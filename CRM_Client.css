@@ -1,0 +1,107 @@
+
+
+body
+{	
+	height:100%;
+	width:100%;
+    margin: 0;
+	/*background-image:url(background.jpg);your background image*/  
+	background-repeat:no-repeat;/*we want to have one single image not a repeated one*/  
+	background-size:cover;/*this sets the image to fullscreen covering the whole screen*/  
+}
+#div-vertical
+{	
+	float: left;
+    height: 100vh;
+	width: 10%;
+}
+
+#contacts_div
+{
+	font-size: 17px;
+	margin-left:15%;
+	margin-top:5%;
+	float: left;
+	width:50%;
+	
+	
+}
+#add_contact
+{
+	margin-top:5.5%;
+	text-align: center;
+}
+
+.form-control.required
+{
+  content:"*";
+  color:red;
+}
+
+form
+{
+	float:left;
+	margin-left:5%;
+}
+#add_contact_button
+{
+	font-size:25px;
+	height:80px;
+    width:200px;
+}
+/* Style the navigation bar */
+.navbar {
+	background-color: #004d99;
+	padding-right:5%;
+	padding-top:15%;
+	overflow: auto;
+	width: 50%;
+}
+
+/* Navbar links */
+.navbar a {
+ /* float: left;*/
+	text-decoration: none;
+	text-align: center;
+	font-size: 17px;
+	padding: 12px;
+	color: white;
+	float: left;
+  
+ }
+
+/* Navbar links on mouse-over */
+.navbar a:hover {
+  background-color: #000;
+  
+}
+
+/* Current/active navbar link */
+.active {
+  background-color: #ff0066;
+}
+
+.table_head
+{
+  background-color: #ff0066;
+  color: white;
+
+}
+
+ul,li{
+	text-decoration:none
+	list-style: none;
+	display: inline-block;
+    list-style-type: none;
+}
+.modal-body .form-horizontal .col-sm-2,
+.modal-body .form-horizontal .col-sm-10 {
+    width: 100%
+}
+
+.modal-body .form-horizontal .control-label {
+    text-align: left;
+}
+.modal-body .form-horizontal .col-sm-offset-2 {
+    margin-left: 15px;
+}

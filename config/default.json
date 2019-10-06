@@ -1,0 +1,48 @@
+{
+  "api": {
+    "base_uri": "/shopping_api",
+    "client_main_html_page": "/",
+    "client_main_js": "/shoppingClient.js",
+    "client_bootstrap_css": "/bootstrap.min.css",
+    "client_angular_js": "/angular.min.js",
+    "client_bootstrap_map": "/bootstrap.min.css.map",
+    "client_angular_map": "/angular.min.js.map",
+    "user_signIn": "/user/signIn",
+    "user_signUp": "/user/signUp",
+    "product_add": "/product/add",
+    "product_list": "/product/list",
+    "product_review_list": "/product/review/list",
+    "product_review_add": "/product/review/add"
+  },
+  "http": {
+    "port": 5000,
+    "request": {
+      "size_limit": "50mb"
+    },
+    "response": {
+        "OK": 200,
+        "InternalError": 500
+    },
+    "content_type":  {
+      "json": "application/json",
+      "text_plain": "plain/text",
+      "text_html": "text/html",
+      "text_css": "text/css",
+      "text_javascript": "text/javascript"
+    }
+  },
+  "server_db": {
+    "path": "./db",
+    "users_db": "./db/users.json",
+    "products_db": "./db/products.json"
+  },
+  "client":
+  {
+    "client_main_html_page": "./public/shoppingClient.html",
+    "client_main_js": "./public/shoppingClient.js",
+    "bootstrap_css": "./public/bootstrap.min.css",
+    "angular_js": "./public/angular.min.js",
+    "bootstrap_map": "./public/bootstrap.min.css.map",
+    "angular_map": "./public/angular.min.js.map"
+  }
+}

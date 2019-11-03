@@ -3,26 +3,46 @@ var http = require('http');
 var fs = require('fs');
 var url = require('url');
 var  config = require('./config/default.json');
-
+var mongoClient = require('mongodb').MongoClient; // New MongoDB client
+var urldb = "mongodb://localhost:27017/CRMdb";
 
 var portNum = 5000;
-var contacts_fields=["Name","PhoneNumber","eMail","Address"];
+const dbName = 'CRMdb'
 
 function onRequest(request, response) {
 
     var url_parts = url.parse(request.url, true);
     console.log(JSON.stringify(url_parts.pathname));
     console.log(JSON.stringify(request.method));
-    if (request.method == 'GET' && request.url == '/') {//bring the main page
-        console.log('--Rendering html page--');
-        fs.readFile('./CRM_Client.html', function (error, data) {
-            if (error) {
-                console.log('error has happand in CRM_Client.html', error)
-            }
-            response.writeHead(200, {"Content-Type": "text/html"});
-            response.end(data);
-        });
-    }
+    if (request.method == 'GET' && request.url == '/')
+	{//bring the main page
+		console.log('--Rendering html page--');
+		fs.readFile('./CRM_Client.html', function (error, data) {
+			if (error) {
+				console.log('error has happand in CRM_Client.html', error)
+			}
+		response.writeHead(200, {"Content-Type": "text/html"});
+			mongoClient.connect( urldb , function(err, db) { // connect to the local Database
+
+			if(err) { throw err; } // check if connection is ok, else err-output
+			console.log("database created!");
+			 console.log(`Connected MongoDB: ${urldb}`)
+             console.log(`Database: ${dbName}`)
+
+			var dbo = db.db(dbName);
+			dbo.createCollection("contacts", function(err, res) {
+				if (err) throw err;
+				console.log("Collection created!");});
+			
+			response.end();
+			db.close(); // close the Database connection
+			});
+			response.end(data);
+			
+		});
+			
+	}
+   
     else if (request.method == 'GET' && url_parts.pathname == '/bootstrap.min.css') {//bring the bootstrap file
         console.log('--Rendering bootstrap-css file--');
         fs.readFile('./lib/bootstrap.min.css', function (error, data) {

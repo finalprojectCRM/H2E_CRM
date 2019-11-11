@@ -229,7 +229,7 @@ var app = angular.module("CRM", []);
 	$scope.getOptionsList = function()
 	{
 		$log.log("entered getStatusList() = function()");
-		 $http.get("http://localhost:5000/getStatusOptions").then(
+		 $http.get("http://localhost:7000/getStatusOptions").then(
 			function (response) {//success callback
 				$scope.options = response.data.statusOptions;//return the list of the statusOptions
 			},
@@ -273,7 +273,7 @@ var app = angular.module("CRM", []);
 			if($scope.status_from_modal != "")
 			{
 			     var new_status= {Status:$scope.status_from_modal};
-				$http.post("http://localhost:5000/addOption", {
+				$http.post("http://localhost:7000/addOption", {
 				new_status: new_status,
 				}).then(
 				function (response) { //success callback
@@ -292,7 +292,7 @@ var app = angular.module("CRM", []);
 		
 	
 	$scope.getContactsList = function(){// get the list of the contacts
-		 $http.get("http://localhost:5000/getContacts").then(
+		 $http.get("http://localhost:7000/getContacts").then(
 			function (response) {//success callback
 				$scope.contactsInfo = response.data.contacts;//return the list of the contacts
 			},
@@ -378,7 +378,7 @@ var app = angular.module("CRM", []);
 	$scope.addNewContact = function(){
 				
 		var contact={Name:$scope.newName,Status:$scope.newStatus, PhoneNumber:$scope.newPhoneNumber, eMail:$scope.newEmail, Address:$scope.newAddress};
-		$http.post("http://localhost:5000/addContact", {
+		$http.post("http://localhost:7000/addContact", {
 				contact: contact,
 			}).then(
 				function (response) { //success callback            
@@ -404,7 +404,7 @@ var app = angular.module("CRM", []);
 	
 	$scope.delete_contact_function = function(contact)
 	{
-		$http.post("http://localhost:5000/deleteContact", {
+		$http.post("http://localhost:7000/deleteContact", {
 				contact: contact,
 			}).then(
 				function (response) { //success callback            

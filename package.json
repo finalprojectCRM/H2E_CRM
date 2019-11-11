@@ -1,0 +1,13 @@
+{
+  "name": "testmongo",
+  "version": "1.0.0",
+  "main": "CRM_Server.js",
+  "scripts": {
+    "start": "node CRM_Server.js"
+  },
+  "dependencies": {
+    "express": "^4.17.1",
+    "mongodb": "^3.2.7",
+    "body-parser": "latest"
+  }
+}

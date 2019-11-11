@@ -1,0 +1,15 @@
+{
+  "mongo": {
+    "uri_prefix": "mongodb",
+    "cluster_url": "localhost",
+    "mongodb_port": 27017,
+    "mongodb_name": "CRM_DB",
+    "replica_set": false,
+    "sharded": false,
+    "use_ssl": false,
+    "auth_type": "none",
+    "username": "username",
+    "password": "password"
+  }
+}
+

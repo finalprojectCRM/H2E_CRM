@@ -28,9 +28,9 @@ function onRequest(request, response) {
 			console.log("database created!");
 			 console.log(`Connected MongoDB: ${urldb}`)
              console.log(`Database: ${dbName}`)
-
-			var dbo = db.db(dbName);
-			dbo.createCollection("contacts", function(err, res) {
+             console.log("Switched to "+db.databaseName+" database")
+			
+			db.createCollection("contacts", function(err, res) {
 				if (err) throw err;
 				console.log("Collection created!");});
 			

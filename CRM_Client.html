@@ -60,7 +60,7 @@
 										<td ng-show="contactIsEdit==false">{{contactInfo.eMail}}</td>
 										<td ng-show="contactIsEdit==false">{{contactInfo.Address}}</td>	
 										
-									<td ng-show="contactIsEdit==false"><i class="fa fa-edit" style="font-size:24px;color:#008fb3"  aria-hidden="true" ng-click = "contactIsEdit =!contactIsEdit"></i></td>
+									<td ng-show="contactIsEdit==false"><i class="fa fa-edit" style="font-size:24px;color:#008fb3"  aria-hidden="true" ng-click = "contactIsEdit =!contactIsEdit;update_contact_function(contactInfo)"></i></td>
 									<div ng-if="contactIsEdit" class="form-group row" >
 										
 											<td ng-show="contactIsEdit==true"><input ng-model="contactInfo.Name" type="text" class="form-control" /></td>
@@ -68,7 +68,7 @@
 										
 										<td ng-show="contactIsEdit==true"><div class="form-group">
 											<select class="form-control" id="status_select" ng-model="contactInfo.Status" ng-change="onChange(contactInfo.Status)">
-												 <option value=''>-- Choose status --</option>
+												<option value=''>-- Choose status --</option>
 												<option ng-repeat="option in options">{{option.Status}}</option>
 												<option >add a new status</option>
 											</select>
@@ -82,7 +82,7 @@
 									</div>
 									
 									<td><i class="fa fa-trash" style="font-size:24px;color:#003366" ng-show="contactIsEdit==false" aria-hidden="true" ng-click = "delete_contact_function(contactInfo)"></i></td>
-									<td ng-show="contactIsEdit==true"><i class="fa fa-check-square-o" style="font-size:24px;color:#00e600"" aria-hidden="true" ng-click = "save_updated(contactInfo,contactsInfo);contactIsEdit =!contactIsEdit;"></i></td>
+									<td ng-show="contactIsEdit==true"><i class="fa fa-check-square-o" style="font-size:24px;color:#00e600" aria-hidden="true" ng-click = "save_updated(contactInfo);contactIsEdit =!contactIsEdit"></i></td>
 									
 
 								</tr>
@@ -90,10 +90,9 @@
 									<td><input ng-model="newName" type="text" class="form-control" placeholder="Name" /></td>
 									<td ><div class="form-group">
 										<select class="form-control" id="status_select" ng-model="newStatus" ng-change="onChange(newStatus)">
-								             <option value=''>-- Choose status --</option>
-		
+								            <option value=''>-- Choose status --</option>
 											<option ng-repeat="option in options">{{option.Status}}</option>
-											<option>add a new status</option>
+											<option >add a new status</option>
 										</select>
 										
 									</div></td>
@@ -160,17 +159,6 @@
 						</div>
 					</div>
 				</div>
-				
-
-<!--#####################################################-->
-				
-				<!--@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@-->
-				
-
-  
-
-
-				<!--@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@-->
 
 	
 				
@@ -185,6 +173,7 @@ var app = angular.module("CRM", []);
 
 	var MAX_LETTERS_IN_NAME = 25;
 	var MAX_LETTERS_IN_ADDRESS = 35;
+	var contact_before_update;
 	
     $scope.show_contacts = false;
 	$scope.get_new_contact_details = false;
@@ -229,7 +218,7 @@ var app = angular.module("CRM", []);
 	$scope.getOptionsList = function()
 	{
 		$log.log("entered getStatusList() = function()");
-		 $http.get("http://localhost:7000/getStatusOptions").then(
+		 $http.get("http://localhost:3000/getStatusOptions").then(
 			function (response) {//success callback
 				$scope.options = response.data.statusOptions;//return the list of the statusOptions
 			},
@@ -243,15 +232,11 @@ var app = angular.module("CRM", []);
 	
 	$scope.update_contact_function = function(contact)
 	{
-	    $scope.show_update_expression = false;
-		$scope.show_update_input = true;
-		var contact_before_update = contact;
-	    $scope.update_name = contact.Name;
-		$scope.update_status = contact.Status;
-		$scope.update_phone_number = contact.PhoneNumber;
-		$scope.update_eMail = contact.eMail;
-		$scope.update_address = contact.Address;
-		
+		contact_before_update = {Name:contact.Name,Status:contact.Status, PhoneNumber:contact.PhoneNumber, eMail:contact.eMail, Address:contact.Address};
+		$log.log("contact name : "+contact.Name);
+		$scope.update_status = contact_before_update.Status;
+
+        		
 	}
 	
 	$scope.onChange = function(option){
@@ -272,12 +257,13 @@ var app = angular.module("CRM", []);
 		{
 			if($scope.status_from_modal != "")
 			{
-			     var new_status= {Status:$scope.status_from_modal};
-				$http.post("http://localhost:7000/addOption", {
+			    var new_status= {Status:$scope.status_from_modal};
+				$http.post("http://localhost:3000/addOption", {
 				new_status: new_status,
 				}).then(
 				function (response) { //success callback
-                  $scope.newStatus=$scope.status_from_modal;				
+                  //$scope.newStatus=$scope.status_from_modal;
+                 // $scope.update_status=$scope.status_from_modal;				  
                   $scope.getOptionsList();				
 				},
 				function (response) { //failure callback
@@ -292,7 +278,7 @@ var app = angular.module("CRM", []);
 		
 	
 	$scope.getContactsList = function(){// get the list of the contacts
-		 $http.get("http://localhost:7000/getContacts").then(
+		 $http.get("http://localhost:3000/getContacts").then(
 			function (response) {//success callback
 				$scope.contactsInfo = response.data.contacts;//return the list of the contacts
 			},
@@ -323,6 +309,11 @@ var app = angular.module("CRM", []);
 	  else
 	  {
 		$scope.newName="";
+	  }
+	  
+	  if($scope.newStatus==undefined || $scope.newStatus=="" || $scope.newStatus=="add a new status")
+	  {
+		 $scope.newStatus="";
 	  }
 	   
 		
@@ -378,7 +369,7 @@ var app = angular.module("CRM", []);
 	$scope.addNewContact = function(){
 				
 		var contact={Name:$scope.newName,Status:$scope.newStatus, PhoneNumber:$scope.newPhoneNumber, eMail:$scope.newEmail, Address:$scope.newAddress};
-		$http.post("http://localhost:7000/addContact", {
+		$http.post("http://localhost:3000/addContact", {
 				contact: contact,
 			}).then(
 				function (response) { //success callback            
@@ -404,7 +395,7 @@ var app = angular.module("CRM", []);
 	
 	$scope.delete_contact_function = function(contact)
 	{
-		$http.post("http://localhost:7000/deleteContact", {
+		$http.post("http://localhost:3000/deleteContact", {
 				contact: contact,
 			}).then(
 				function (response) { //success callback            
@@ -416,30 +407,38 @@ var app = angular.module("CRM", []);
 			);
 	}
 	
-	$scope.save_updated = function(contactInfoToUpdate,contactsInfoToUpdate)
+	
+	
+	$scope.save_updated = function(contactInfoToUpdate)
 	{
-	 $log.log("name: "+ contactInfoToUpdate.Name);
-	if($scope.contactInfo.Name!=undefined)
+	 $log.log("name before: "+ contact_before_update.Name);
+	 $log.log("name after : "+ contactInfoToUpdate.Name);
+	 if(contactInfoToUpdate.Name!=undefined)
 	  {
 		if(contactInfoToUpdate.Name > MAX_LETTERS_IN_NAME){//check the length of the name
 			alert("WARNNING:This name is too long, therefore only 25 characters will be saved");
-			$scope.newName=$scope.newName.slice(0, MAX_LETTERS_IN_NAME);
+			contactInfoToUpdate.Name=contactInfoToUpdate.Name.slice(0, MAX_LETTERS_IN_NAME);
 			return;
 		}
 	  }
 	  else
 	  {
-		$scope.newName="";
+		contactInfoToUpdate.Name="";
+	  }
+	  
+	  if(contactInfoToUpdate.Status==undefined || contactInfoToUpdate.Status=="" || contactInfoToUpdate.Status=="add a new status")
+	  {
+		 contactInfoToUpdate.Status="";
 	  }
 	   
 		
-		if($scope.newPhoneNumber!=undefined || $scope.newPhoneNumber!= "")
+		if(contactInfoToUpdate.PhoneNumber!=undefined || contactInfoToUpdate.PhoneNumber!= "")
 		{//check the phone number
 			var valid_phone_number =  /^\+?([0-9]{2})?[0-9]{7,10}$/;
-		    if(!valid_phone_number.test($scope.newPhoneNumber))
+		    if(!valid_phone_number.test(contactInfoToUpdate.PhoneNumber))
 			{//check the phone number
 				alert("ERROR:This phone number is invalid");
-				$scope.newPhoneNumber=undefined;
+				contactInfoToUpdate.PhoneNumber=undefined;
 				return;
 			}
 		}
@@ -450,35 +449,35 @@ var app = angular.module("CRM", []);
 		}
 			
 		
-		if($scope.newEmail!=undefined)
+		if(contactInfoToUpdate.eMail!=undefined && contactInfoToUpdate.eMail!="")
 		{
 			var valid_email = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-				if( !valid_email.test($scope.newEmail)){//check the email
+				if( !valid_email.test(contactInfoToUpdate.eMail)){//check the email
 					alert("ERROR:This email is invalid");
-					$scope.newEmail=undefined;
-					return;
+					contactInfoToUpdate.eMail=undefined;
 				}
 		}
         else
 		{
-		   $scope.newEmail="";
+		   contactInfoToUpdate.eMail="";
         }		
 		
-		if($scope.newAddress!=undefined)
+		if(contactInfoToUpdate.Address!=undefined)
 		{
-			if($scope.newAddress > MAX_LETTERS_IN_ADDRESS){//check the length of the address
+			if(contactInfoToUpdate.Address > MAX_LETTERS_IN_ADDRESS){//check the length of the address
 				alert("WARNNING:This address is too long, therefore only 35 characters will be saved");
-				$scope.newAddress=$scope.newAddress.slice(0, MAX_LETTERS_IN_ADDRESS);
+				contactInfoToUpdate.Address=contactInfoToUpdate.Address.slice(0, MAX_LETTERS_IN_ADDRESS);
 				return;
 			}
 			
 		}
 		else
 		{
-		   $scope.newAddress = "";
+		   contactInfoToUpdate.Address = "";
 		}
-		$http.post("http://localhost:5000/updateContact", {
-				contactsInfoToUpdate: contactsInfoToUpdate,
+		var updated_contact={Name:contactInfoToUpdate.Name,Status:$scope.update_status, PhoneNumber:contactInfoToUpdate.PhoneNumber, eMail:contactInfoToUpdate.eMail, Address:contactInfoToUpdate.Address};
+		$http.post("http://localhost:3000/updateContact", {
+				contact_before_update: contact_before_update,updated_contact:updated_contact
 			}).then(
 				function (response) { //success callback            
 					

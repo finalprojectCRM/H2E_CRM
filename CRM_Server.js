@@ -10,7 +10,7 @@ const ObjectId = require("mongodb").ObjectID;
 const config = require('./mongo-config.json');
 
 const APP_NAME = require('os').hostname();
-const APP_PORT = 7000;
+const APP_PORT = 3000;
 
 var database, contacts_collection;
 var app = Express();
@@ -57,46 +57,46 @@ app.listen(APP_PORT, () =>
 
 
 app.get("/", (request, response) => {
-        console.log('--Rendering html page--');
+    console.log('--Rendering html page--');
 
 
-            let mongo_config = config["mongo"];
-            let db_name = mongo_config["mongodb_name"];
-            let conn_string = get_mongo_connection_string();
-            console.log("db uri: " + conn_string);
-            MongoClient.connect(conn_string,
-                {
-                    useNewUrlParser: true,
-                    readPreference:ReadPreference.NEAREST,
-                    autoReconnect:true,
-                    reconnectTries:Number.MAX_SAFE_INTEGER,
-                    poolSize:16,
-                    connectWithNoPrimary:true,
-                    useUnifiedTopology: true,
-                    appname:APP_NAME
-                }, (error, client) => {
-                    if(error) {
-                        console.log("ERROR TO CONECT TO MONGODB")
-                    }
-                    database = client.db(db_name);
-                    contacts_collection = database.collection("contacts");
-                    statuses_collection = database.collection("statuses");
+    let mongo_config = config["mongo"];
+    let db_name = mongo_config["mongodb_name"];
+    let conn_string = get_mongo_connection_string();
+    console.log("db uri: " + conn_string);
+    MongoClient.connect(conn_string,
+        {
+            useNewUrlParser: true,
+            readPreference:ReadPreference.NEAREST,
+            autoReconnect:true,
+            reconnectTries:Number.MAX_SAFE_INTEGER,
+            poolSize:16,
+            connectWithNoPrimary:true,
+            useUnifiedTopology: true,
+            appname:APP_NAME
+        }, (error, client) => {
+            if(error) {
+                console.log("ERROR TO CONECT TO MONGODB")
+            }
+            database = client.db(db_name);
+            contacts_collection = database.collection("contacts");
+            statuses_collection = database.collection("statuses");
 
-                    console.log("Connected to `" + db_name + "`!");
-                    result = {
-                        "db_conn_string": conn_string
-                    };
+            console.log("Connected to `" + db_name + "`!");
+            result = {
+                "db_conn_string": conn_string
+            };
 
-                    fs.readFile('./CRM_Client.html', function (error, data) {
-                        if (error) {
-                            console.log('error has happand in CRM_Client.html', error)
-                        }
-                        response.writeHead(200, {"Content-Type": "text/html"});
-                        response.end(data);
-                    });
+            fs.readFile('./CRM_Client.html', function (error, data) {
+                if (error) {
+                    console.log('error has happand in CRM_Client.html', error)
+                }
+                response.writeHead(200, {"Content-Type": "text/html"});
+                response.end(data);
+            });
 
 
-                });
+        });
 
 });
 app.get("/bootstrap.min.css", (request, response) =>{
@@ -119,28 +119,6 @@ app.get("/angular.min.js", (request, response) =>{//bring the angular file
             response.end(data);
         });
 });
-    /*else if (request.method == 'GET' && url_parts.pathname == '/angular.min.js.map') {//bring the angular-map file
-        console.log('--Rendering angular-map file--');
-        fs.readFile('./lib/angular.min.js.map', function (error, data) {
-            if (error) {
-                console.log('error has happand in /angular.min.js.map', error)
-            }
-            response.writeHead(200, { 'Content-Type': 'application/json' });
-            response.end(data);
-        });
-    }
-
-
-    else if (request.method == 'GET' && url_parts.pathname == '/bootstrap.min.css.map') {//bring the bootstrap-map file
-        console.log('--Rendering bootstrap-map file--');
-        fs.readFile('./lib/bootstrap.min.css.map', function (error, data) {
-            if (error) {
-                console.log('error has happand in /bootstrap.min.css.map', error)
-            }
-			response.writeHead(200, { 'Content-Type': 'application/json' });
-            response.end(data);
-        });
-    }*/
 
 app.get("/CRM_Client.css", (request, response) =>{   //bring the CRM_Client.css file
         console.log('--Rendering CRM_Client.css file--');
@@ -219,14 +197,17 @@ app.get("/getStatusOptions", (request, response) =>{
 
 app.post("/updateContact", (request, response) =>{
 //update contact
-        request.on('data', function (stringifiedData) {
-            var data = JSON.parse(stringifiedData);
-            var contacts_to_update = data.contactsInfoToUpdate;
-
-            fs.writeFileSync('contacts.json', JSON.stringify(contacts_to_update));
-            response.writeHead(200, { 'Content-Type': 'application/json' });
-            response.end();
-        });
+    console.log("updateContact FUNCTION");
+    var contact_before_update_body = request.body.contact_before_update;
+    var contact_after_update_body = request.body.updated_contact;
+    contact_before_update = {"Name":contact_before_update_body.Name ,"Status" : contact_before_update_body.Status , "PhoneNumber":contact_before_update_body.PhoneNumber ,"eMail" : contact_before_update_body.eMail ,"Address" : contact_before_update_body.Address };
+    console.log("contact_before_update_body.Name : "+contact_before_update_body.Name);
+    console.log("contact_after_update_body.Name : "+contact_after_update_body.Name);
+    contact_after_update = { $set: {"Name":contact_after_update_body.Name ,"Status" : contact_after_update_body.Status , "PhoneNumber":contact_after_update_body.PhoneNumber ,"eMail" : contact_after_update_body.eMail ,"Address" : contact_after_update_body.Address } };
+    contacts_collection.updateOne(contact_before_update, contact_after_update, function(err, res) {
+        if (err) throw err;
+        console.log("1 document updated");
+    });
 });
 
 app.post("/addOption", (request, response) =>{

@@ -22,9 +22,10 @@
 			
 			<div id="div-vertical" class="navbar">
 				<ul>
-					<li><a class="active" ><i class="fa fa-fw fa-home"></i> Home</a></li> 
-					<li ng-click="get_contacts_function()"><a><i class="fa fa-fw fa-user" > </i> Contacts</a></li>
-					<li><a><i class="fa fa-calendar"></i> Calendar</a></li> 
+					
+					<li a class="active" ng-click="get_contacts_function()"><a><i class="fa fa-fw fa-user" > </i> Contacts</a></li>
+					<li ng-click="calendar_function()"><a><i class="fa fa-calendar" ></i> Calendar</a></li> 
+					<li ng-click="settings_function()"><a><i class="fa fa-gear"></i>Settings </a></li> 
 				</ul>
 			</div>
 			
@@ -203,6 +204,16 @@ var app = angular.module("CRM", []);
 	   
 	}	
 
+	$scope.calendar_function = function()
+	{
+	   $scope.show_contacts = false;
+	}
+	
+	$scope.settings_function = function()
+	{
+	   $scope.show_contacts = false;
+	}
+	
 	$scope.add_contact_function = function()
 	{
 	    $scope.get_new_contact_details = true;
@@ -262,7 +273,7 @@ var app = angular.module("CRM", []);
 				new_status: new_status,
 				}).then(
 				function (response) { //success callback
-                  //$scope.newStatus=$scope.status_from_modal;
+                    $scope.newStatus="";
                  // $scope.update_status=$scope.status_from_modal;				  
                   $scope.getOptionsList();				
 				},
@@ -311,11 +322,11 @@ var app = angular.module("CRM", []);
 		$scope.newName="";
 	  }
 	  
-	  if($scope.newStatus==undefined || $scope.newStatus=="" || $scope.newStatus=="add a new status")
+	  if($scope.newStatus==undefined || $scope.newStatus=="" || $scope.newStatus=="add a new status") 
 	  {
 		 $scope.newStatus="";
 	  }
-	   
+	  
 		
 		if($scope.newPhoneNumber!=undefined || $scope.newPhoneNumber!= "")
 		{//check the phone number
@@ -411,27 +422,30 @@ var app = angular.module("CRM", []);
 	
 	$scope.save_updated = function(contactInfoToUpdate)
 	{
-	 $log.log("name before: "+ contact_before_update.Name);
-	 $log.log("name after : "+ contactInfoToUpdate.Name);
-	 if(contactInfoToUpdate.Name!=undefined)
-	  {
-		if(contactInfoToUpdate.Name > MAX_LETTERS_IN_NAME){//check the length of the name
-			alert("WARNNING:This name is too long, therefore only 25 characters will be saved");
-			contactInfoToUpdate.Name=contactInfoToUpdate.Name.slice(0, MAX_LETTERS_IN_NAME);
-			return;
+		$log.log("Status before: "+ contact_before_update.Status);
+		$log.log("Status after : "+ contactInfoToUpdate.Status);
+		if(contactInfoToUpdate.Name!=undefined)
+		{
+			if(contactInfoToUpdate.Name > MAX_LETTERS_IN_NAME){//check the length of the name
+				alert("WARNNING:This name is too long, therefore only 25 characters will be saved");
+				contactInfoToUpdate.Name=contactInfoToUpdate.Name.slice(0, MAX_LETTERS_IN_NAME);
+				return;
+			}
 		}
-	  }
-	  else
-	  {
-		contactInfoToUpdate.Name="";
-	  }
-	  
-	  if(contactInfoToUpdate.Status==undefined || contactInfoToUpdate.Status=="" || contactInfoToUpdate.Status=="add a new status")
-	  {
-		 contactInfoToUpdate.Status="";
-	  }
-	   
-		
+		else
+		{
+			contactInfoToUpdate.Name="";
+		}
+		  
+		if(contactInfoToUpdate.Status==undefined || contactInfoToUpdate.Status=="") 
+		{
+			contactInfoToUpdate.Status="";
+		}
+		else if (contactInfoToUpdate.Status=="add a new status")
+		{
+			contactInfoToUpdate.Status = contact_before_update.Status;
+		}
+			
 		if(contactInfoToUpdate.PhoneNumber!=undefined || contactInfoToUpdate.PhoneNumber!= "")
 		{//check the phone number
 			var valid_phone_number =  /^\+?([0-9]{2})?[0-9]{7,10}$/;
@@ -475,7 +489,7 @@ var app = angular.module("CRM", []);
 		{
 		   contactInfoToUpdate.Address = "";
 		}
-		var updated_contact={Name:contactInfoToUpdate.Name,Status:$scope.update_status, PhoneNumber:contactInfoToUpdate.PhoneNumber, eMail:contactInfoToUpdate.eMail, Address:contactInfoToUpdate.Address};
+		var updated_contact={Name:contactInfoToUpdate.Name,Status:contactInfoToUpdate.Status, PhoneNumber:contactInfoToUpdate.PhoneNumber, eMail:contactInfoToUpdate.eMail, Address:contactInfoToUpdate.Address};
 		$http.post("http://localhost:3000/updateContact", {
 				contact_before_update: contact_before_update,updated_contact:updated_contact
 			}).then(

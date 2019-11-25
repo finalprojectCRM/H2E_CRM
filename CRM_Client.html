@@ -13,7 +13,6 @@
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
 		<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
 		<link rel="stylesheet" type="text/css" href="CRM_Client.css"></link>
-		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"/>
 		
 	</head>
 	
@@ -42,6 +41,7 @@
 					<div class="col-lg-20">
 						<table align="right" class="table table-hover-responsive"  class="text-center" >
 							<thead>
+
 								<tr class="table_head">
 									<th>Name</th>
 									<th>Status</th>
@@ -83,12 +83,54 @@
 									</div>
 									
 									<td><i class="fa fa-trash" style="font-size:24px;color:#003366" ng-show="contactIsEdit==false" aria-hidden="true" ng-click = "delete_contact_function(contactInfo)"></i></td>
-									<td ng-show="contactIsEdit==true"><i class="fa fa-check-square-o" style="font-size:24px;color:#00e600" aria-hidden="true" ng-click = "save_updated(contactInfo);contactIsEdit =!contactIsEdit"></i></td>
-									
+									<td ng-show="contactIsEdit==true"><i class="fa fa-check-square-o" style="font-size:24px;color:#00e600" aria-hidden="true" ng-click = "save_updated(contactInfo)"></i></td>
+									 
+									 		<div class="modal fade" id="Phone_Error_Modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+											<div class="modal-dialog">
+												<div class="modal-content">
+													<!-- Modal Header -->
+													<div class="modal-header">
+														<button type="button" class="close" 
+														   data-dismiss="modal">
+															   <span aria-hidden="true">&times;</span>
+															   <span class="sr-only">Close</span>
+														</button>
+														<h4 class="modal-title" id="myModalLabel">
+															ERROR
+														</h4>
+													</div>
+													
+													<!-- Modal Body -->
+													<div class="modal-body">
+														
+														<div class="form-horizontal" role="form">
+														  <div class="form-group">
+															<div class="col-sm-10">
+															{{Phone_Error}}
+															</div>
+														  </div>
+														  
+														</div>				
+													</div>
+													
+													<!-- Modal Footer -->
+													<div class="modal-footer">
+														<button type="button" class="btn btn-default"
+																data-dismiss="modal">
+																	close
+														</button>
+														<button type="button" class="btn btn-primary" data-dismiss="modal" ng-click="contactIsEdit=!contactIsEdit">
+															change
+														</button>
+														{{contactIsEdit}}
+													</div>
+												</div>
+											</div>
+										</div>
 
 								</tr>
 								<tr ng-show="get_new_contact_details==true">
-									<td><input ng-model="newName" type="text" class="form-control" placeholder="Name" /></td>
+									<td><input ng-model="newName" type="text" class="form-control" placeholder="Name" maxlength="25"/></td>
 									<td ><div class="form-group">
 										<select class="form-control" id="status_select" ng-model="newStatus" ng-change="onChange(newStatus)">
 								            <option value=''>-- Choose status --</option>
@@ -99,9 +141,10 @@
 									</div></td>
 									<td><input ng-model="newPhoneNumber"  type="text" placeholder="Phone Number"  class="form-control is-invalid" required /></td>
 									<td><input ng-model="newEmail" type="text" class="form-control" placeholder="Email" /></td>
-									<td><input ng-model="newAddress" type="text" class="form-control" placeholder="Address" /></td>
+									<td><input ng-model="newAddress" type="text" class="form-control" placeholder="Address" maxlength="35"/></td>
 									<td><i ng-click="check_and_save_details()" style="font-size:24px;color:#00e673" class="fa fa-check-square-o"/></td>
 									<td><i class="fa fa-times" style="font-size:24px;color:#ff3333" ng-click="cancel_function()"></i></td>
+									
 								</tr>
 								<tr ng-show="show_contacts==true">
 									<td></td>
@@ -118,7 +161,7 @@
 						</table>
 					</div>
 				</form>
-				<!--#################################################-->
+
 				<div class="modal fade" id="myModalHorizontal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
 					<div class="modal-dialog">
 						<div class="modal-content">
@@ -160,6 +203,8 @@
 						</div>
 					</div>
 				</div>
+				
+
 
 	
 				
@@ -172,16 +217,18 @@
 var app = angular.module("CRM", []);
 	app.controller('CRM_controller', ['$scope','$http','$log', function($scope, $http,$log) {	
 
-	var MAX_LETTERS_IN_NAME = 25;
+	var MAX_LETTERS_IN_NAME = 5;
 	var MAX_LETTERS_IN_ADDRESS = 35;
 	var contact_before_update;
+    var new_status_option = "add a new status";
 	
     $scope.show_contacts = false;
 	$scope.get_new_contact_details = false;
 	$scope.click = false;
 	$scope.show_update_input = false;
 	$scope.show_update_expression = false;
-	
+	$scope.check_phone_enable = false;
+
 	$scope.contactsInfo=[];
 	$scope.options=[];
 
@@ -192,6 +239,7 @@ var app = angular.module("CRM", []);
 
 	$scope.get_contacts_function = function()
 	{
+	
 	   $scope.show_contacts = true;
 	   $scope.show_update_expression = true;
 	   $scope.show_update_input = false;
@@ -207,11 +255,13 @@ var app = angular.module("CRM", []);
 	$scope.calendar_function = function()
 	{
 	   $scope.show_contacts = false;
+	   $scope.search = "";
 	}
 	
 	$scope.settings_function = function()
 	{
 	   $scope.show_contacts = false;
+	   $scope.search = "";
 	}
 	
 	$scope.add_contact_function = function()
@@ -223,7 +273,12 @@ var app = angular.module("CRM", []);
 	$scope.cancel_function = function()
 	{
 	    $scope.get_new_contact_details = false;
-		 $scope.click = true;
+		$scope.click = true;
+		$scope.newName=undefined;
+		$scope.newStatus=undefined;
+		$scope.newPhoneNumber=undefined;
+		$scope.newEmail=undefined;
+		$scope.newAddress=undefined;
 	}
 	
 	$scope.getOptionsList = function()
@@ -246,12 +301,13 @@ var app = angular.module("CRM", []);
 		contact_before_update = {Name:contact.Name,Status:contact.Status, PhoneNumber:contact.PhoneNumber, eMail:contact.eMail, Address:contact.Address};
 		$log.log("contact name : "+contact.Name);
 		$scope.update_status = contact_before_update.Status;
+		 $log.log("contactIsEdit : "+$scope.contactIsEdit);
 
         		
 	}
 	
 	$scope.onChange = function(option){
-		if(option=="add a new status")
+		if(option==new_status_option)
 		{
 		    angular.element(myModalHorizontal).modal("show");
 		 }
@@ -263,7 +319,7 @@ var app = angular.module("CRM", []);
 	$scope.save_new_status = function()
 	{
 	
-	$log.log("save_new_status "+$scope.status_from_modal);
+		$log.log("save_new_status "+$scope.status_from_modal);
 		if($scope.status_from_modal != undefined)
 		{
 			if($scope.status_from_modal != "")
@@ -307,12 +363,12 @@ var app = angular.module("CRM", []);
 	  $log.log($scope.newPhoneNumber);
 	  $log.log($scope.newEmail);
 	  $log.log($scope.newAddress);
-	  
-	  
+  
 	  if($scope.newName!=undefined)
 	  {
-		if($scope.newName > MAX_LETTERS_IN_NAME){//check the length of the name
-			alert("WARNNING:This name is too long, therefore only 25 characters will be saved");
+		var name = $scope.newName;
+		if(name.length > MAX_LETTERS_IN_NAME){//check the length of the name
+			alert("WARNNING:This name is too long, therefore only "+ MAX_LETTERS_IN_NAME  +" characters including spaces will be saved");
 			$scope.newName=$scope.newName.slice(0, MAX_LETTERS_IN_NAME);
 			return;
 		}
@@ -322,26 +378,27 @@ var app = angular.module("CRM", []);
 		$scope.newName="";
 	  }
 	  
-	  if($scope.newStatus==undefined || $scope.newStatus=="" || $scope.newStatus=="add a new status") 
+	  if($scope.newStatus==undefined || $scope.newStatus=="" || $scope.newStatus==new_status_option) 
 	  {
 		 $scope.newStatus="";
 	  }
 	  
 		
-		if($scope.newPhoneNumber!=undefined || $scope.newPhoneNumber!= "")
+		if($scope.newPhoneNumber==undefined || $scope.newPhoneNumber== "")
 		{//check the phone number
-			var valid_phone_number =  /^\+?([0-9]{2})?[0-9]{7,10}$/;
+		    alert("ERROR:You must enter a phone number");
+		    return;
+			
+		}
+		else
+		{
+		    var valid_phone_number =  /^\+?([0-9]{2})?[0-9]{7,10}$/;
 		    if(!valid_phone_number.test($scope.newPhoneNumber))
 			{//check the phone number
 				alert("ERROR:This phone number is invalid");
 				$scope.newPhoneNumber=undefined;
 				return;
 			}
-		}
-		else
-		{
-		   alert("ERROR:You must enter a phone number");
-		   return;
 		}
 			
 		
@@ -356,13 +413,14 @@ var app = angular.module("CRM", []);
 		}
         else
 		{
-		   $scope.newEmail="";
+		   $scope.newEmail= undefined ;
         }		
 		
 		if($scope.newAddress!=undefined)
 		{
-			if($scope.newAddress > MAX_LETTERS_IN_ADDRESS){//check the length of the address
-				alert("WARNNING:This address is too long, therefore only 35 characters will be saved");
+		    var address = $scope.newAddress;
+			if(address.length > MAX_LETTERS_IN_ADDRESS){//check the length of the address
+				alert("WARNNING:This address is too long, therefore only "+ MAX_LETTERS_IN_ADDRESS +" characters including spaces will be saved");
 				$scope.newAddress=$scope.newAddress.slice(0, MAX_LETTERS_IN_ADDRESS);
 				return;
 			}
@@ -372,10 +430,12 @@ var app = angular.module("CRM", []);
 		{
 		   $scope.newAddress = "";
 		}
-		$scope.get_new_contact_details=false;
+		
 		$scope.click = true;
+     	$log.log(" before new contact:");
 		$scope.addNewContact();
 	}
+	
 	
 	$scope.addNewContact = function(){
 				
@@ -383,15 +443,23 @@ var app = angular.module("CRM", []);
 		$http.post("http://localhost:3000/addContact", {
 				contact: contact,
 			}).then(
-				function (response) { //success callback            
-					$scope.new_contact =response.data.contact;
-					$scope.getContactsList();
-					
-					$scope.newName=undefined;
-					$scope.newPhoneNumber=undefined;
-					$scope.newEmail=undefined;
-					$scope.newAddress=undefined;
+				function (response) { //success callback  
+                    $log.log("phone exists response : "+response.data.phone_exists);				
+					if(!response.data.phone_exists)
+					{
+						$scope.get_new_contact_details=false;
+						$scope.getContactsList();
+						$scope.newName=undefined;
+						$scope.newPhoneNumber=undefined;
+						$scope.newEmail=undefined;
+						$scope.newAddress=undefined;
 
+					}
+					else
+					{
+					   alert(response.data.phone_exists);
+					}				
+					
 				},
 				function (response) { //failure callback
 					$scope.newName=undefined;
@@ -426,8 +494,8 @@ var app = angular.module("CRM", []);
 		$log.log("Status after : "+ contactInfoToUpdate.Status);
 		if(contactInfoToUpdate.Name!=undefined)
 		{
-			if(contactInfoToUpdate.Name > MAX_LETTERS_IN_NAME){//check the length of the name
-				alert("WARNNING:This name is too long, therefore only 25 characters will be saved");
+			if(contactInfoToUpdate.Name.length > MAX_LETTERS_IN_NAME){//check the length of the name
+				alert("WARNNING:This name is too long, therefore only "+MAX_LETTERS_IN_NAME+" characters including spaces will be saved");
 				contactInfoToUpdate.Name=contactInfoToUpdate.Name.slice(0, MAX_LETTERS_IN_NAME);
 				return;
 			}
@@ -441,8 +509,13 @@ var app = angular.module("CRM", []);
 		{
 			contactInfoToUpdate.Status="";
 		}
-		else if (contactInfoToUpdate.Status=="add a new status")
+		else if (contactInfoToUpdate.Status==new_status_option)
 		{
+		
+		    if (contact_before_update.Status==new_status_option)
+			{
+			  contactInfoToUpdate.Status = "";
+			}
 			contactInfoToUpdate.Status = contact_before_update.Status;
 		}
 			
@@ -463,7 +536,7 @@ var app = angular.module("CRM", []);
 		}
 			
 		
-		if(contactInfoToUpdate.eMail!=undefined && contactInfoToUpdate.eMail!="")
+		if(contactInfoToUpdate.eMail!=undefined && contactInfoToUpdate.eMail!="" && contactInfoToUpdate.eMail!=null)
 		{
 			var valid_email = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
 				if( !valid_email.test(contactInfoToUpdate.eMail)){//check the email
@@ -478,8 +551,8 @@ var app = angular.module("CRM", []);
 		
 		if(contactInfoToUpdate.Address!=undefined)
 		{
-			if(contactInfoToUpdate.Address > MAX_LETTERS_IN_ADDRESS){//check the length of the address
-				alert("WARNNING:This address is too long, therefore only 35 characters will be saved");
+			if(contactInfoToUpdate.Address.length > MAX_LETTERS_IN_ADDRESS){//check the length of the address
+				alert("WARNNING:This address is too long, therefore only "+MAX_LETTERS_IN_ADDRESS +" characters including spaces will be saved");
 				contactInfoToUpdate.Address=contactInfoToUpdate.Address.slice(0, MAX_LETTERS_IN_ADDRESS);
 				return;
 			}
@@ -493,10 +566,23 @@ var app = angular.module("CRM", []);
 		$http.post("http://localhost:3000/updateContact", {
 				contact_before_update: contact_before_update,updated_contact:updated_contact
 			}).then(
-				function (response) { //success callback            
+				function (response) { //success callback   
+
+                   $log.log("phone exists response : "+response.data.phone_exists);				
+					if(!response.data.phone_exists)
+					{
+                        
+					}
+					else
+					{
+					   $scope.Phone_Error = response.data.phone_exists;
+					   angular.element(Phone_Error_Modal).modal("show");
+					    
+					}					
 					
 				},
 				function (response) { //failure callback
+					
 					
 				}
 			);

@@ -147,14 +147,27 @@ app.post("/addContact", (request, response) =>{
         //add new contact
             var contact = request.body.contact;
             console.log("contact: " + contact.Name);
+			
+			contacts_collection.findOne({"PhoneNumber": contact.PhoneNumber}).then(function(result) {
+			  if(!result) {
+				contacts_collection.insertOne(
+                {"Name": contact.Name , "Status" : contact.Status ,"PhoneNumber": contact.PhoneNumber, "eMail" : contact.eMail ,"Address" : contact.Address} , function(err, res){
+                 if (err) throw err;});
+				 response.end();
+			  }
+			  else
+			  {
+                 response.writeHead(200, { 'Content-Type': 'application/json' });
+                 response.end(JSON.stringify({"phone_exists" :"ERROR : this phone number already exists, change it or search for this user."}));
+			  }
+			  
+			
 
-            contacts_collection.updateOne(
-                {"PhoneNumber": contact.PhoneNumber},
-                { $setOnInsert: { "Name": contact.Name ,"Status" : contact.Status , "eMail" : contact.eMail ,"Address" : contact.Address} },
-                { upsert: true }
-   )
-    response.writeHead(200, { 'Content-Type': 'application/json' });
-    response.end();
+			}).catch(function(err) {
+			  response.send({error: err})
+			})
+
+
 
 });
 app.get("/getContacts", (request, response) =>{
@@ -203,11 +216,22 @@ app.post("/updateContact", (request, response) =>{
     contact_before_update = {"Name":contact_before_update_body.Name ,"Status" : contact_before_update_body.Status , "PhoneNumber":contact_before_update_body.PhoneNumber ,"eMail" : contact_before_update_body.eMail ,"Address" : contact_before_update_body.Address };
     console.log("contact_before_update_body.Name : "+contact_before_update_body.Name);
     console.log("contact_after_update_body.Name : "+contact_after_update_body.Name);
-    contact_after_update = { $set: {"Name":contact_after_update_body.Name ,"Status" : contact_after_update_body.Status , "PhoneNumber":contact_after_update_body.PhoneNumber ,"eMail" : contact_after_update_body.eMail ,"Address" : contact_after_update_body.Address } };
-    contacts_collection.updateOne(contact_before_update, contact_after_update, function(err, res) {
-        if (err) throw err;
-        console.log("1 document updated");
-    });
+	contacts_collection.findOne({"PhoneNumber": contact_after_update_body.PhoneNumber}).then(function(result) {
+			  if(!result) 
+			  {
+				contact_after_update = { $set: {"Name":contact_after_update_body.Name ,"Status" : contact_after_update_body.Status , "PhoneNumber":contact_after_update_body.PhoneNumber ,"eMail" : contact_after_update_body.eMail ,"Address" : contact_after_update_body.Address } };
+				contacts_collection.updateOne(contact_before_update, contact_after_update, function(err, res) {
+				if (err) throw err;
+				response.end();
+				  });
+			  }
+			  else
+			  {
+                 response.writeHead(200, { 'Content-Type': 'application/json' });
+                 response.end(JSON.stringify({"phone_exists" :"ERROR : this phone number already exists, change it or search for this user."}));
+			  }
+  
+});
 });
 
 app.post("/addOption", (request, response) =>{

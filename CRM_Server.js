@@ -214,24 +214,36 @@ app.post("/updateContact", (request, response) =>{
     var contact_before_update_body = request.body.contact_before_update;
     var contact_after_update_body = request.body.updated_contact;
     contact_before_update = {"Name":contact_before_update_body.Name ,"Status" : contact_before_update_body.Status , "PhoneNumber":contact_before_update_body.PhoneNumber ,"eMail" : contact_before_update_body.eMail ,"Address" : contact_before_update_body.Address };
-    console.log("contact_before_update_body.Name : "+contact_before_update_body.Name);
-    console.log("contact_after_update_body.Name : "+contact_after_update_body.Name);
-	contacts_collection.findOne({"PhoneNumber": contact_after_update_body.PhoneNumber}).then(function(result) {
+   
+	if(contact_after_update_body.PhoneNumber == contact_before_update_body.PhoneNumber)
+	{
+		contact_after_update = { $set: {"Name":contact_after_update_body.Name ,"Status" : contact_after_update_body.Status , "PhoneNumber":contact_after_update_body.PhoneNumber ,"eMail" : contact_after_update_body.eMail ,"Address" : contact_after_update_body.Address } };
+				contacts_collection.updateOne(contact_before_update, contact_after_update, function(err, res) {
+				if (err) throw err;
+				response.end(JSON.stringify({"contact_after_update" :{"Name":contact_after_update_body.Name ,"Status" : contact_after_update_body.Status , "PhoneNumber":contact_after_update_body.PhoneNumber ,"eMail" : contact_after_update_body.eMail ,"Address" : contact_after_update_body.Address } }));
+			    });
+	}
+	else
+	{
+		contacts_collection.findOne({"PhoneNumber": contact_after_update_body.PhoneNumber}).then(function(result) {
 			  if(!result) 
 			  {
 				contact_after_update = { $set: {"Name":contact_after_update_body.Name ,"Status" : contact_after_update_body.Status , "PhoneNumber":contact_after_update_body.PhoneNumber ,"eMail" : contact_after_update_body.eMail ,"Address" : contact_after_update_body.Address } };
 				contacts_collection.updateOne(contact_before_update, contact_after_update, function(err, res) {
 				if (err) throw err;
-				response.end();
+				response.end(JSON.stringify({"contact_after_update" :{"Name":contact_after_update_body.Name ,"Status" : contact_after_update_body.Status , "PhoneNumber":contact_after_update_body.PhoneNumber ,"eMail" : contact_after_update_body.eMail ,"Address" : contact_after_update_body.Address } }));
+
 				  });
 			  }
 			  else
 			  {
                  response.writeHead(200, { 'Content-Type': 'application/json' });
-                 response.end(JSON.stringify({"phone_exists" :"ERROR : this phone number already exists, change it or search for this user."}));
+                 response.end(JSON.stringify({"phone_exists" :"This phone number already exists, change it or search for this user."}));
 			  }
   
 });
+	}
+	
 });
 
 app.post("/addOption", (request, response) =>{

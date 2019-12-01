@@ -3,8 +3,8 @@
 	<head>
 		 <meta name="viewport" content="width=device-width, initial-scale=1">
 		 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
-  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
+		  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+		  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
 		<link rel="stylesheet" type="text/css" href="bootstrap.min.css" />
 		<script type="text/javascript" src="angular.min.js"></script>
 		<!--<script type="text/javascript" src="CRM_Client.js"></script>-->
@@ -90,11 +90,6 @@
 												<div class="modal-content">
 													<!-- Modal Header -->
 													<div class="modal-header">
-														<button type="button" class="close" 
-														   data-dismiss="modal">
-															   <span aria-hidden="true">&times;</span>
-															   <span class="sr-only">Close</span>
-														</button>
 														<h4 class="modal-title" id="myModalLabel">
 															{{message_type}}
 														</h4>
@@ -115,14 +110,12 @@
 													
 													<!-- Modal Footer -->
 													<div class="modal-footer">
-														<button type="button" class="btn btn-default"
+														<button type="button" class="btn btn-primary""
 																data-dismiss="modal">
-																	close
+																	ok
 														</button>
-														<button type="button" class="btn btn-primary" data-dismiss="modal" ng-click="contactIsEdit=!contactIsEdit">
-															change
-														</button>
-														{{contactIsEdit}}
+							
+				
 													</div>
 												</div>
 											</div>
@@ -223,6 +216,7 @@ var app = angular.module("CRM", []);
 	var MAX_LETTERS_IN_ADDRESS = 35;
 	var contact_before_update;
     var new_status_option = "add a new status";
+	$scope.PhoneNumber_before_update = undefined;
 	
     $scope.show_contacts = false;
 	$scope.get_new_contact_details = false;
@@ -518,9 +512,11 @@ var app = angular.module("CRM", []);
 		if(contactInfoToUpdate.Name!=undefined)
 		{
 			if(contactInfoToUpdate.Name.length > MAX_LETTERS_IN_NAME){//check the length of the name
-				alert("WARNNING:This name is too long, therefore only "+MAX_LETTERS_IN_NAME+" characters including spaces will be saved");
-				contactInfoToUpdate.Name=contactInfoToUpdate.Name.slice(0, MAX_LETTERS_IN_NAME);
-				return;
+			$scope.message_type = "WARNNING";
+		    $scope.message = "This name is too long, therefore only "+ MAX_LETTERS_IN_NAME  +" characters including spaces will be saved";
+		    angular.element(Message_Modal).modal("show");
+			contactInfoToUpdate.Name=contactInfoToUpdate.Name.slice(0, MAX_LETTERS_IN_NAME);
+			return;
 			}
 		}
 		else
@@ -542,19 +538,22 @@ var app = angular.module("CRM", []);
 			contactInfoToUpdate.Status = contact_before_update.Status;
 		}
 			
-		if(contactInfoToUpdate.PhoneNumber!=undefined || contactInfoToUpdate.PhoneNumber!= "")
+		if(contactInfoToUpdate.PhoneNumber!=undefined && contactInfoToUpdate.PhoneNumber!= "")
 		{//check the phone number
 			var valid_phone_number =  /^\+?([0-9]{2})?[0-9]{7,10}$/;
 		    if(!valid_phone_number.test(contactInfoToUpdate.PhoneNumber))
 			{//check the phone number
-				alert("ERROR:This phone number is invalid");
-				contactInfoToUpdate.PhoneNumber=undefined;
+				 $scope.message_type = "ERROR";
+		         $scope.message = "This phone number is invalid";
+		         angular.element(Message_Modal).modal("show");
 				return;
 			}
 		}
 		else
 		{
-		   alert("ERROR:You must enter a phone number");
+		    $scope.message_type = "ERROR";
+		    $scope.message = "You must enter a phone number";
+		    angular.element(Message_Modal).modal("show");
 		   return;
 		}
 			
@@ -563,8 +562,10 @@ var app = angular.module("CRM", []);
 		{
 			var valid_email = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
 				if( !valid_email.test(contactInfoToUpdate.eMail)){//check the email
-					alert("ERROR:This email is invalid");
-					contactInfoToUpdate.eMail=undefined;
+					$scope.message_type = "ERROR";
+		            $scope.message = "This email is invalid";
+		            angular.element(Message_Modal).modal("show");
+					return;
 				}
 		}
         else
@@ -575,7 +576,10 @@ var app = angular.module("CRM", []);
 		if(contactInfoToUpdate.Address!=undefined)
 		{
 			if(contactInfoToUpdate.Address.length > MAX_LETTERS_IN_ADDRESS){//check the length of the address
-				alert("WARNNING:This address is too long, therefore only "+MAX_LETTERS_IN_ADDRESS +" characters including spaces will be saved");
+				$scope.message_type = "WARNNING";
+		        $scope.message = "This address is too long, therefore only "+ MAX_LETTERS_IN_ADDRESS +" characters including spaces will be saved";
+			    angular.element(Message_Modal).modal("show");
+				$scope.newAddress=$scope.newAddress.slice(0, MAX_LETTERS_IN_ADDRESS);
 				contactInfoToUpdate.Address=contactInfoToUpdate.Address.slice(0, MAX_LETTERS_IN_ADDRESS);
 				return;
 			}
@@ -594,12 +598,14 @@ var app = angular.module("CRM", []);
                    $log.log("phone exists response : "+response.data.phone_exists);				
 					if(!response.data.phone_exists)
 					{
-                        
+                          $scope.getContactsList();
 					}
 					else
 					{
+					   $scope.message_type = "ERROR";
 					   $scope.message = response.data.phone_exists;
 					   angular.element(Message_Modal).modal("show");
+					  
 					    
 					}					
 					

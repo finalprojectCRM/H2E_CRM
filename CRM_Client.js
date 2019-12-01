@@ -23,7 +23,7 @@ var app = angular.module("CRM", []);
 	
 
 	
-
+    //show the list of contacts
 	$scope.get_contacts_function = function()
 	{
 	
@@ -39,6 +39,7 @@ var app = angular.module("CRM", []);
 	   
 	}	
 
+    //show calendar
 	$scope.calendar_function = function()
 	{
 	   $scope.show_contacts = false;
@@ -46,19 +47,20 @@ var app = angular.module("CRM", []);
 
 	   $scope.search = "";
 	}
-	
+   //show settings
 	$scope.settings_function = function()
 	{
 	   $scope.show_contacts = false;
 	   $scope.search = "";
 	}
-	
+	//show the 
 	$scope.add_contact_function = function()
 	{
 	    $scope.get_new_contact_details = true;
 		 $scope.click = false;
 	}
 	
+	//close the option of contact addition
 	$scope.cancel_function = function()
 	{
 	    $scope.get_new_contact_details = false;
@@ -70,6 +72,7 @@ var app = angular.module("CRM", []);
 		$scope.newAddress=undefined;
 	}
 	
+	//get the list of statuses from the server
 	$scope.getOptionsList = function()
 	{
 		$log.log("entered getStatusList() = function()");
@@ -86,7 +89,8 @@ var app = angular.module("CRM", []);
 	   
 	
 	}
-	
+
+    //save the deatailes of contact before update
 	$scope.update_contact_function = function(contact)
 	{
 		contact_before_update = {Name:contact.Name,Status:contact.Status, PhoneNumber:contact.PhoneNumber, eMail:contact.eMail, Address:contact.Address};
@@ -96,14 +100,16 @@ var app = angular.module("CRM", []);
 
         		
 	}
-	
+
+    //show the modal with a new status addition
 	$scope.onChange = function(option){
 		if(option==new_status_option)
 		{
 		    angular.element(myModalHorizontal).modal("show");
 		}
 	}
-	
+
+    //save a new status in server
 	$scope.save_new_status = function()
 	{
 		if($scope.status_from_modal != undefined)
@@ -131,7 +137,7 @@ var app = angular.module("CRM", []);
 		$scope.status_from_modal =undefined;
 	}
 		
-	
+	//get the contacts list from server
 	$scope.getContactsList = function(){// get the list of the contacts
 		 $http.get("http://localhost:3000/getContacts").then(
 			function (response) {//success callback
@@ -145,7 +151,9 @@ var app = angular.module("CRM", []);
 		);
 		
 	}
-	
+ 
+ 
+    //check validation of all new contact fildes
 	$scope.check_and_save_details = function()
 	{
 	  if($scope.newName!=undefined)
@@ -229,7 +237,7 @@ var app = angular.module("CRM", []);
 		$scope.addNewContact();
 	}
 	
-	
+    //add a new contact to server
 	$scope.addNewContact = function(){
 				
 		var contact={Name:$scope.newName,Status:$scope.newStatus, PhoneNumber:$scope.newPhoneNumber, eMail:$scope.newEmail, Address:$scope.newAddress};
@@ -237,7 +245,7 @@ var app = angular.module("CRM", []);
 				contact: contact,
 			}).then(
 				function (response) { //success callback  
-                    $log.log("phone exists response : "+response.data.phone_exists);				
+                    $log.log("phone exists response : "+response.data.phone_exists);					
 					if(!response.data.phone_exists)
 					{
 						$scope.get_new_contact_details=false;
@@ -249,11 +257,12 @@ var app = angular.module("CRM", []);
 						$scope.newAddress=undefined;
 
 					}
+					//check if the phone exsists
 					else
 					{
 					   $scope.message_type = "ERROR";
-					$scope.message = response.data.phone_exists;
-				    angular.element(Message_Modal).modal("show");
+                       $scope.message = response.data.phone_exists;
+				       angular.element(Message_Modal).modal("show");
 					}				
 					
 				},
@@ -267,7 +276,7 @@ var app = angular.module("CRM", []);
 			);
 	}
 	
-	
+	 //delete a contact from server
 	$scope.delete_contact_function = function(contact)
 	{
 		$http.post("http://localhost:3000/deleteContact", {
@@ -283,7 +292,7 @@ var app = angular.module("CRM", []);
 	}
 	
 	
-	
+	//check validation of all updated contact fildes and if they corect are corcect send them to the server
 	$scope.save_updated = function(contactInfoToUpdate)
 	{
 		$log.log("Status before: "+ contact_before_update.Status);
@@ -379,6 +388,7 @@ var app = angular.module("CRM", []);
 					{
                           $scope.getContactsList();
 					}
+					//check if th phone already exsist
 					else
 					{
 					   $scope.message_type = "ERROR";

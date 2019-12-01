@@ -18,7 +18,7 @@ app.use(BodyParser.json());
 app.use(BodyParser.urlencoded({ extended: true }));
 
 
-
+//get to mongo db Permissions
 function get_mongo_connection_string()
 {
     let connection_string = "";
@@ -49,13 +49,13 @@ function get_mongo_connection_string()
     return connection_string;
 }
 
-
+//listen to server
 app.listen(APP_PORT, () =>
 {
     console.log("server " + APP_NAME + " is listening on port " + APP_PORT);
 });
 
-
+//get main page and contect to mongo db
 app.get("/", (request, response) => {
     console.log('--Rendering html page--');
 
@@ -99,6 +99,7 @@ app.get("/", (request, response) => {
         });
 
 });
+//get bootstrap 
 app.get("/bootstrap.min.css", (request, response) =>{
         console.log('--Rendering bootstrap-css file--');
         fs.readFile('./lib/bootstrap.min.css', function (error, data) {
@@ -109,6 +110,7 @@ app.get("/bootstrap.min.css", (request, response) =>{
             response.end(data);
         });
 });
+//get angular
 app.get("/angular.min.js", (request, response) =>{//bring the angular file
         console.log('--Rendering angular-js file--');
         fs.readFile('./lib/angular.min.js', function (error, data) {
@@ -120,6 +122,7 @@ app.get("/angular.min.js", (request, response) =>{//bring the angular file
         });
 });
 
+//get CSS
 app.get("/CRM_Client.css", (request, response) =>{   //bring the CRM_Client.css file
         console.log('--Rendering CRM_Client.css file--');
         fs.readFile('./CRM_Client.css', function (error, data) {
@@ -131,6 +134,7 @@ app.get("/CRM_Client.css", (request, response) =>{   //bring the CRM_Client.css 
         });
 });
 
+//get CRM_Client.js
 app.get("/CRM_Client.js", (request, response) =>{
         console.log('--Rendering CRM_Client.css file--');
         fs.readFile('./CRM_Client.js', function (error, data) {
@@ -142,6 +146,7 @@ app.get("/CRM_Client.js", (request, response) =>{
         });
 });
 
+// contact addition only if the contact does not exsist
 app.post("/addContact", (request, response) =>{
     console.log("addContact FUNCTION");
         //add new contact
@@ -155,6 +160,7 @@ app.post("/addContact", (request, response) =>{
                  if (err) throw err;});
 				 response.end();
 			  }
+			  //check if the contact already exsists
 			  else
 			  {
                  response.writeHead(200, { 'Content-Type': 'application/json' });
@@ -170,6 +176,7 @@ app.post("/addContact", (request, response) =>{
 
 
 });
+//get the list of contacts
 app.get("/getContacts", (request, response) =>{
 
         console.log("entered getContacts function");
@@ -183,6 +190,7 @@ app.get("/getContacts", (request, response) =>{
 
 });
 
+//delete contact
 app.post("/deleteContact", (request, response) =>{
 //add new contact
     console.log("entered deleteContact function");
@@ -197,6 +205,7 @@ app.post("/deleteContact", (request, response) =>{
             response.end();
 });
 
+// get the statuses list
 app.get("/getStatusOptions", (request, response) =>{
     console.log("entered getStatusOptions function");
     statuses_collection.find({}).toArray((error, result) => {
@@ -208,6 +217,7 @@ app.get("/getStatusOptions", (request, response) =>{
     });
 });
 
+//update contact detailes only with phone number that does not exsist in the system
 app.post("/updateContact", (request, response) =>{
 //update contact
     console.log("updateContact FUNCTION");
@@ -246,6 +256,7 @@ app.post("/updateContact", (request, response) =>{
 	
 });
 
+//add a new status
 app.post("/addOption", (request, response) =>{
 //add new option
     var status_to_add = request.body.new_status;

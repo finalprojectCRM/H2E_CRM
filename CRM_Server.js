@@ -133,7 +133,7 @@ app.get("/CRM_Client.css", (request, response) =>{   //bring the CRM_Client.css 
 
 app.get("/CRM_Client.js", (request, response) =>{
         console.log('--Rendering CRM_Client.css file--');
-        fs.readFile('./CRM_Client.css', function (error, data) {
+        fs.readFile('./CRM_Client.js', function (error, data) {
             if (error) {
                 console.log('error has happand in /CRM_Client.js', error)
             }

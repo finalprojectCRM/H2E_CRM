@@ -83,7 +83,7 @@
 									</div>
 									
 									<td><i class="fa fa-trash" style="font-size:24px;color:#003366" ng-show="contactIsEdit==false" aria-hidden="true" ng-click = "delete_contact_function(contactInfo)"></i></td>
-									<td ng-show="contactIsEdit==true"><i class="fa fa-check-square-o" style="font-size:24px;color:#00e600" aria-hidden="true" ng-click = "save_updated(contactInfo)"></i></td>
+									<td ng-show="contactIsEdit==true"><i class="fa fa-check-square-o" style="font-size:24px;color:#00e600" aria-hidden="true" ng-click = "save_updated(contactInfo);contactIsEdit =!contactIsEdit"></i></td>
 									 
 									 		<div class="modal fade" id="Message_Modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
 											<div class="modal-dialog">
@@ -154,7 +154,7 @@
 									<td></td>
 									<td></td>
 									
-									<td ng-show="click==true"><i class="fa fa-user-plus" style="font-size:24px;color:#00cc99" ng-click="add_contact_function()"></i></td> 
+									<td ng-show="click==true"><i class="fa fa-user-plus" style="font-size:24px;color:#00cc99" ng-click="add_contact_function() "></i></td> 
 								</tr>
 															
 							</tbody></p>
@@ -219,7 +219,7 @@
 var app = angular.module("CRM", []);
 	app.controller('CRM_controller', ['$scope','$http','$log', function($scope, $http,$log) {	
 
-	var MAX_LETTERS_IN_NAME = 5;
+	var MAX_LETTERS_IN_NAME = 25;
 	var MAX_LETTERS_IN_ADDRESS = 35;
 	var contact_before_update;
     var new_status_option = "add a new status";

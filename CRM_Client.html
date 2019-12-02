@@ -13,13 +13,99 @@
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
 		<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
 		<link rel="stylesheet" type="text/css" href="CRM_Client.css"></link>
-		
 	</head>
 	
 	<body>
-		<div ng-controller="CRM_controller" >
+		<div ng-controller="CRM_controller"> 
+		
+		    <div ng-show="login_page==true" id="log_in">
+				<form class="container center_div row-md-offset-6">
+					<div class="font-weight-bold text-center">
+						<div class="text-primary">
+							<div class="col-xs-3 col-md-offset-6">
+								<form class="form-signin">
+									<h2 class="form-signin-heading text-center">Please Log In</h2>
+									<div class="form-group">
+										<label for="li_uName">User Name</label>
+										<input ng-model="l_uName" class="form-control w-50 p-3" id="li_uName" placeholder="Enter user name">
+									</div>
+									<div class="form-group">
+										<label for="li_uPassword">Password</label>
+										<input ng-model="l_password" type="password" class="form-control w-50 p-3" id="li_uPassword" placeholder="Enter Password">
+									</div>
+									
+								</form>
+							</div>
+							
+							<div class="col-xs-1 col-xs-offset-7 ">
+								<button class="btn btn-md  btn-primary center-block " ng-click="logIn()">ENTER</button>
+								</p>
+							</div>
+							
+							
+							<div class="col-xs-3 col-xs-offset-6">
+								<label>Not registered yet?</label><a href="#" ng-click="validation_of_temp_password()"> Sign up here</a>
+							</div>
+					   </div>
+				   </div>
+				</form>		
+			</div>
 			
-			<div id="div-vertical" class="navbar">
+			 <div ng-show="temp_password_page==true">
+			 
+			    <form class="container center_div">
+					<div class="font-weight-bold text-center">
+						<div class="text-primary">
+							<div class="col-xs-6 col-md-offset-5">
+								<form class="form-signin">
+								<h2 class="form-signin-heading text-center">Temporary password for registration</h2>
+									<div class="form-group col-xs-6 col-lg-offset-3 text-center">
+										<input ng-model="temp_password" type="password" class="form-control w-50 p-3" id="li_uPassword" placeholder="Enter temporary password">
+									</div>
+									<div class="col-xs-2 col-xs-offset-5 ">
+										<button class="btn btn-md  btn-primary center-block " ng-click="verify_temporary_password()">verify</button>
+										</p>
+									</div>
+								</form>
+							</div>
+					   </div>
+				   </div>
+				</form>		
+			 </div>
+		
+		    <div ng-show="register_page == true" id="sign_up">
+				<div class="container col-xs-7 col-md-offset-3">
+					<form>
+						<h2 class="form-signin-heading text-center">Please Sign Up</h2>
+						<div class="form-group">
+							<label for="uName">User Name</label>
+							<input ng-model="registration_user_name" class="form-control w-50 p-3" id="uName" placeholder="Enter user name">
+						</div>
+						<div class="form-group">
+							<label for="fName">Name</label>
+							<input ng-model="registration_name" class="form-control w-50 p-3" id="Name" placeholder="Enter your name">
+						</div>
+						
+						<div class="form-group">
+							<label for="uEmail">Email Address</label>
+							<input ng-model="registration_email" type="email" class="form-control w-50 p-3" id="uEmail" aria-describedby="emailHelp" placeholder="Enter email">
+						</div>
+						<div class="form-group">
+							<label for="uPassword">Password</label>
+							<input ng-model="registration_password" type="password" class="form-control w-50 p-3" id="uPassword" placeholder="Enter Password">
+						</div>
+						<div class="form-group">
+							<label for="uPassword2">Ensure Password</label>
+							<input ng-model="registration_validation_password" type="password" class="form-control w-50 p-3" id="uPassword2" placeholder="Enter Password again">
+						</div>
+						<button class="btn btn-lg btn-primary btn-block" ng-click="signUp()">SUBMIT</button>
+					</form>
+				</div>
+			</div>
+			
+			
+			
+			<div ng-show = "menu==true" id="div-vertical" class="navbar">
 				<ul>
 					
 					<li a class="active" ng-click="get_contacts_function()"><a><i class="fa fa-fw fa-user" > </i> Contacts</a></li>

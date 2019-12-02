@@ -12,7 +12,7 @@ const config = require('./mongo-config.json');
 const APP_NAME = require('os').hostname();
 const APP_PORT = 3000;
 
-var database, contacts_collection;
+var database, contacts_collection, statuses_collection, users_collection;
 var app = Express();
 app.use(BodyParser.json());
 app.use(BodyParser.urlencoded({ extended: true }));
@@ -81,6 +81,7 @@ app.get("/", (request, response) => {
             database = client.db(db_name);
             contacts_collection = database.collection("contacts");
             statuses_collection = database.collection("statuses");
+			users_collection = database.collection("users");
 
             console.log("Connected to `" + db_name + "`!");
             result = {
@@ -144,6 +145,34 @@ app.get("/CRM_Client.js", (request, response) =>{
             response.writeHead(200, { 'Content-Type':"text/javascript" });
             response.end(data);
         });
+});
+
+app.get("/checkExsistingTempPassword", (request, response) =>{
+
+        console.log("entered checkExsistingTempPassword function");
+			
+			users_collection.findOne({"UserName": "Admin"}).then(function(result) {
+			  if(!result) {
+				var tempPassword = "12345678";
+				users_collection.insertOne(
+                {"UserName": "Admin" , "TempPassword": tempPassword } , function(err, res){
+                 if (err) throw err;});
+				 response.writeHead(200, { 'Content-Type': 'application/json' });
+				 response.end(JSON.stringify({"tempPassword" : tempPassword}));
+			  }
+			  //check if the contact already exsists
+			  else
+			  {
+                 response.writeHead(200, { 'Content-Type': 'application/json' });
+				 response.end(JSON.stringify({"tempPassword" : result.TempPassword}));
+			  }
+			  
+			
+
+			}).catch(function(err) {
+			  response.send({error: err})
+			})
+
 });
 
 // contact addition only if the contact does not exsist
@@ -251,7 +280,7 @@ app.post("/updateContact", (request, response) =>{
                  response.end(JSON.stringify({"phone_exists" :"This phone number already exists, change it or search for this user."}));
 			  }
   
-});
+        });
 	}
 	
 });

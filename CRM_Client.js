@@ -2,31 +2,119 @@
 var app = angular.module("CRM", []);
 	app.controller('CRM_controller', ['$scope','$http','$log', function($scope, $http,$log) {	
 
+	var contact_before_update;
 	var MAX_LETTERS_IN_NAME = 25;
 	var MAX_LETTERS_IN_ADDRESS = 35;
-	var contact_before_update;
     var new_status_option = "add a new status";
+	var temp_password_from_server ;
 	$scope.PhoneNumber_before_update = undefined;
 	
-    $scope.show_contacts = false;
-	$scope.get_new_contact_details = false;
 	$scope.click = false;
-	$scope.show_update_input = false;
-	$scope.show_update_expression = false;
-	$scope.check_phone_enable = false;
+	$scope.menu = false;
 	$scope.show_calendar = false;
+    $scope.show_contacts = false;
+	$scope.show_update_input = false;
+	$scope.check_phone_enable = false;
+	$scope.show_update_expression = false;
+	$scope.get_new_contact_details = false;
+	$scope.login_page = true;
+	$scope.register_page = false;
 
 	$scope.contactsInfo=[];
 	$scope.options=[];
 
-   
 	
+	
+	$scope.validation_of_temp_password = function()
+	{
+		$scope.temp_password_page = true;
+		$scope.login_page = false;
+		$scope.check_if_exists_password_in_db();
+	}
+	
+    $scope.check_if_exists_password_in_db = function()
+	{
+		$http.get("http://localhost:3000/checkExsistingTempPassword").then(
+			function (response) {//success callback
+			    temp_password_from_server = response.data.tempPassword;
+				$log.log("temp_password_from_server: " + temp_password_from_server);
+			},
+			function (response) {//failure callback
+			    $scope.message = response.data.error;
+				$scope.message_type = "ERROR";
+			    angular.element(Message_Modal).modal("show");
+			}	
+		);		
+	}
+	
+	$scope.verify_temporary_password = function()
+	{
+		
+		if($scope.temp_password == temp_password_from_server )
+		{
+			$scope.register_page = true;
+			$scope.temp_password_page = false;
+		}
+		else
+		{
+			$scope.message = "You don't have a correct temporary password , Please get it from the administrator";
+		    $scope.message_type = "ERROR";
+			angular.element(Message_Modal).modal("show");
+		}
+	
+		
+	}
 
+	$scope.signUp=function()
+	{//user sign up,check and register 
+		if($scope.registration_user_name==undefined){//check if the first name & the last name contains letters
+			alert("User name must contain at least one letter");
+			return;
+		}
+		if($scope.registration_name==undefined){//check if the first name & the last name contains letters
+			alert("User name and/or first name and/or last name must contain at least one letter");
+			return;
+		}
+		if($scope.s_uName=="" || $scope.s_fName=="" || $scope.s_lName==""){//check if the first name & the last name contains letters
+			alert("User name and/or first name and/or last name must contain at least one letter");
+			return;
+		}
+		var re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+		if($scope.registration_email==undefined || !re.test($scope.registration_email)){//check the email
+			alert("The email not valid");
+			return;
+		}
+		if($scope.registration_password==undefined || $scope.registration_password=="" || $scope.registration_password.length<8){//check the length of the password
+			alert("The password must contain at least 8 letters");
+			$scope.registration_password=undefined;
+			return;
+		}
+		if($scope.registration_password!=$scope.registration_validation_password){//check if the two password equals
+			alert("The passwords not equals");
+			$scope.registration_password=$scope.registration_validation_password=undefined;
+			return;
+		}
+		var user={fName:$scope.s_fName,lName:$scope.s_lName,uName:$scope.s_uName,
+					 eMail:$scope.s_uEmail,password:$scope.s_uPassword};
+		$http.post("http://localhost:3000/addUser", {
+			user: user,
+		}).then(
+			function (response) { //success callback            
+				$scope.c_user =response.data.user;
+				alert("The user added successfuly");
+				$scope.wUser="Hello "+$scope.c_user.fName+" "+$scope.c_user.lName;
+				$scope.status=3;
+			},
+			function (response) { //failure callback
+				alert(response.data.error);
+			}
+		);
+	}
 	
     //show the list of contacts
 	$scope.get_contacts_function = function()
 	{
-	
+	   $scope.login_page = false;
 	   $scope.show_contacts = true;
 	   $scope.show_update_expression = true;
 	   $scope.show_update_input = false;
@@ -42,6 +130,7 @@ var app = angular.module("CRM", []);
     //show calendar
 	$scope.calendar_function = function()
 	{
+	   $scope.login_page = false;
 	   $scope.show_contacts = false;
 	   $scope.show_calendar = true;
 
@@ -50,6 +139,7 @@ var app = angular.module("CRM", []);
    //show settings
 	$scope.settings_function = function()
 	{
+	   $scope.login_page = false;
 	   $scope.show_contacts = false;
 	   $scope.search = "";
 	}

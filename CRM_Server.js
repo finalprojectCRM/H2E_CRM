@@ -175,6 +175,33 @@ app.get("/checkExsistingTempPassword", (request, response) =>{
 
 });
 
+app.post("/addUser", (request, response) =>{
+
+        console.log("entered addUser function");
+		 var user = request.body.user;
+			
+			users_collection.findOne({"UserName": user.UserName}).then(function(result) {
+			  if(!result) 
+			  {
+				 users_collection.insertOne(user);
+                 if (err) throw err;
+			     response.writeHead(200, { 'Content-Type': 'application/json' });
+				 user_to_client =  {"UserName":user.UserName, "Name":user.Name,
+				  "eMail":user.eMail,"Password":user.Password}
+                 response.end(JSON.stringify({"user" :user_to_client}));
+
+			  }
+			  else
+			  {
+                 response.writeHead(200, { 'Content-Type': 'application/json' });
+                 response.end(JSON.stringify({user_exists :"This user name already exists."}));
+			  }
+  
+        }).catch(function(err) {
+			  response.send({error: err})
+			});
+});
+
 // contact addition only if the contact does not exsist
 app.post("/addContact", (request, response) =>{
     console.log("addContact FUNCTION");

@@ -67,46 +67,75 @@ var app = angular.module("CRM", []);
 
 	$scope.signUp=function()
 	{//user sign up,check and register 
-		if($scope.registration_user_name==undefined){//check if the first name & the last name contains letters
-			alert("User name must contain at least one letter");
+	
+	    var re_username = /^[a-zA-Z]{3,10}$/;
+		var re_name = /^[a-zA-Z\s\u0590-\u05fe]{2,20}$/;
+		if($scope.registration_user_name==undefined ||!re_username.test($scope.registration_user_name)){
+		    $scope.message = "User name must contain only English letters ,minimum 3 leterrs and maximum 10 letters and no whitespace";
+		    $scope.message_type = "ERROR";
+			angular.element(Message_Modal).modal("show");
 			return;
 		}
-		if($scope.registration_name==undefined){//check if the first name & the last name contains letters
-			alert("User name and/or first name and/or last name must contain at least one letter");
+		if($scope.registration_name==undefined ||!re_name.test($scope.registration_name)){
+			$scope.message = "The name must contain only English or Hebrew letters ,minimum 2 leterrs and maximum 20 letters ";
+		    $scope.message_type = "ERROR";
+			angular.element(Message_Modal).modal("show");
 			return;
 		}
-		if($scope.s_uName=="" || $scope.s_fName=="" || $scope.s_lName==""){//check if the first name & the last name contains letters
-			alert("User name and/or first name and/or last name must contain at least one letter");
+		var re_email = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+		if($scope.registration_email==undefined || !re_email.test($scope.registration_email)){//check the email
+			$scope.message = "This email is invalid ";
+		    $scope.message_type = "ERROR";
+			angular.element(Message_Modal).modal("show");
 			return;
 		}
-		var re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-		if($scope.registration_email==undefined || !re.test($scope.registration_email)){//check the email
-			alert("The email not valid");
-			return;
-		}
-		if($scope.registration_password==undefined || $scope.registration_password=="" || $scope.registration_password.length<8){//check the length of the password
-			alert("The password must contain at least 8 letters");
-			$scope.registration_password=undefined;
+		var re_password = /^((?!.*[\s])(?=.*[A-Z])(?=.*\d))(?=.*?[#?!@$%^&*-]).{8,15}$/;
+		if($scope.registration_password==undefined || !re_password.test($scope.registration_password)){//check the length of the password
+			$scope.message = "The password must contain at least 8 to 15 characters , at least : one capital letter, one small letter, one number, and one of the following special characters: #?! @ $% ^ & * -";
+		    $scope.message_type = "ERROR";
+			angular.element(Message_Modal).modal("show");
 			return;
 		}
 		if($scope.registration_password!=$scope.registration_validation_password){//check if the two password equals
-			alert("The passwords not equals");
+			$scope.message = "The two passwords do not match";
+		    $scope.message_type = "ERROR";
+			angular.element(Message_Modal).modal("show");
 			$scope.registration_password=$scope.registration_validation_password=undefined;
 			return;
 		}
-		var user={fName:$scope.s_fName,lName:$scope.s_lName,uName:$scope.s_uName,
-					 eMail:$scope.s_uEmail,password:$scope.s_uPassword};
+		var user={UserName:$scope.registration_user_name, Name:$scope.registration_name,
+				  eMail:$scope.registration_email,Password:$scope.registration_password};
+		$log.log("befor call server");
+		  
 		$http.post("http://localhost:3000/addUser", {
 			user: user,
 		}).then(
-			function (response) { //success callback            
-				$scope.c_user =response.data.user;
-				alert("The user added successfuly");
-				$scope.wUser="Hello "+$scope.c_user.fName+" "+$scope.c_user.lName;
-				$scope.status=3;
+			function (response) { 
+			    var user_from_server = response.data.user;
+			   //success callback
+               	if(!response.data.user_exists)	
+				{
+					$log.log(user_from_server.Name);
+					$scope.registration_user_name = undefined;
+					$scope.registration_name = undefined;
+					$scope.registration_email = undefined;
+					$scope.registration_password = undefined;
+					$scope.registration_validation_password = undefined;
+					
+				}
+				else
+				{
+					$scope.message = response.data.user_exists;
+					$scope.message_type = "ERROR";
+					angular.element(Message_Modal).modal("show");
+					$scope.registration_user_name = undefined;
+					
+				}
+					
+
 			},
 			function (response) { //failure callback
-				alert(response.data.error);
+				
 			}
 		);
 	}

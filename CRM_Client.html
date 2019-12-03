@@ -27,11 +27,11 @@
 									<h2 class="form-signin-heading text-center">Please Log In</h2>
 									<div class="form-group">
 										<label for="li_uName">User Name</label>
-										<input ng-model="l_uName" class="form-control w-50 p-3" id="li_uName" placeholder="Enter user name">
+										<input ng-model="l_uName" class="form-control w-50 p-3"  placeholder="Enter user name">
 									</div>
 									<div class="form-group">
 										<label for="li_uPassword">Password</label>
-										<input ng-model="l_password" type="password" class="form-control w-50 p-3" id="li_uPassword" placeholder="Enter Password">
+										<input ng-model="l_password" type="password" class="form-control w-50 p-3"  placeholder="Enter Password">
 									</div>
 									
 								</form>
@@ -79,24 +79,24 @@
 						<h2 class="form-signin-heading text-center">Please Sign Up</h2>
 						<div class="form-group">
 							<label for="uName">User Name</label>
-							<input ng-model="registration_user_name" class="form-control w-50 p-3" id="uName" placeholder="Enter user name">
+							<input ng-model="registration_user_name" class="form-control w-50 p-3" placeholder="Enter user name">
 						</div>
 						<div class="form-group">
 							<label for="fName">Name</label>
-							<input ng-model="registration_name" class="form-control w-50 p-3" id="Name" placeholder="Enter your name">
+							<input ng-model="registration_name" class="form-control w-50 p-3" placeholder="Enter your name">
 						</div>
 						
 						<div class="form-group">
 							<label for="uEmail">Email Address</label>
-							<input ng-model="registration_email" type="email" class="form-control w-50 p-3" id="uEmail" aria-describedby="emailHelp" placeholder="Enter email">
+							<input ng-model="registration_email" type="email" class="form-control w-50 p-3"  aria-describedby="emailHelp" placeholder="Enter email">
 						</div>
 						<div class="form-group">
 							<label for="uPassword">Password</label>
-							<input ng-model="registration_password" type="password" class="form-control w-50 p-3" id="uPassword" placeholder="Enter Password">
+							<input ng-model="registration_password" type="password" class="form-control w-50 p-3"  placeholder="Enter Password">
 						</div>
 						<div class="form-group">
 							<label for="uPassword2">Ensure Password</label>
-							<input ng-model="registration_validation_password" type="password" class="form-control w-50 p-3" id="uPassword2" placeholder="Enter Password again">
+							<input ng-model="registration_validation_password" type="password" class="form-control w-50 p-3"  placeholder="Enter Password again">
 						</div>
 						<button class="btn btn-lg btn-primary btn-block" ng-click="signUp()">SUBMIT</button>
 					</form>
@@ -154,7 +154,7 @@
 										
 										
 										<td ng-show="contactIsEdit==true"><div class="form-group">
-											<select class="form-control" id="status_select" ng-model="contactInfo.Status" ng-change="onChange(contactInfo.Status)">
+											<select class="form-control"  ng-model="contactInfo.Status" ng-change="onChange(contactInfo.Status)">
 												<option value=''>-- Choose status --</option>
 												<option ng-repeat="option in options">{{option.Status}}</option>
 												<option >add a new status</option>
@@ -171,42 +171,7 @@
 									<td><i class="fa fa-trash" style="font-size:24px;color:#003366" ng-show="contactIsEdit==false" aria-hidden="true" ng-click = "delete_contact_function(contactInfo)"></i></td>
 									<td ng-show="contactIsEdit==true"><i class="fa fa-check-square-o" style="font-size:24px;color:#00e600" aria-hidden="true" ng-click = "save_updated(contactInfo)"></i></td>
 									 
-									 		<div class="modal fade" id="Message_Modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-											<div class="modal-dialog">
-												<div class="modal-content">
-													<!-- Modal Header -->
-													<div class="modal-header">
-														<h4 class="modal-title" id="myModalLabel">
-															{{message_type}}
-														</h4>
-													</div>
-													
-													<!-- Modal Body -->
-													<div class="modal-body">
-														
-														<div class="form-horizontal" role="form">
-														  <div class="form-group">
-															<div class="col-sm-10">
-															{{message}}
-															</div>
-														  </div>
-														  
-														</div>				
-													</div>
-													
-													<!-- Modal Footer -->
-													<div class="modal-footer">
-														<button type="button" class="btn btn-primary""
-																data-dismiss="modal">
-																	ok
-														</button>
-							
-				
-													</div>
-												</div>
-											</div>
-										</div>
-
+									 		
 								</tr>
 								<tr ng-show="get_new_contact_details==true">
 									<td><input ng-model="newName" type="text" class="form-control" placeholder="Name" maxlength="25"/></td>
@@ -290,6 +255,43 @@
 	
 				
 			</div>
+			
+			<div class="modal fade" id="Message_Modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+											<div class="modal-dialog">
+												<div class="modal-content">
+													<!-- Modal Header -->
+													<div class="modal-header">
+														<h4 class="modal-title" id="myModalLabel">
+															{{message_type}}
+														</h4>
+													</div>
+													
+													<!-- Modal Body -->
+													<div class="modal-body">
+														
+														<div class="form-horizontal" role="form">
+														  <div class="form-group">
+															<div class="col-sm-10">
+															{{message}}
+															</div>
+														  </div>
+														  
+														</div>				
+													</div>
+													
+													<!-- Modal Footer -->
+													<div class="modal-footer">
+														<button type="button" class="btn btn-primary""
+																data-dismiss="modal">
+																	ok
+														</button>
+							
+				
+													</div>
+												</div>
+											</div>
+										</div>
+
 			
 		</div>
 	</body>

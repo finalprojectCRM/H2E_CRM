@@ -17,53 +17,54 @@ var app = angular.module("CRM", []);
 	$scope.check_phone_enable = false;
 	$scope.show_update_expression = false;
 	$scope.get_new_contact_details = false;
-	$scope.login_page = true;
+	$scope.login_page = false;
 	$scope.register_page = false;
+	$scope.admin_page = false;
+	$scope.first_load = false;
+	
 
 	$scope.contactsInfo=[];
 	$scope.options=[];
 
+	$http({method : "GET",
+			url : "firstSystemLoad"
+		  }).then(function(response) {		  		  
+			  tempPassword =  response.data.tempPassword;
+			  $log.log("tempPassword: " + tempPassword);
+
+			  
+			  $scope.first_load = true;	
+			  $scope.temp_password_page = true;
+			  
+			  //$scope.register_page = true;
+			  //$scope.UserName = "Admin";
+			}, function (response) {
+    });
 	
 	
-	$scope.validation_of_temp_password = function()
+    $scope.validation_of_temp_password = function(tempPasswordFromClient)
 	{
-		$scope.temp_password_page = true;
-		$scope.login_page = false;
-		$scope.check_if_exists_password_in_db();
-	}
-	
-    $scope.check_if_exists_password_in_db = function()
-	{
-		$http.get("http://localhost:3000/checkExsistingTempPassword").then(
+		$http.post("http://localhost:3000/verifyTemporaryPassword", {
+			tempPassword: tempPasswordFromClient,
+		}).then(
 			function (response) {//success callback
-			    temp_password_from_server = response.data.tempPassword;
-				$log.log("temp_password_from_server: " + temp_password_from_server);
+			    if(response.data.verified == true)
+				{
+					$scope.register_page = true;
+				}
+				else
+				{
+					$scope.message = response.data.not_verified;
+					$scope.message_type = "ERROR";
+					angular.element(Message_Modal).modal("show");
+				}
 			},
 			function (response) {//failure callback
-			    $scope.message = response.data.error;
-				$scope.message_type = "ERROR";
-			    angular.element(Message_Modal).modal("show");
+			    
 			}	
 		);		
 	}
 	
-	$scope.verify_temporary_password = function()
-	{
-		
-		if($scope.temp_password == temp_password_from_server )
-		{
-			$scope.register_page = true;
-			$scope.temp_password_page = false;
-		}
-		else
-		{
-			$scope.message = "You don't have a correct temporary password , Please get it from the administrator";
-		    $scope.message_type = "ERROR";
-			angular.element(Message_Modal).modal("show");
-		}
-	
-		
-	}
 
 	$scope.signUp=function()
 	{//user sign up,check and register 
@@ -121,6 +122,7 @@ var app = angular.module("CRM", []);
 					$scope.registration_email = undefined;
 					$scope.registration_password = undefined;
 					$scope.registration_validation_password = undefined;
+					$log.log(user_from_server.UserName);
 					
 				}
 				else
@@ -133,6 +135,61 @@ var app = angular.module("CRM", []);
 				}
 					
 
+			},
+			function (response) { //failure callback
+				
+			}
+		);
+	}
+	
+	$scope.login=function(){//log in user
+	$log.log("UserNameLogin "+$scope.UserNameLogin)
+		if($scope.UserNameLogin == undefined || $scope.UserNameLogin == "")
+		{
+			$scope.message = "User name is required";
+			$scope.message_type = "ERROR";
+			angular.element(Message_Modal).modal("show");
+			return;
+		}
+			
+		
+		if($scope.PasswordLogin == undefined || $scope.PasswordLogin == "")
+	    {
+			$scope.message = "Password is required";
+			$scope.message_type = "ERROR";
+			angular.element(Message_Modal).modal("show");
+			return;
+
+		}
+				
+		var LoginUser={UserName:$scope.UserNameLogin, Password:$scope.PasswordLogin};
+		$http.post("http://localhost:3000/login", {
+			LoginUser: LoginUser,
+		}).then(
+			function (response) { //success callback            
+				LoginUser = response.data.user_login;
+				if(!response.data.no_match)
+				{
+					if(LoginUser.adminUser == true)
+					{
+						$scope.admin_page = true;
+					}
+					else
+					{
+						$scope.admin_page = false;
+					}
+					$scope.UserNameLogin = undefined;
+					$scope.PasswordLogin = undefined;
+					$scope.menu = true;
+					$scope.login_page = false;
+				}
+				else
+				{
+					$scope.message = response.data.no_match;
+					$scope.message_type = "ERROR";
+					angular.element(Message_Modal).modal("show");
+				}
+				
 			},
 			function (response) { //failure callback
 				
@@ -195,7 +252,7 @@ var app = angular.module("CRM", []);
 	$scope.getOptionsList = function()
 	{
 		$log.log("entered getStatusList() = function()");
-		 $http.get("http://localhost:3000/getStatusOptions").then(
+		$http.get("http://localhost:3000/getStatusOptions").then(
 			function (response) {//success callback
 				$scope.options = response.data.statusOptions;//return the list of the statusOptions
 			},

@@ -94,7 +94,10 @@ app.get("/", (request, response) => {
                 }
                 response.writeHead(200, {"Content-Type": "text/html"});
                 response.end(data);
+				
             });
+			
+			
 
 
         });
@@ -147,12 +150,13 @@ app.get("/CRM_Client.js", (request, response) =>{
         });
 });
 
-app.get("/checkExsistingTempPassword", (request, response) =>{
+app.get("/firstSystemLoad", (request, response) =>{
 
-        console.log("entered checkExsistingTempPassword function");
+        console.log("entered firstSystemLoad function");
 			
 			users_collection.findOne({"UserName": "Admin"}).then(function(result) {
 			  if(!result) {
+				  
 				var tempPassword = "12345678";
 				users_collection.insertOne(
                 {"UserName": "Admin" , "TempPassword": tempPassword } , function(err, res){
@@ -160,11 +164,29 @@ app.get("/checkExsistingTempPassword", (request, response) =>{
 				 response.writeHead(200, { 'Content-Type': 'application/json' });
 				 response.end(JSON.stringify({"tempPassword" : tempPassword}));
 			  }
-			  //check if the contact already exsists
+
+			}).catch(function(err) {
+			  response.send({error: err})
+			})
+
+});
+
+app.post("/verifyTemporaryPassword", (request, response) =>{
+
+        console.log("entered verifyTemporaryPassword function");
+		
+			 var tempPassword = request.body.tempPassword;
+			 users_collection.findOne({"TempPassword": tempPassword}).then(function(result) {
+			  if(!result) {
+				console.log("!result not a password"); 
+				response.writeHead(200, { 'Content-Type': 'application/json' });
+                response.end(JSON.stringify({not_verified :"You don't have a correct temporary password , Please get it from the administrator"}));
+			  }
 			  else
 			  {
+				   console.log("good password");
                  response.writeHead(200, { 'Content-Type': 'application/json' });
-				 response.end(JSON.stringify({"tempPassword" : result.TempPassword}));
+                 response.end(JSON.stringify({verified :true}));
 			  }
 			  
 			
@@ -180,21 +202,57 @@ app.post("/addUser", (request, response) =>{
         console.log("entered addUser function");
 		 var user = request.body.user;
 			
-			users_collection.findOne({"UserName": user.UserName}).then(function(result) {
+			  users_collection.findOne({"UserName": user.UserName}).then(function(result) {
 			  if(!result) 
 			  {
-				 users_collection.insertOne(user);
-                 if (err) throw err;
-			     response.writeHead(200, { 'Content-Type': 'application/json' });
-				 user_to_client =  {"UserName":user.UserName, "Name":user.Name,
+				users_collection.insertOne(user, function(err, res) {
+				if (err) throw err;
+				user_to_client =  {"UserName":user.UserName, "Name":user.Name,
 				  "eMail":user.eMail,"Password":user.Password}
+				 console.log("user:" + user_to_client.UserName);
+				response.writeHead(200, { 'Content-Type': 'application/json' });
                  response.end(JSON.stringify({"user" :user_to_client}));
-
+				  });
 			  }
+  
 			  else
 			  {
                  response.writeHead(200, { 'Content-Type': 'application/json' });
                  response.end(JSON.stringify({user_exists :"This user name already exists."}));
+			  }
+  
+        }).catch(function(err) {
+			  response.send({error: err})
+			});
+});
+
+app.post("/login", (request, response) =>{
+
+        console.log("entered login function");
+		 var user = request.body.LoginUser;
+		  console.log(user.UserName);
+			
+			  users_collection.findOne({"UserName": user.UserName,"Password":user.Password}).then(function(result) {
+			  if(!result) 
+			  {  
+		        console.log("no match!");
+				response.writeHead(200, { 'Content-Type': 'application/json' });
+                response.end(JSON.stringify({no_match :"The user name or password is incorrect. Try again."}));
+			  }
+  
+			  else
+			  {
+				 console.log(result.Name);
+                 response.writeHead(200, { 'Content-Type': 'application/json' });
+				 if(result.UserName == "Admin")
+				 {
+					 response.end(JSON.stringify({user_login :{"adminUser":true,"UserName":result.UserName, "Name":result.Name,
+				  "eMail":result.eMail,"Password":result.Password}}));
+				 }
+				 else
+                 {
+					 response.end(JSON.stringify({user_login :result}));
+				 }
 			  }
   
         }).catch(function(err) {

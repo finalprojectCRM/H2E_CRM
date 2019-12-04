@@ -17,7 +17,7 @@
 	
 	<body>
 		<div ng-controller="CRM_controller"> 
-		
+		    
 		    <div ng-show="login_page==true" id="log_in">
 				<form class="container center_div row-md-offset-6">
 					<div class="font-weight-bold text-center">
@@ -27,18 +27,18 @@
 									<h2 class="form-signin-heading text-center">Please Log In</h2>
 									<div class="form-group">
 										<label for="li_uName">User Name</label>
-										<input ng-model="l_uName" class="form-control w-50 p-3"  placeholder="Enter user name">
+										<input ng-model="UserNameLogin" class="form-control w-50 p-3"  placeholder="Enter user name">
 									</div>
 									<div class="form-group">
 										<label for="li_uPassword">Password</label>
-										<input ng-model="l_password" type="password" class="form-control w-50 p-3"  placeholder="Enter Password">
+										<input ng-model="PasswordLogin" type="password" class="form-control w-50 p-3"  placeholder="Enter Password">
 									</div>
 									
 								</form>
 							</div>
 							
 							<div class="col-xs-1 col-xs-offset-7 ">
-								<button class="btn btn-md  btn-primary center-block " ng-click="logIn()">ENTER</button>
+								<button class="btn btn-md  btn-primary center-block " ng-click="login()">ENTER</button>
 								</p>
 							</div>
 							
@@ -58,12 +58,13 @@
 						<div class="text-primary">
 							<div class="col-xs-6 col-md-offset-5">
 								<form class="form-signin">
-								<h2 class="form-signin-heading text-center">Temporary password for registration</h2>
+								<h1 ng-show="first_load==true">Hello Admin</h1>
+								<h2 class="form-signin-heading text-center">please enter Temporary password for registration</h2>
 									<div class="form-group col-xs-6 col-lg-offset-3 text-center">
 										<input ng-model="temp_password" type="password" class="form-control w-50 p-3" id="li_uPassword" placeholder="Enter temporary password">
 									</div>
 									<div class="col-xs-2 col-xs-offset-5 ">
-										<button class="btn btn-md  btn-primary center-block " ng-click="verify_temporary_password()">verify</button>
+										<button class="btn btn-md  btn-primary center-block " ng-click="validation_of_temp_password(temp_password)">verify</button>
 										</p>
 									</div>
 								</form>
@@ -110,7 +111,7 @@
 					
 					<li a class="active" ng-click="get_contacts_function()"><a><i class="fa fa-fw fa-user" > </i> Contacts</a></li>
 					<li ng-click="calendar_function()"><a><i class="fa fa-calendar" ></i> Calendar</a></li> 
-					<li ng-click="settings_function()"><a><i class="fa fa-gear"></i>Settings </a></li> 
+					<li ng-click="settings_function()" ng-show="admin_page==true"><a><i class="fa fa-gear"></i>Settings </a></li> 
 				</ul>
 			</div>
 			

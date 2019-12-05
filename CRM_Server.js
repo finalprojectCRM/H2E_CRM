@@ -153,17 +153,32 @@ app.get("/CRM_Client.js", (request, response) =>{
 app.get("/firstSystemLoad", (request, response) =>{
 
         console.log("entered firstSystemLoad function");
+		var tempPassword = "12345678";
 			
-			users_collection.findOne({"UserName": "Admin"}).then(function(result) {
-			  if(!result) {
-				  
-				var tempPassword = "12345678";
+			users_collection.findOne({"UserName": "Admin"}).then(function(mongo_user) {
+			if(!mongo_user) 
+			{
 				users_collection.insertOne(
-                {"UserName": "Admin" , "TempPassword": tempPassword } , function(err, res){
-                 if (err) throw err;});
-				 response.writeHead(200, { 'Content-Type': 'application/json' });
-				 response.end(JSON.stringify({"tempPassword" : tempPassword}));
-			  }
+                {"UserName": "Admin" ,"Name":"",
+				  "eMail":"","Password":"", "TempPassword": tempPassword } , function(err, res){
+                if (err) throw err;});
+				response.writeHead(200, { 'Content-Type': 'application/json' });
+				response.end(JSON.stringify({"admin_exists" : false }));
+			}
+			else
+			{
+				if(mongo_user.UserName=="Admin" && mongo_user.Name=="" && mongo_user.eMail=="" && mongo_user.Password=="")
+				{
+					response.writeHead(200, { 'Content-Type': 'application/json' });
+					response.end(JSON.stringify({"admin_exists" : false }));
+				}
+				else
+				{
+					response.writeHead(200, { 'Content-Type': 'application/json' });
+				response.end(JSON.stringify({"admin_exists" : true }));
+				}				
+				
+			}
 
 			}).catch(function(err) {
 			  response.send({error: err})
@@ -175,50 +190,78 @@ app.post("/verifyTemporaryPassword", (request, response) =>{
 
         console.log("entered verifyTemporaryPassword function");
 		
-			 var tempPassword = request.body.tempPassword;
-			 users_collection.findOne({"TempPassword": tempPassword}).then(function(result) {
-			  if(!result) {
+			var tempPassword = request.body.tempPassword;
+			users_collection.findOne({"TempPassword": tempPassword}).then(function(result) {
+			if(!result) {
 				console.log("!result not a password"); 
 				response.writeHead(200, { 'Content-Type': 'application/json' });
                 response.end(JSON.stringify({not_verified :"You don't have a correct temporary password , Please get it from the administrator"}));
-			  }
-			  else
-			  {
-				   console.log("good password");
-                 response.writeHead(200, { 'Content-Type': 'application/json' });
-                 response.end(JSON.stringify({verified :true}));
-			  }
-			  
+			}
+			else
+			{
+				console.log("good password");
+				response.writeHead(200, { 'Content-Type': 'application/json' });
+				response.end(JSON.stringify({verified :true}));
+			}
 			
-
 			}).catch(function(err) {
 			  response.send({error: err})
 			})
 
 });
 
+app.post("/changeTemporaryPassword", (request, response) =>{
+
+        console.log("entered changeTemporaryPassword function");
+		
+			 var NewTempPassword = request.body.new_temp_password;
+			 console.log("NewTempPassword: "+NewTempPassword);
+			 users_collection.update({"UserName": "Admin"}, { $set:{TempPassword: NewTempPassword.TempPassword}}, function(err, obj) {
+                    if (err) throw err;
+                    console.log("succssed changing temp password");
+
+                });
+            response.writeHead(200, { 'Content-Type': 'application/json' });
+            response.end(JSON.stringify({"succsses" :"The temp password has been changed succssesfully"}));
+			  
+});
+
 app.post("/addUser", (request, response) =>{
 
         console.log("entered addUser function");
-		 var user = request.body.user;
-			
-			  users_collection.findOne({"UserName": user.UserName}).then(function(result) {
-			  if(!result) 
+		var user = request.body.user;
+			  users_collection.findOne({"UserName": user.UserName}).then(function(mongo_user) {
+			  if(!mongo_user) 
 			  {
 				users_collection.insertOne(user, function(err, res) {
 				if (err) throw err;
-				user_to_client =  {"UserName":user.UserName, "Name":user.Name,
-				  "eMail":user.eMail,"Password":user.Password}
-				 console.log("user:" + user_to_client.UserName);
-				response.writeHead(200, { 'Content-Type': 'application/json' });
-                 response.end(JSON.stringify({"user" :user_to_client}));
+				
+				 response.writeHead(200, { 'Content-Type': 'application/json' });
+                 response.end(JSON.stringify({"user" :{"UserName":user.UserName, "Name":user.Name,
+				  "eMail":user.eMail,"Password":user.Password ,is_admin:false}}));
 				  });
 			  }
   
 			  else
 			  {
-                 response.writeHead(200, { 'Content-Type': 'application/json' });
-                 response.end(JSON.stringify({user_exists :"This user name already exists."}));
+				  
+				 if(mongo_user.UserName=="Admin" && mongo_user.Name=="" && mongo_user.eMail=="" && mongo_user.Password=="")
+				 {
+					 users_collection.update({"UserName": "Admin"}, { $set:{"Name":user.Name,
+				     "eMail":user.eMail,"Password":user.Password}}, function(err, obj) {
+                     if (err) throw err;
+					 response.writeHead(200, { 'Content-Type': 'application/json' });
+                     response.end(JSON.stringify({"user" :{"UserName":user.UserName, "Name":user.Name,
+				     "eMail":user.eMail,"Password":user.Password ,is_admin: true}}));
+                     console.log("admin register");
+
+                });
+				 }
+				 else
+				 {
+					 response.writeHead(200, { 'Content-Type': 'application/json' });
+					 response.end(JSON.stringify({user_exists :"This user name already exists."}));
+				 }
 			  }
   
         }).catch(function(err) {

@@ -21,6 +21,7 @@ var app = angular.module("CRM", []);
 	$scope.register_page = false;
 	$scope.admin_page = false;
 	$scope.first_load = false;
+	$scope.Admin = false;
 	
 
 	$scope.contactsInfo=[];
@@ -28,13 +29,22 @@ var app = angular.module("CRM", []);
 
 	$http({method : "GET",
 			url : "firstSystemLoad"
-		  }).then(function(response) {		  		  
+		  }).then(function(response) {
+         if(response.data.admin_exists == false)
+		 {			 
 			  tempPassword =  response.data.tempPassword;
 			  $log.log("tempPassword: " + tempPassword);
 
 			  
 			  $scope.first_load = true;	
 			  $scope.temp_password_page = true;
+		 }
+		 else
+		 {
+			 $scope.login_page =true;
+			 $scope.first_load = false;	
+		 }
+			
 			  
 			  //$scope.register_page = true;
 			  //$scope.UserName = "Admin";
@@ -48,9 +58,19 @@ var app = angular.module("CRM", []);
 			tempPassword: tempPasswordFromClient,
 		}).then(
 			function (response) {//success callback
-			    if(response.data.verified == true)
+			    if(response.data.verified == true )
 				{
-					$scope.register_page = true;
+					if($scope.first_load == true)
+					{
+					  $scope.new_temp_password_page = true;
+
+					}
+					else
+					{
+						$scope.register_page =true;
+					}
+					$scope.temp_password_page = false;
+					
 				}
 				else
 				{
@@ -65,9 +85,62 @@ var app = angular.module("CRM", []);
 		);		
 	}
 	
+	$scope.change_temp_password=function()
+	{
+		var re_password = /^((?!.*[\s])(?=.*[A-Z])(?=.*\d))(?=.*?[#?!@$%^&*-]).{8,15}$/;
+		if($scope.new_temporary_password==undefined || !re_password.test($scope.new_temporary_password)){//check the length of the password
+			$scope.message = "The password must contain at least 8 to 15 characters , at least : one capital letter or one small letter, one number, and one of the following special characters: #?! @ $% ^ & * -";
+		    $scope.message_type = "ERROR";
+			angular.element(Message_Modal).modal("show");
+			return;
+		}
+		if($scope.new_temporary_password!=$scope.new_temporary_validation_password){//check if the two password equals
+			$scope.message = "The two passwords do not match";
+		    $scope.message_type = "ERROR";
+			angular.element(Message_Modal).modal("show");
+		    $scope.new_temporary_validation_password=undefined;
+			return;
+		}
+		var new_temp_password ={TempPassword:$scope.new_temporary_password};
+		$http.post("http://localhost:3000/changeTemporaryPassword", {
+			new_temp_password: new_temp_password,
+		}).then(
+			function (response) { //success callback
+			  
+               	
+					$scope.message = response.data.succsses;
+					$scope.message_type = "Succsses";
+					angular.element(Message_Modal).modal("show");
+					$scope.new_temporary_password = $scope.new_temporary_validation_password = undefined ;
+					$scope.register_page = true;
+					$scope.registration_user_name = "Admin";
+					$scope.Admin = true;
+					
+					
+					
+					$scope.new_temp_password_page=false;
+					
+					
+			
+					
+
+			},
+			function (response) { //failure callback
+				
+			}
+		);
+		
+		
+		
+	}
+	
+	
+	
+	
 
 	$scope.signUp=function()
 	{//user sign up,check and register 
+	   
 	
 	    var re_username = /^[a-zA-Z]{3,10}$/;
 		var re_name = /^[a-zA-Z\s\u0590-\u05fe]{2,20}$/;
@@ -92,7 +165,7 @@ var app = angular.module("CRM", []);
 		}
 		var re_password = /^((?!.*[\s])(?=.*[A-Z])(?=.*\d))(?=.*?[#?!@$%^&*-]).{8,15}$/;
 		if($scope.registration_password==undefined || !re_password.test($scope.registration_password)){//check the length of the password
-			$scope.message = "The password must contain at least 8 to 15 characters , at least : one capital letter, one small letter, one number, and one of the following special characters: #?! @ $% ^ & * -";
+			$scope.message = "The password must contain at least 8 to 15 characters , at least : one capital letter or one small letter, one number, and one of the following special characters: #?! @ $% ^ & * -";
 		    $scope.message_type = "ERROR";
 			angular.element(Message_Modal).modal("show");
 			return;
@@ -101,9 +174,12 @@ var app = angular.module("CRM", []);
 			$scope.message = "The two passwords do not match";
 		    $scope.message_type = "ERROR";
 			angular.element(Message_Modal).modal("show");
-			$scope.registration_password=$scope.registration_validation_password=undefined;
+			$scope.registration_validation_password=undefined;
 			return;
 		}
+		
+		
+		
 		var user={UserName:$scope.registration_user_name, Name:$scope.registration_name,
 				  eMail:$scope.registration_email,Password:$scope.registration_password};
 		$log.log("befor call server");
@@ -122,6 +198,17 @@ var app = angular.module("CRM", []);
 					$scope.registration_email = undefined;
 					$scope.registration_password = undefined;
 					$scope.registration_validation_password = undefined;
+					$scope.menu = true;
+					$scope.register_page = false;
+					if(user_from_server.is_admin==true)
+					{
+						$scope.admin_page = true;
+					}
+					else
+					{
+						$scope.admin_page = false;
+					}
+					
 					$log.log(user_from_server.UserName);
 					
 				}

@@ -3,7 +3,7 @@
 	<head>
 		 <meta name="viewport" content="width=device-width, initial-scale=1">
 		 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
-		  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+		 <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
 		  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
 		<link rel="stylesheet" type="text/css" href="bootstrap.min.css" />
 		<script type="text/javascript" src="angular.min.js"></script>
@@ -44,7 +44,7 @@
 							
 							
 							<div class="col-xs-3 col-xs-offset-6">
-								<label>Not registered yet?</label><a href="#" ng-click="validation_of_temp_password()"> Sign up here</a>
+								<label>Not registered yet?</label><a href="#" ng-click="temp_password_page=true;login_page=false;$scope.Admin = false;"> Sign up here</a>
 							</div>
 					   </div>
 				   </div>
@@ -59,12 +59,40 @@
 							<div class="col-xs-6 col-md-offset-5">
 								<form class="form-signin">
 								<h1 ng-show="first_load==true">Hello Admin</h1>
-								<h2 class="form-signin-heading text-center">please enter Temporary password for registration</h2>
+								<h2 ng-show="first_load==true" class="form-signin-heading text-center">Please enter the temporary password that you got with the system</h2>
+								<h2 ng-show="first_load==false" class="form-signin-heading text-center">Please enter temporary password for registration</h2>
 									<div class="form-group col-xs-6 col-lg-offset-3 text-center">
 										<input ng-model="temp_password" type="password" class="form-control w-50 p-3" id="li_uPassword" placeholder="Enter temporary password">
 									</div>
 									<div class="col-xs-2 col-xs-offset-5 ">
 										<button class="btn btn-md  btn-primary center-block " ng-click="validation_of_temp_password(temp_password)">verify</button>
+										</p>
+									</div>
+								</form>
+							</div>
+					   </div>
+				   </div>
+				</form>		
+			 </div>
+			 
+			  <div ng-show="new_temp_password_page==true">
+			 
+			    <form class="container center_div">
+					<div class="font-weight-bold text-center">
+						<div class="text-primary">
+							<div class="col-xs-6 col-md-offset-5">
+								<form class="form-signin">
+								<h2 class="form-signin-heading text-center">Please change the temporary password for registration</h2>
+								<div class="form-group">
+									<label for="uPassword">Password</label>
+									<input ng-model="new_temporary_password" type="password" class="form-control w-50 p-3"  placeholder="Enter Password">
+								</div>
+								<div class="form-group">
+									<label for="uPassword2">Ensure Password</label>
+									<input ng-model="new_temporary_validation_password" type="password" class="form-control w-50 p-3"  placeholder="Enter Password again">
+								</div>
+									<div class="col-xs-2 col-xs-offset-5 ">
+										<button class="btn btn-md  btn-primary center-block " ng-click="change_temp_password()">verify</button>
 										</p>
 									</div>
 								</form>
@@ -80,7 +108,8 @@
 						<h2 class="form-signin-heading text-center">Please Sign Up</h2>
 						<div class="form-group">
 							<label for="uName">User Name</label>
-							<input ng-model="registration_user_name" class="form-control w-50 p-3" placeholder="Enter user name">
+
+							<input ng-disabled="Admin==true" ng-model="registration_user_name" class="form-control w-50 p-3" placeholder="Enter user name" id ="usernameField">
 						</div>
 						<div class="form-group">
 							<label for="fName">Name</label>

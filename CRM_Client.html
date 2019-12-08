@@ -19,57 +19,64 @@
 		<div ng-controller="CRM_controller"> 
 		    
 		    <div ng-show="login_page==true" id="log_in">
-				<form class="container center_div row-md-offset-6">
-					<div class="font-weight-bold text-center">
-						<div class="text-primary">
+			
+					<div class="content">
+					
+					  <div class="text-center">
 							<div class="col-xs-3 col-md-offset-6">
-								<form class="form-signin">
-									<h2 class="form-signin-heading text-center">Please Log In</h2>
-									<div class="form-group">
-										<label for="li_uName">User Name</label>
-										<input ng-model="UserNameLogin" class="form-control w-50 p-3"  placeholder="Enter user name">
+							<label class="header_text form-signin-heading text-center text-primary">Please log in</label></p>
+									<div class="input-group">
+									    <span class="input-group-addon primary"><i class="fa fa-user fa-lg"></i></span>
+										<input ng-model="UserNameLogin" class="form-control w-50 p-3"  placeholder="Enter user name" >
 									</div>
-									<div class="form-group">
-										<label for="li_uPassword">Password</label>
+									</p>
+									<div class="input-group">
+										<span class="input-group-addon primary"><i class="fa fa-lock fa-lg"></i></span>
 										<input ng-model="PasswordLogin" type="password" class="form-control w-50 p-3"  placeholder="Enter Password">
 									</div>
-									
-								</form>
+									</p>
+								
 							</div>
 							
 							<div class="col-xs-1 col-xs-offset-7 ">
-								<button class="btn btn-md  btn-primary center-block " ng-click="login()">ENTER</button>
+							    </p>
+								<button class="btn btn-sm  center-block "  style="font-size: 12px;  background-color: #ff6699;color: white;" ng-click="login()">Login</button>
 								</p>
 							</div>
 							
 							
-							<div class="col-xs-3 col-xs-offset-6">
+							<div class="col-xs-3 col-xs-offset-6 text-primary">
 								<label>Not registered yet?</label><a href="#" ng-click="temp_password_page=true;login_page=false;$scope.Admin = false;"> Sign up here</a>
 							</div>
+
 					   </div>
-				   </div>
-				</form>		
+				   </div>	
 			</div>
 			
 			 <div ng-show="temp_password_page==true">
 			 
-			    <form class="container center_div">
+			    <form class="temp_password_div">
 					<div class="font-weight-bold text-center">
 						<div class="text-primary">
-							<div class="col-xs-6 col-md-offset-5">
-								<form class="form-signin">
-								<h1 ng-show="first_load==true">Hello Admin</h1>
-								<h2 ng-show="first_load==true" class="form-signin-heading text-center">Please enter the temporary password that you got with the system</h2>
-								<h2 ng-show="first_load==false" class="form-signin-heading text-center">Please enter temporary password for registration</h2>
-									<div class="form-group col-xs-6 col-lg-offset-3 text-center">
-										<input ng-model="temp_password" type="password" class="form-control w-50 p-3" id="li_uPassword" placeholder="Enter temporary password">
-									</div>
-									<div class="col-xs-2 col-xs-offset-5 ">
-										<button class="btn btn-md  btn-primary center-block " ng-click="validation_of_temp_password(temp_password)">verify</button>
+								<label class="header_text text-center text-info" ng-show="first_load==true" >Hello Administrator</label></br>
+								<label class="temp_password_text text-center" ng-show="first_load==true" class="form-signin-heading text-center">Please enter the temporary password</label></br>
+								<label class="temp_password_text text-center" ng-show="first_load==true" class="form-signin-heading text-center">that you got with the system</label>
+								<label class="temp_password_text text-center" ng-show="first_load==false" class="form-signin-heading text-center">Please enter temporary password</label></br>
+								<label class="temp_password_text text-center" ng-show="first_load==false" class="form-signin-heading text-center">from administrator </label>
+								</br>
+									<div class="col-xs-4 col-xs-offset-4" style="margin-top:10px" >
+										<div  class="input-group ">							
+											<span class="input-group-addon primary"><i class="fa fa-lock fa-lg"></i></span>
+											<input ng-model="temp_password" type="password" class="form-control w-50 p-3" id="li_uPassword" placeholder="Enter temporary password"></p>
+										</div>
+									</div></p>
+								</br>
+									
+									<div class="col-xs-2 col-xs-offset-5 " style="margin-top:10px">
+									</p>
+										<button class="btn btn-sm center-block  " style="font-size: 15px; background-color: #ff6699;color: white;" ng-click="validation_of_temp_password(temp_password)">verify</button>
 										</p>
 									</div>
-								</form>
-							</div>
 					   </div>
 				   </div>
 				</form>		
@@ -77,59 +84,76 @@
 			 
 			  <div ng-show="new_temp_password_page==true">
 			 
-			    <form class="container center_div">
-					<div class="font-weight-bold text-center">
+			    <form class="change_temp_password_div ">
+					<div class="font-weight-bold text-center col-xs-10">
 						<div class="text-primary">
-							<div class="col-xs-6 col-md-offset-5">
-								<form class="form-signin">
-								<h2 class="form-signin-heading text-center">Please change the temporary password for registration</h2>
-								<div class="form-group">
-									<label for="uPassword">Password</label>
-									<input ng-model="new_temporary_password" type="password" class="form-control w-50 p-3"  placeholder="Enter Password">
+							<div>
+								<label class="temp_password_text text-center col-md-offset-4" class="text-center">Please change the temporary password</label></br>
+								<label class="temp_password_text text-center col-md-offset-4" class="text-center">that you got with the system</label>
+							</div>
+							</br>
+							
+							<div class="col-xs-4 col-md-offset-6">
+								<div class="input-group">
+								    <span class="input-group-addon primary"><i class="fa fa-lock fa-lg"></i></span>
+									<input ng-model="new_temporary_password" type="password" class="form-control w-50 p-3"  placeholder="Enter a new temprorary Password">
 								</div>
-								<div class="form-group">
-									<label for="uPassword2">Ensure Password</label>
-									<input ng-model="new_temporary_validation_password" type="password" class="form-control w-50 p-3"  placeholder="Enter Password again">
+								</br>
+								<div class="input-group">
+									<span class="input-group-addon primary"><i class="fa fa-lock fa-lg"></i></span>
+									<input ng-model="new_temporary_validation_password" type="password" class="form-control w-50 p-3"  placeholder="Enter password again for validation">
 								</div>
-									<div class="col-xs-2 col-xs-offset-5 ">
-										<button class="btn btn-md  btn-primary center-block " ng-click="change_temp_password()">verify</button>
-										</p>
-									</div>
-								</form>
+								</br>
+								<div class="col-xs-2 col-xs-offset-4 ">
+									<button class="btn btn-md center-block " style="background-color: #ff6699;color: white; margin-top:10px" ng-click="change_temp_password()">verify</button>
+								</div>
 							</div>
 					   </div>
 				   </div>
 				</form>		
 			 </div>
 		
-		    <div ng-show="register_page == true" id="sign_up">
-				<div class="container col-xs-7 col-md-offset-3">
-					<form>
-						<h2 class="form-signin-heading text-center">Please Sign Up</h2>
-						<div class="form-group">
-							<label for="uName">User Name</label>
-
-							<input ng-disabled="Admin==true" ng-model="registration_user_name" class="form-control w-50 p-3" placeholder="Enter user name" id ="usernameField">
+		    <div ng-show="register_page == true" id="sign_up" >
+				<div class="sign_up_div col-xs-4">
+					<div>
+						<label class=" text-center text-primary col-md-offset-6" style="font-size: 30px;">Please Sign Up</label>
+					</div>
+					</br>
+					
+					<div class="col-xs-4 col-md-offset-5">
+						<div class="input-group">
+							<span class="input-group-addon primary"><i class="fa fa-user fa-lg"></i></span>
+							<input ng-disabled="Admin==true" ng-model="registration_user_name" class="form-control w-50 p-3" placeholder="Enter user name">
+							
 						</div>
-						<div class="form-group">
-							<label for="fName">Name</label>
-							<input ng-model="registration_name" class="form-control w-50 p-3" placeholder="Enter your name">
+						</br>
+						<div class="input-group">
+							<span class="input-group-addon primary"><i class="fa fa-user fa-lg"></i></span>
+							<input ng-model="registration_name" class="form-control w-50 p-3" placeholder="Enter name">	
 						</div>
+						</br>
+						<div class="input-group">
+							<span class="input-group-addon primary"><i class="fa fa-at fa-md" style="font-size:15px"></i></span>
+							<input ng-model="registration_email" type="email" class="form-control w-50 p-3"  aria-describedby="emailHelp" placeholder="Enter email address">				
+						</div>
+						</br>
 						
-						<div class="form-group">
-							<label for="uEmail">Email Address</label>
-							<input ng-model="registration_email" type="email" class="form-control w-50 p-3"  aria-describedby="emailHelp" placeholder="Enter email">
+						<div class="input-group">
+							<span class="input-group-addon primary"><i class="fa fa-lock fa-lg"></i></span>
+							<input ng-model="registration_password" type="password" class="form-control w-50 p-3"  placeholder="Enter Password">	
 						</div>
-						<div class="form-group">
-							<label for="uPassword">Password</label>
-							<input ng-model="registration_password" type="password" class="form-control w-50 p-3"  placeholder="Enter Password">
+						</br>
+						
+						<div class="input-group">
+							<span class="input-group-addon primary"><i class="fa fa-lock fa-lg"></i></span>
+							<input ng-model="registration_validation_password" type="password" class="form-control w-50 p-3"  placeholder="Enter Password again for validation">
 						</div>
-						<div class="form-group">
-							<label for="uPassword2">Ensure Password</label>
-							<input ng-model="registration_validation_password" type="password" class="form-control w-50 p-3"  placeholder="Enter Password again">
-						</div>
-						<button class="btn btn-lg btn-primary btn-block" ng-click="signUp()">SUBMIT</button>
-					</form>
+						</br>
+					</div>
+					
+					<div class="col-xs-2 col-xs-offset-6" > 
+						<button class="btn btn-md center-block" style="background-color: #ff6699;color: white;" ng-click="signUp()">Submit</button>
+					</div>
 				</div>
 			</div>
 			

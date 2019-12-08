@@ -54,11 +54,14 @@ var app = angular.module("CRM", []);
 	
     $scope.validation_of_temp_password = function(tempPasswordFromClient)
 	{
+		$log.log("validation_of_temp_password :" + tempPasswordFromClient);
 		$http.post("http://localhost:3000/verifyTemporaryPassword", {
 			tempPassword: tempPasswordFromClient,
 		}).then(
 			function (response) {//success callback
-			    if(response.data.verified == true )
+			$log.log("response.data.verified :" + response.data.verified);
+			
+			    if(response.data.verified == true )//passwords were equal
 				{
 					if($scope.first_load == true)
 					{

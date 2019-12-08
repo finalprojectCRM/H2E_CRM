@@ -192,7 +192,8 @@ app.post("/verifyTemporaryPassword", (request, response) =>{
 		
 			var tempPassword = request.body.tempPassword;
 			users_collection.findOne({"TempPassword": tempPassword}).then(function(result) {
-			if(!result) {
+			console.log("result: "+result.TempPassword);
+			if(!result.TempPassword) {
 				console.log("!result not a password"); 
 				response.writeHead(200, { 'Content-Type': 'application/json' });
                 response.end(JSON.stringify({not_verified :"You don't have a correct temporary password , Please get it from the administrator"}));
@@ -205,7 +206,8 @@ app.post("/verifyTemporaryPassword", (request, response) =>{
 			}
 			
 			}).catch(function(err) {
-			  response.send({error: err})
+			  response.writeHead(200, { 'Content-Type': 'application/json' });
+                response.end(JSON.stringify({not_verified :"You don't have a correct temporary password , Please get it from the administrator"}));
 			})
 
 });

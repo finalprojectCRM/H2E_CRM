@@ -14,6 +14,8 @@ const APP_PORT = 3000;
 
 var database, contacts_collection, statuses_collection, users_collection;
 var app = Express();
+var firstTempPassword = "12345678";
+
 app.use(BodyParser.json());
 app.use(BodyParser.urlencoded({ extended: true }));
 
@@ -153,29 +155,37 @@ app.get("/CRM_Client.js", (request, response) =>{
 app.get("/firstSystemLoad", (request, response) =>{
 
         console.log("entered firstSystemLoad function");
-		var tempPassword = "12345678";
 			
 			users_collection.findOne({"UserName": "Admin"}).then(function(mongo_user) {
-			if(!mongo_user) 
+			if(!mongo_user)//Admin not yet in system = mongo db users_collection is empty
 			{
 				users_collection.insertOne(
                 {"UserName": "Admin" ,"Name":"",
-				  "eMail":"","Password":"", "TempPassword": tempPassword } , function(err, res){
+				  "eMail":"","Password":"", "TempPassword": firstTempPassword } , function(err, res){
                 if (err) throw err;});
-				response.writeHead(200, { 'Content-Type': 'application/json' });
-				response.end(JSON.stringify({"admin_exists" : false }));
+				response.writeHead(200, {'Content-Type': 'application/json' });
+				response.end(JSON.stringify({"admin_first_load" : true }));//Admin has been loaded first time to mongodb
 			}
-			else
+			else//there is a user in system and Admin exists = mongo db users_collection is not empty
 			{
 				if(mongo_user.UserName=="Admin" && mongo_user.Name=="" && mongo_user.eMail=="" && mongo_user.Password=="")
 				{
-					response.writeHead(200, { 'Content-Type': 'application/json' });
-					response.end(JSON.stringify({"admin_exists" : false }));
+					if(mongo_user.TempPassword == firstTempPassword)//admin did not yet change the temp password that he got from system
+					{
+						response.writeHead(200, { 'Content-Type':'application/json' });
+						response.end(JSON.stringify({"admin_changed_temp_password" : false }));
+					}
+					else//admin changed temp password that he got from system
+					{
+						response.writeHead(200, { 'Content-Type':'application/json' });
+						response.end(JSON.stringify({"admin_changed_temp_password" : true }));//go to registation page with admin
+					}
+					
 				}
-				else
+				else//Admin has filled in all his details
 				{
 					response.writeHead(200, { 'Content-Type': 'application/json' });
-				response.end(JSON.stringify({"admin_exists" : true }));
+					response.end(JSON.stringify({"admin_exists_with_details" : true }));
 				}				
 				
 			}
@@ -189,27 +199,41 @@ app.get("/firstSystemLoad", (request, response) =>{
 app.post("/verifyTemporaryPassword", (request, response) =>{
 
         console.log("entered verifyTemporaryPassword function");
-		
-			var tempPassword = request.body.tempPassword;
-			users_collection.findOne({"TempPassword": tempPassword}).then(function(result) {
-			console.log("result: "+result.TempPassword);
-			if(!result.TempPassword) {
+		var tempPassword = request.body.tempPassword;
+		users_collection.findOne({"UserName": "Admin"}).then(function(mongo_user) {
+			
+			if(mongo_user.TempPassword != tempPassword)//not correct temp password
+			{
 				console.log("!result not a password"); 
 				response.writeHead(200, { 'Content-Type': 'application/json' });
                 response.end(JSON.stringify({not_verified :"You don't have a correct temporary password , Please get it from the administrator"}));
 			}
 			else
 			{
-				console.log("good password");
-				response.writeHead(200, { 'Content-Type': 'application/json' });
-				response.end(JSON.stringify({verified :true}));
+				if(mongo_user.UserName=="Admin" && mongo_user.Name=="" && mongo_user.eMail=="" && mongo_user.Password=="")
+				{
+					if(mongo_user.TempPassword == firstTempPassword)//admin did not yet change the temp password that he got from system
+					{
+						response.writeHead(200, { 'Content-Type':'application/json' });
+						response.end(JSON.stringify({"admin_changed_temp_password" : false }));
+					}
+					else//admin changed temp password that he got from system
+					{
+						response.writeHead(200, { 'Content-Type':'application/json' });
+						response.end(JSON.stringify({"admin_changed_temp_password" : true }));//go to registation page with admin
+					}
+				}
+				else
+				{
+					console.log("good password");
+					response.writeHead(200, { 'Content-Type': 'application/json' });
+					response.end(JSON.stringify({verified :true}));
+				}
 			}
-			
+				
 			}).catch(function(err) {
-			  response.writeHead(200, { 'Content-Type': 'application/json' });
-                response.end(JSON.stringify({not_verified :"You don't have a correct temporary password , Please get it from the administrator"}));
-			})
-
+			  response.send({error: err})
+			})	
 });
 
 app.post("/changeTemporaryPassword", (request, response) =>{

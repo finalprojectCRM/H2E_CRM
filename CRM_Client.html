@@ -58,11 +58,11 @@
 			    <form class="temp_password_div">
 					<div class="font-weight-bold text-center">
 						<div class="text-primary">
-								<label class="header_text text-center text-info" ng-show="first_load==true" >Hello Administrator</label></br>
-								<label class="temp_password_text text-center" ng-show="first_load==true" class="form-signin-heading text-center">Please enter the temporary password</label></br>
+								<label class="header_text text-center text-info" ng-show="first_load==true||not_first_load==true" >Hello Administrator</label></br>
+								<label class="temp_password_text text-center" ng-show="not_first_load==true" class="form-signin-heading text-center">Please enter the temporary password</label>
+								<label class="temp_password_text text-center" ng-show="not_first_load==false" class="form-signin-heading text-center">Please enter the temporary password</label></br>
 								<label class="temp_password_text text-center" ng-show="first_load==true" class="form-signin-heading text-center">that you got with the system</label>
-								<label class="temp_password_text text-center" ng-show="first_load==false" class="form-signin-heading text-center">Please enter temporary password</label></br>
-								<label class="temp_password_text text-center" ng-show="first_load==false" class="form-signin-heading text-center">from administrator </label>
+								<label class="temp_password_text text-center" ng-show="first_load==false && not_first_load==false" class="form-signin-heading text-center">from administrator </label>
 								</br>
 									<div class="col-xs-4 col-xs-offset-4" style="margin-top:10px" >
 										<div  class="input-group ">							

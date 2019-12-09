@@ -30,20 +30,27 @@ var app = angular.module("CRM", []);
 	$http({method : "GET",
 			url : "firstSystemLoad"
 		  }).then(function(response) {
-         if(response.data.admin_exists == false)
-		 {			 
-			  tempPassword =  response.data.tempPassword;
-			  $log.log("tempPassword: " + tempPassword);
-
 			  
-			  $scope.first_load = true;	
-			  $scope.temp_password_page = true;
-		 }
-		 else
-		 {
-			 $scope.login_page =true;
-			 $scope.first_load = false;	
-		 }
+		$scope.first_load = false;
+		$scope.not_first_load = false;
+			  
+		if(response.data.admin_first_load == true || response.data.admin_changed_temp_password == false)//go to change password page
+		{
+			$scope.first_load = true;	
+			$scope.temp_password_page = true;
+			
+        }
+        else if(response.data.admin_changed_temp_password == true)//admin	
+		{
+			$scope.first_load = false;
+			$scope.not_first_load = true;
+			$scope.temp_password_page = true;
+		}			
+		else
+		{
+			$scope.login_page =true;
+			$scope.first_load = false;	
+		}
 			
 			  
 			  //$scope.register_page = true;
@@ -61,31 +68,38 @@ var app = angular.module("CRM", []);
 			function (response) {//success callback
 			$log.log("response.data.verified :" + response.data.verified);
 			
-			    if(response.data.verified == true )//passwords were equal
-				{
-					if($scope.first_load == true)
-					{
-					  $scope.new_temp_password_page = true;
-
-					}
-					else
-					{
-						$scope.register_page =true;
-					}
-					$scope.temp_password_page = false;
-					
-				}
-				else
-				{
-					$scope.message = response.data.not_verified;
-					$scope.message_type = "ERROR";
-					angular.element(Message_Modal).modal("show");
-				}
+			if(response.data.verified == true)//verified passwords (not for Admin user)
+			{
+				$scope.new_temp_password_page = false;
+				$scope.temp_password_page = false;
+				$scope.register_page =true;
+			}
+			else if(response.data.admin_changed_temp_password == false)//admin did not yet change temp password that he got with the system  			
+			{
+				$scope.new_temp_password_page = true;
+				$scope.temp_password_page = false;
+				
+				$scope.register_page = false;
+			}
+			else if(response.data.admin_changed_temp_password == true)//admin changed temp password that he got with the system  			
+			{
+				$scope.new_temp_password_page = false;
+				$scope.temp_password_page = false;
+				$scope.register_page =true;
+				$scope.registration_user_name = "Admin";
+				$scope.Admin = true;
+			}
+			else//not correct temprorary password
+			{
+				$scope.message = response.data.not_verified;
+				$scope.message_type = "ERROR";
+				angular.element(Message_Modal).modal("show");
+			}
 			},
 			function (response) {//failure callback
 			    
 			}	
-		);		
+		);	
 	}
 	
 	$scope.change_temp_password=function()
@@ -122,6 +136,7 @@ var app = angular.module("CRM", []);
 					
 					
 					$scope.new_temp_password_page=false;
+					$scope.first_load=false;
 					
 					
 			

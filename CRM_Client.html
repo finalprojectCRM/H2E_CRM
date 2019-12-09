@@ -157,9 +157,23 @@
 				</div>
 			</div>
 			
-			
+			<div class="account_div" ng-show="account==true">
+
+				<div class="dropdown" >
+					 <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+								<i style = "font-size: 75px; margin-bottom:10px" class="fa fa-user-circle fa-lg"></i>
+								</a>
+								<p class="text-primary" style = "text-align:center;">{{name_of_user}}</br>
+					<ul class="dropdown-menu">
+						<li><a href="#">change password</a></li>
+						<li><a href="#">log out</a></li>
+					</ul>
+				</div>
+			</div>
 			
 			<div ng-show = "menu==true" id="div-vertical" class="navbar">
+			
+			    
 				<ul>
 					
 					<li a class="active" ng-click="get_contacts_function()"><a><i class="fa fa-fw fa-user" > </i> Contacts</a></li>

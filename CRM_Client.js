@@ -8,7 +8,7 @@ var app = angular.module("CRM", []);
     var new_status_option = "add a new status";
 	var temp_password_from_server ;
 	$scope.PhoneNumber_before_update = undefined;
-	
+	$scope.account = false;
 	$scope.click = false;
 	$scope.menu = false;
 	$scope.show_calendar = false;
@@ -217,6 +217,7 @@ var app = angular.module("CRM", []);
 					$scope.registration_password = undefined;
 					$scope.registration_validation_password = undefined;
 					$scope.menu = true;
+					$scope.account = true;
 					$scope.register_page = false;
 					if(user_from_server.is_admin==true)
 					{
@@ -286,7 +287,9 @@ var app = angular.module("CRM", []);
 					$scope.UserNameLogin = undefined;
 					$scope.PasswordLogin = undefined;
 					$scope.menu = true;
+					$scope.account = true;
 					$scope.login_page = false;
+					$scope.name_of_user = LoginUser.Name;
 				}
 				else
 				{

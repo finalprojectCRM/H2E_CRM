@@ -7,6 +7,10 @@ var app = angular.module("CRM", []);
 	var MAX_LETTERS_IN_ADDRESS = 35;
     var new_status_option = "add a new status";
 	var temp_password_from_server ;
+	var logged_in_user;
+	var incorect_password = false;
+	var incorect_current_password = false;
+	
 	$scope.PhoneNumber_before_update = undefined;
 	$scope.account = false;
 	$scope.click = false;
@@ -124,10 +128,6 @@ var app = angular.module("CRM", []);
 		}).then(
 			function (response) { //success callback
 			  
-               	
-					$scope.message = response.data.succsses;
-					$scope.message_type = "Succsses";
-					angular.element(Message_Modal).modal("show");
 					$scope.new_temporary_password = $scope.new_temporary_validation_password = undefined ;
 					$scope.register_page = true;
 					$scope.registration_user_name = "Admin";
@@ -206,7 +206,9 @@ var app = angular.module("CRM", []);
 			user: user,
 		}).then(
 			function (response) { 
+			
 			    var user_from_server = response.data.user;
+				logged_in_user = user_from_server;
 			   //success callback
                	if(!response.data.user_exists)	
 				{
@@ -217,8 +219,11 @@ var app = angular.module("CRM", []);
 					$scope.registration_password = undefined;
 					$scope.registration_validation_password = undefined;
 					$scope.menu = true;
+					$scope.all_system = true;
 					$scope.account = true;
+					$scope.name_of_user = user_from_server.Name;
 					$scope.register_page = false;
+					
 					if(user_from_server.is_admin==true)
 					{
 						$scope.admin_page = true;
@@ -274,6 +279,7 @@ var app = angular.module("CRM", []);
 		}).then(
 			function (response) { //success callback            
 				LoginUser = response.data.user_login;
+				logged_in_user = LoginUser;
 				if(!response.data.no_match)
 				{
 					if(LoginUser.adminUser == true)
@@ -290,6 +296,8 @@ var app = angular.module("CRM", []);
 					$scope.account = true;
 					$scope.login_page = false;
 					$scope.name_of_user = LoginUser.Name;
+					$scope.all_system = true;
+
 				}
 				else
 				{
@@ -661,6 +669,7 @@ var app = angular.module("CRM", []);
 		{
 		   contactInfoToUpdate.Address = "";
 		}
+	
 		var updated_contact={Name:contactInfoToUpdate.Name,Status:contactInfoToUpdate.Status, PhoneNumber:contactInfoToUpdate.PhoneNumber, eMail:contactInfoToUpdate.eMail, Address:contactInfoToUpdate.Address};
 		$http.post("http://localhost:3000/updateContact", {
 				contact_before_update: contact_before_update,updated_contact:updated_contact
@@ -689,5 +698,113 @@ var app = angular.module("CRM", []);
 				}
 			);
 	}
+	
+	$scope.repeat_message = function()
+	{
+		if(incorect_password == true)
+		{
+			angular.element(change_password_modal).modal("show");
+			incorect_password = false;
+		}
+		if(incorect_current_password==true)
+		{
+		   angular.element(validation_current_password_modal).modal("show");
+		   incorect_current_password =false;
+		}
+	}
+	
+	$scope.change_password_function = function(new_password)
+	{
+		var re_password = /^((?!.*[\s])(?=.*[A-Z])(?=.*\d))(?=.*?[#?!@$%^&*-]).{8,15}$/;
+		if($scope.new_password==undefined || !re_password.test($scope.new_password)){//check the length of the password
+			$scope.message = "The password must contain at least 8 to 15 characters , at least : one capital letter or one small letter, one number, and one of the following special characters: #?! @ $% ^ & * -";
+		    $scope.message_type = "ERROR";
+			angular.element(Message_Modal).modal("show");
+			$scope.new_password=undefined ;
+			$scope.verify_new_password=undefined;
+			incorect_password = true;
+			return;
+			
+			
+		}
+		if($scope.new_password!=$scope.verify_new_password){//check if the two password equals
+			$scope.message = "The two passwords do not match";
+		    $scope.message_type = "ERROR";
+			angular.element(Message_Modal).modal("show");
+			$scope.verify_new_password=undefined;
+		    incorect_password = true;
+			return;
+		}
+		var logged_in_new_password ={username:logged_in_user.UserName,new_password:$scope.new_password};
+		$http.post("http://localhost:3000/changeCurrentPassword", {	
+			logged_in_new_password: logged_in_new_password,
+		}).then(
+		   function (response) { //success callback
+				$scope.new_password=undefined ;
+			    $scope.verify_new_password=undefined;
+			  
+				$scope.message_type = "SUCCESS";
+			    $scope.message = response.data.success;
+			    angular.element(Message_Modal).modal("show");
+				
+					
+
+			},
+			function (response) { //failure callback
+				
+			}
+		);
+	}
+	
+    $scope.verify_password = function(current_password)
+	{
+	  var logged_in_current_password ={username:logged_in_user.UserName , current_password:current_password};
+		$http.post("http://localhost:3000/verificationCurrentPassword", {	
+			logged_in_current_password: logged_in_current_password,
+		}).then(
+			function (response) { //success callback
+				$scope.current_password = undefined;
+			  	if(response.data.verified == true)//the current password was verified for this username
+				{
+					$log.log("change_password_div");
+					angular.element(change_password_modal).modal("show");
+					$log.log("change_password_div");
+				}
+				else//the current password was not verified for this username
+				{
+				   $scope.message_type = "ERROR";
+				   $scope.message = response.data.not_verified;
+				   angular.element(Message_Modal).modal("show");
+				   incorect_current_password = true;
+				}
+				$scope.current_password = undefined;
+					
+
+			},
+			function (response) { //failure callback
+				
+			}
+		);
+		
+		
+	}
+	
+    $scope.change_password = function()
+	{
+		
+	    angular.element(validation_current_password_modal).modal("show");
+	}
+	$scope.sign_out = function()
+	{
+		$scope.all_system = false;
+		$scope.login_page = true;
+
+		/*$scope.admin_page = false;
+		$scope.menu = false;
+		$scope.account = false;
+		$scope.show_contacts = false;*/
+	}
+	
+
 	}]);
 })();

@@ -176,7 +176,12 @@ overflow:auto;
 .account_div
 {
 
-position:absolute;
+   position:absolute;
    top:60px;
    right:100px;
+   text-align:center;
 }
+.hover_color:hover {
+			background-color: blue;
+			opacity: 0.9;
+		}

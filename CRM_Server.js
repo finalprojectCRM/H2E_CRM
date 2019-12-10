@@ -252,6 +252,46 @@ app.post("/changeTemporaryPassword", (request, response) =>{
 			  
 });
 
+app.post("/verificationCurrentPassword", (request, response) =>{
+
+        console.log("entered verificationCurrentPassword function");
+		
+			 var logged_in_current_password = request.body.logged_in_current_password;
+			 users_collection.findOne({"UserName": logged_in_current_password.username,"Password":logged_in_current_password.current_password}).then(function(mongo_user) {
+				 
+				if(mongo_user==null)//no such username with this current password
+				 {
+					 console.log("entered if ");
+					response.writeHead(200, { 'Content-Type': 'application/json' });
+                    response.end(JSON.stringify({"not_verified" :"The current password is incorrect, please try again."})); 
+				 }
+				 else//fount the user that the username and the current password match
+				 {
+					console.log("entered else");
+					response.writeHead(200, { 'Content-Type': 'application/json' });
+                    response.end(JSON.stringify({"verified" :true}));
+				 }
+			 });
+
+            
+			  
+});
+
+app.post("/changeCurrentPassword", (request, response) =>{
+
+        console.log("entered changeCurrentPassword function");
+		
+			 var logged_in_new_password = request.body.logged_in_new_password;
+			 users_collection.update({"UserName": logged_in_new_password.username},
+			 {$set:{"Password":logged_in_new_password.new_password }}, function(err, obj) {
+                     if (err) throw err;
+					 response.writeHead(200, { 'Content-Type': 'application/json' });
+                     response.end(JSON.stringify({"success" :"The Password has been changed successesfully"}));
+				
+			 
+			 });
+});
+
 app.post("/addUser", (request, response) =>{
 
         console.log("entered addUser function");

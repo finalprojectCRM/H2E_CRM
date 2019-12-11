@@ -10,6 +10,10 @@ var app = angular.module("CRM", []);
 	var logged_in_user;
 	var incorect_password = false;
 	var incorect_current_password = false;
+	var delete_all_contacts_flag = false;
+	var delete_all_users_flag = false;
+
+
 	
 	$scope.PhoneNumber_before_update = undefined;
 	$scope.account = false;
@@ -343,6 +347,7 @@ var app = angular.module("CRM", []);
 	{
 	   $scope.login_page = false;
 	   $scope.show_contacts = false;
+	   $scope.show_settings = true;
 	   $scope.search = "";
 	}
 	//show the 
@@ -397,8 +402,13 @@ var app = angular.module("CRM", []);
 	$scope.onChange = function(option){
 		if(option==new_status_option)
 		{
-		    angular.element(myModalHorizontal).modal("show");
+		    angular.element(add_new_status_modal).modal("show");
 		}
+	}
+	
+	$scope.add_new_status_settings = function()
+	{
+		angular.element(add_new_status_modal).modal("show");
 	}
 
     //save a new status in server
@@ -788,6 +798,76 @@ var app = angular.module("CRM", []);
 		
 		
 	}
+	$scope.insure_delete_all_contacts = function()
+	{
+		$scope.message = "Are you sure you want to delede all the contacts from system ? if you press OK, all contacts will be deleted and the information will be lost. ";
+		$scope.message_type = "WARNNING";
+		angular.element(Message_Modal_With_Cancel).modal("show");
+		delete_all_contacts_flag = true;
+	}
+	$scope.insure_delete_all_users = function()
+	{
+		$scope.message = "Are you sure you want to delede all the users from system ? if you press OK, all users will be deleted and the information will be lost. ";
+		$scope.message_type = "WARNNING";
+		angular.element(Message_Modal_With_Cancel).modal("show");
+		delete_all_users_flag = true;
+	}
+	
+	$scope.response_ok = function()
+	{
+		$log.log("entered response_ok " +delete_all_contacts_flag);
+		if(delete_all_contacts_flag == true)
+		{
+			$scope.delete_all_contacts();
+			delete_all_contacts_flag = false;
+
+		}
+		if(delete_all_users_flag == true)
+		{
+			$scope.delete_all_users();
+			delete_all_users_flag = false;
+
+		}
+	}
+	
+	$scope.delete_all_contacts = function()
+	{
+		$log.log("entered delete_all_contacts");
+
+		$http.get("http://localhost:3000/deleteAllContacts").then(
+			function (response) {//success callback
+				$scope.message = response.data.message;
+				$scope.message_type = "SUCCESS";
+			    angular.element(Message_Modal).modal("show");
+			},
+			function (response) {//failure callback
+				
+			}	
+		);
+	}
+	
+	$scope.delete_all_users = function()
+	{
+		$log.log("entered delete_all_users");
+
+		$http.get("http://localhost:3000/deleteAllUsers").then(
+			function (response) {//success callback
+				$scope.message = response.data.message;
+				$scope.message_type = "SUCCESS";
+			    angular.element(Message_Modal).modal("show");
+			},
+			function (response) {//failure callback
+				
+			}	
+		);
+	}
+	
+	$scope.delete_user = function()
+	{
+		$scope.message_type = "Choose user to delete";
+		angular.element(delete_modal).modal("show");
+	}
+	
 	
     $scope.change_password = function()
 	{
@@ -798,11 +878,6 @@ var app = angular.module("CRM", []);
 	{
 		$scope.all_system = false;
 		$scope.login_page = true;
-
-		/*$scope.admin_page = false;
-		$scope.menu = false;
-		$scope.account = false;
-		$scope.show_contacts = false;*/
 	}
 	
 

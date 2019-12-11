@@ -479,6 +479,57 @@ app.post("/updateContact", (request, response) =>{
 	
 });
 
+
+app.get("/deleteAllContacts", (request, response) =>{
+	
+	contacts_collection.remove({},function(err, obj) {
+		 if (err) throw err;
+		 response.writeHead(200, { 'Content-Type': 'application/json' });
+		 response.end(JSON.stringify({"message":"All contacts have been deleted from the system"}));
+
+	});
+       
+});
+
+app.get("/deleteAllUsers", (request, response) =>{
+	
+	users_collection.remove({UserName: { $ne: "Admin" } },function(err, obj) {
+		 if (err) throw err;
+		 response.writeHead(200, { 'Content-Type': 'application/json' });
+		 response.end(JSON.stringify({"message":"All users have been deleted from the system"}));
+
+	});
+
+});
+
+app.post("/deleteUser", (request, response) =>{
+//add new contact
+    console.log("entered deleteUser function");
+            var user_to_delete = request.body.username;
+            console.log("user_to_delete :"+ user_to_delete);
+                users_collection.deleteOne({"UserName":user_to_delete}, function(err, obj) {
+                    if (err) throw err;
+                    console.log("1 document deleted");
+
+                });
+            response.writeHead(200, { 'Content-Type': 'application/json' });
+            response.end();
+});
+
+app.post("/deleteStatus", (request, response) =>{
+//add new contact
+    console.log("entered deleteStatus function");
+            var status_to_delete = request.body.Status;
+            console.log("user_to_delete :"+ user_to_delete);
+                statuses_collection.deleteOne({"Status":status_to_delete}, function(err, obj) {
+                    if (err) throw err;
+                    console.log("1 status deleted");
+
+                });
+            response.writeHead(200, { 'Content-Type': 'application/json' });
+            response.end();
+});
+
 //add a new status
 app.post("/addOption", (request, response) =>{
 //add new option

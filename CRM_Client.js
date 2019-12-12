@@ -1,6 +1,55 @@
 (function() {
 var app = angular.module("CRM", []);
-	app.controller('CRM_controller', ['$scope','$http','$log', function($scope, $http,$log) {	
+
+app.directive('demoFileModel', function ($parse) {
+        return {
+            restrict: 'A', //the directive can be used as an attribute only
+ 
+            /*
+             link is a function that defines functionality of directive
+             scope: scope associated with the element
+             element: element on which this directive used
+             attrs: key value pair of element attributes
+             */
+            link: function (scope, element, attrs) {
+                var model = $parse(attrs.demoFileModel),
+                    modelSetter = model.assign; //define a setter for demoFileModel
+ 
+                //Bind change event on the element
+                element.bind('change', function () {
+                    //Call apply on scope, it checks for value changes and reflect them on UI
+                    scope.$apply(function () {
+                        //set the model value
+                        modelSetter(scope, element[0].files[0]);
+                    });
+                });
+            }
+        };
+    });
+	 myApp.service('fileUploadService', function ($http, $q) {
+ 
+        this.uploadFileToUrl = function (file, uploadUrl) {
+            //FormData, object of key/value pair for form fields and values
+            var fileFormData = new FormData();
+            fileFormData.append('file', file);
+ 
+            var deffered = $q.defer();
+            $http.post(uploadUrl, fileFormData, {
+                transformRequest: angular.identity,
+                headers: {'Content-Type': undefined}
+ 
+            }).success(function (response) {
+                deffered.resolve(response);
+ 
+            }).error(function (response) {
+                deffered.reject(response);
+            });
+ 
+            return deffered.promise;
+        }
+    });
+
+	app.controller('CRM_controller', ['$scope','$http','$log','$timeout', function($scope, $http,$log,$timeout) {	
 
 	var contact_before_update;
 	var MAX_LETTERS_IN_NAME = 25;
@@ -12,6 +61,7 @@ var app = angular.module("CRM", []);
 	var incorect_current_password = false;
 	var delete_all_contacts_flag = false;
 	var delete_all_users_flag = false;
+	var username_to_delete;
 
 
 	
@@ -33,7 +83,23 @@ var app = angular.module("CRM", []);
 	
 
 	$scope.contactsInfo=[];
+	$scope.users=[];
 	$scope.options=[];
+	
+ 
+        $scope.uploadFile = function () {
+            var file = $scope.myFile;
+            var uploadUrl = "../server/service.php", //Url of webservice/api/server
+                promise = fileUploadService.uploadFileToUrl(file, uploadUrl);
+ 
+            promise.then(function (response) {
+                $scope.serverResponse = response;
+            }, function () {
+                $scope.serverResponse = 'An error has occurred';
+            })
+        };
+
+	
 
 	$http({method : "GET",
 			url : "firstSystemLoad"
@@ -453,6 +519,23 @@ var app = angular.module("CRM", []);
 		);
 		
 	}
+	
+	$scope.getUsersList = function(){// get the list of the contacts
+		 $http.get("http://localhost:3000/getUsers").then(
+			function (response) {//success callback
+				$scope.users = response.data.users;//return the list of the contacts
+				$log.log($scope.users.length);
+				$scope.message_type = "Choose user to delete";
+		        angular.element(delete_modal).modal("show");
+			},
+			function (response) {//failure callback
+				$scope.message = response.data.error;
+				$scope.message_type = "ERROR";
+			    angular.element(Message_Modal).modal("show");
+			}	
+		);
+		
+	}
  
  
     //check validation of all new contact fildes
@@ -862,10 +945,29 @@ var app = angular.module("CRM", []);
 		);
 	}
 	
+	$scope.user_selected = function(username)
+	{
+		var res = username.split(",");
+		var res1=res[1].split(":");
+		
+		username_to_delete = res1[1].split(" ");
+		username_to_delete = String(username_to_delete[1]);
+		$log.log(username_to_delete);
+
+	}
+	
 	$scope.delete_user = function()
 	{
-		$scope.message_type = "Choose user to delete";
-		angular.element(delete_modal).modal("show");
+		$http.post("http://localhost:3000/deleteUser", {
+				username : username_to_delete,
+			}).then(
+				function (response) { //success callback            
+				},
+				function (response) { //failure callback
+					
+				}
+			);
+		$log.log(username_to_delete);
 	}
 	
 	
@@ -878,6 +980,7 @@ var app = angular.module("CRM", []);
 	{
 		$scope.all_system = false;
 		$scope.login_page = true;
+		$scope.temp_password = "";
 	}
 	
 

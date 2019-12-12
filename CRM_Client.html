@@ -292,7 +292,7 @@
 						</a>
 						</br>
 						<ul class="dropdown-menu">
-							<li class="hover_color" ng-click="delete_user()"><a href="#"><i style =" color: rgb(50, 118, 177);" class="fa fa-trash fa-fw"></i> delete user</a></li>
+							<li class="hover_color" ng-click="getUsersList()"><a href="#"><i style =" color: rgb(50, 118, 177);" class="fa fa-trash fa-fw"></i> delete user</a></li>
 							<li class="hover_color" ng-click="insure_delete_all_users()"><a href="#"><i style =" color: rgb(50, 118, 177);" class="fa fa-trash fa-fw"></i> delete all users</a></li>
 						</ul>
 		
@@ -350,7 +350,7 @@
 							  <li class="dropdown-submenu">
 							  <a tabindex="-1" href="#"><i style =" color: rgb(50, 118, 177);" class="fa fa-file-pdf-o fa-fw"></i> file settings</a>
 								  <ul class="dropdown-menu">
-									<li class="hover_color" ng-click="change_password()"><a href="#"><i style =" color: rgb(50, 118, 177);" class="fa fa-plus fa-fw"></i> add new file</a></li>
+									<li class="hover_color" ng-click="add_file=true"><a href="#"><i style =" color: rgb(50, 118, 177);" class="fa fa-plus fa-fw"></i> add new file</a></li>
 									<li class="hover_color" ng-click="sign_out()"><a href="#"><i style =" color: rgb(50, 118, 177);" class="fa fa-trash fa-fw"></i> delete file   </a></li>
 								  </ul>
 							  </li>
@@ -360,6 +360,23 @@
 						</ul>
 					</div>
 				    
+				</div>
+				
+				<div ng-show="add_file==true">
+					<h2>File Upload Demo</h2>
+ 
+					<div class="panel panel-default">
+						<div class="panel-body">
+							<form>
+								<div class="form-group">
+									<label for="myFileField">Select a file: </label>
+									<input type="file" demo-file-model="myFile"  class="form-control" id ="myFileField"/>
+								</div>
+								<button ng-click="uploadFile()" class = "btn btn-primary">Upload File</button>
+							</form>
+						</div>
+					</div>
+					<div>{{serverResponse}}</div>
 				</div>
 				<div class="modal fade" id="add_new_status_modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
 					<div class="modal-dialog">
@@ -597,13 +614,9 @@
 						<div class="modal-body">
 							
 							<div class="row-fluid">
-							  <select class="selectpicker" data-show-subtext="true" data-live-search="true">
-								<option data-subtext="Rep California">Tom Foolery</option>
-								<option data-subtext="Sen California">Bill Gordon</option>
-								<option data-subtext="Sen Massacusetts">Elizabeth Warren</option>
-								<option data-subtext="Rep Alabama">Mario Flores</option>
-								<option data-subtext="Rep Alaska">Don Young</option>
-								<option data-subtext="Rep California" disabled="disabled">Marvin Martinez</option>
+							  <select class="form-control" data-show-subtext="true" data-live-search="true" ng-model="username" ng-change="user_selected(username)">
+							    <option value='' disabled="disabled">-- Choose user --</option>
+								<option ng-repeat="user in users" >Name: {{user.Name}} , User name: {{user.UserName}}</style></option>
 							  </select>
 							</div>
 						  </div>
@@ -616,7 +629,7 @@
 							<button type="button" class="btn btn-primary" data-dismiss="modal">
 										cancel
 							</button>
-							<button type="button" class="btn btn-primary" data-dismiss="modal" ng-click="response_ok()">
+							<button type="button" class="btn btn-primary" data-dismiss="modal" ng-click="delete_user()">
 										delete
 							</button>
 

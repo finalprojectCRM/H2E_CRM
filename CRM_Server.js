@@ -413,6 +413,20 @@ app.get("/getContacts", (request, response) =>{
 
 });
 
+//get the list of contacts
+app.get("/getUsers", (request, response) =>{
+
+        console.log("entered getUsers function");
+        users_collection.find({UserName: { $ne: "Admin" }}).toArray((error, result) => {
+            if(error) {
+                return response.status(500).send(error);
+            }
+            response.writeHead(200, { 'Content-Type': 'application/json' });
+            response.end(JSON.stringify({"users" :result}));
+    });
+
+});
+
 //delete contact
 app.post("/deleteContact", (request, response) =>{
 //add new contact
@@ -506,21 +520,34 @@ app.post("/deleteUser", (request, response) =>{
 //add new contact
     console.log("entered deleteUser function");
             var user_to_delete = request.body.username;
-            console.log("user_to_delete :"+ user_to_delete);
-                users_collection.deleteOne({"UserName":user_to_delete}, function(err, obj) {
+			
+            console.log("user_to_delete:"+user_to_delete+"check");
+                users_collection.findOne({"UserName":user_to_delete}).then(function(result) {
+			  if(!result) {
+				console.log("did not find user to delete ");
+			  }
+			  //check if the contact already exsists
+			  else
+			  {
+				  users_collection.deleteOne({"UserName":result.UserName}, function(err, obj) {
                     if (err) throw err;
-                    console.log("1 document deleted");
+                    console.log("1 user deleted");
 
                 });
-            response.writeHead(200, { 'Content-Type': 'application/json' });
-            response.end();
+                 console.log("User name that found "+result.UserName);
+			  }
+			  
+			
+
+			}).catch(function(err) {
+			  response.send({error: err})
+			})
 });
 
 app.post("/deleteStatus", (request, response) =>{
 //add new contact
     console.log("entered deleteStatus function");
             var status_to_delete = request.body.Status;
-            console.log("user_to_delete :"+ user_to_delete);
                 statuses_collection.deleteOne({"Status":status_to_delete}, function(err, obj) {
                     if (err) throw err;
                     console.log("1 status deleted");

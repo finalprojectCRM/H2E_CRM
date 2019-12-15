@@ -10,7 +10,7 @@ const ObjectId = require("mongodb").ObjectID;
 const config = require('./mongo-config.json');
 
 const APP_NAME = require('os').hostname();
-const APP_PORT = 3000;
+const APP_PORT = 80;
 
 var database, contacts_collection, statuses_collection, users_collection;
 var app = Express();

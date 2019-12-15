@@ -164,7 +164,7 @@ function clearUploadData() {
     $scope.validation_of_temp_password = function(tempPasswordFromClient)
 	{
 		$log.log("validation_of_temp_password :" + tempPasswordFromClient);
-		$http.post("http://localhost:3000/verifyTemporaryPassword", {
+		$http.post("http://34.245.149.214/verifyTemporaryPassword", {
 			tempPassword: tempPasswordFromClient,
 		}).then(
 			function (response) {//success callback
@@ -221,7 +221,7 @@ function clearUploadData() {
 			return;
 		}
 		var new_temp_password ={TempPassword:$scope.new_temporary_password};
-		$http.post("http://localhost:3000/changeTemporaryPassword", {
+		$http.post("http://34.245.149.214/changeTemporaryPassword", {
 			new_temp_password: new_temp_password,
 		}).then(
 			function (response) { //success callback
@@ -300,7 +300,7 @@ function clearUploadData() {
 				  eMail:$scope.registration_email,Password:$scope.registration_password};
 		$log.log("befor call server");
 		  
-		$http.post("http://localhost:3000/addUser", {
+		$http.post("http://34.245.149.214/addUser", {
 			user: user,
 		}).then(
 			function (response) { 
@@ -372,7 +372,7 @@ function clearUploadData() {
 		}
 				
 		var LoginUser={UserName:$scope.UserNameLogin, Password:$scope.PasswordLogin};
-		$http.post("http://localhost:3000/login", {
+		$http.post("http://34.245.149.214/login", {
 			LoginUser: LoginUser,
 		}).then(
 			function (response) { //success callback            
@@ -467,7 +467,7 @@ function clearUploadData() {
 	$scope.getOptionsList = function()
 	{
 		$log.log("entered getStatusList() = function()");
-		$http.get("http://localhost:3000/getStatusOptions").then(
+		$http.get("http://34.245.149.214/getStatusOptions").then(
 			function (response) {//success callback
 				$scope.options = response.data.statusOptions;//return the list of the statusOptions
 			},
@@ -513,7 +513,7 @@ function clearUploadData() {
 			if($scope.status_from_modal != "")
 			{
 			    var new_status= {Status:$scope.status_from_modal};
-				$http.post("http://localhost:3000/addOption", {
+				$http.post("http://34.245.149.214/addOption", {
 				new_status: new_status,
 				}).then(
 				function (response) { //success callback
@@ -535,7 +535,7 @@ function clearUploadData() {
 		
 	//get the contacts list from server
 	$scope.getContactsList = function(){// get the list of the contacts
-		 $http.get("http://localhost:3000/getContacts").then(
+		 $http.get("http://34.245.149.214/getContacts").then(
 			function (response) {//success callback
 				$scope.contactsInfo = response.data.contacts;//return the list of the contacts
 			},
@@ -549,7 +549,7 @@ function clearUploadData() {
 	}
 	
 	$scope.getUsersList = function(){// get the list of the contacts
-		 $http.get("http://localhost:3000/getUsers").then(
+		 $http.get("http://34.245.149.214/getUsers").then(
 			function (response) {//success callback
 				$scope.users = response.data.users;//return the list of the contacts
 				$log.log($scope.users.length);
@@ -654,7 +654,7 @@ function clearUploadData() {
 	$scope.addNewContact = function(){
 				
 		var contact={Name:$scope.newName,Status:$scope.newStatus, PhoneNumber:$scope.newPhoneNumber, eMail:$scope.newEmail, Address:$scope.newAddress};
-		$http.post("http://localhost:3000/addContact", {
+		$http.post("http://34.245.149.214/addContact", {
 				contact: contact,
 			}).then(
 				function (response) { //success callback  
@@ -692,7 +692,7 @@ function clearUploadData() {
 	 //delete a contact from server
 	$scope.delete_contact_function = function(contact)
 	{
-		$http.post("http://localhost:3000/deleteContact", {
+		$http.post("http://34.245.149.214/deleteContact", {
 				contact: contact,
 			}).then(
 				function (response) { //success callback            
@@ -792,7 +792,7 @@ function clearUploadData() {
 		}
 	
 		var updated_contact={Name:contactInfoToUpdate.Name,Status:contactInfoToUpdate.Status, PhoneNumber:contactInfoToUpdate.PhoneNumber, eMail:contactInfoToUpdate.eMail, Address:contactInfoToUpdate.Address};
-		$http.post("http://localhost:3000/updateContact", {
+		$http.post("http://34.245.149.214/updateContact", {
 				contact_before_update: contact_before_update,updated_contact:updated_contact
 			}).then(
 				function (response) { //success callback   
@@ -857,7 +857,7 @@ function clearUploadData() {
 			return;
 		}
 		var logged_in_new_password ={username:logged_in_user.UserName,new_password:$scope.new_password};
-		$http.post("http://localhost:3000/changeCurrentPassword", {	
+		$http.post("http://34.245.149.214/changeCurrentPassword", {	
 			logged_in_new_password: logged_in_new_password,
 		}).then(
 		   function (response) { //success callback
@@ -880,7 +880,7 @@ function clearUploadData() {
     $scope.verify_password = function(current_password)
 	{
 	  var logged_in_current_password ={username:logged_in_user.UserName , current_password:current_password};
-		$http.post("http://localhost:3000/verificationCurrentPassword", {	
+		$http.post("http://34.245.149.214/verificationCurrentPassword", {	
 			logged_in_current_password: logged_in_current_password,
 		}).then(
 			function (response) { //success callback
@@ -945,7 +945,7 @@ function clearUploadData() {
 	{
 		$log.log("entered delete_all_contacts");
 
-		$http.get("http://localhost:3000/deleteAllContacts").then(
+		$http.get("http://34.245.149.214/deleteAllContacts").then(
 			function (response) {//success callback
 				$scope.message = response.data.message;
 				$scope.message_type = "SUCCESS";
@@ -961,7 +961,7 @@ function clearUploadData() {
 	{
 		$log.log("entered delete_all_users");
 
-		$http.get("http://localhost:3000/deleteAllUsers").then(
+		$http.get("http://34.245.149.214/deleteAllUsers").then(
 			function (response) {//success callback
 				$scope.message = response.data.message;
 				$scope.message_type = "SUCCESS";
@@ -986,7 +986,7 @@ function clearUploadData() {
 	
 	$scope.delete_user = function()
 	{
-		$http.post("http://localhost:3000/deleteUser", {
+		$http.post("http://34.245.149.214/deleteUser", {
 				username : username_to_delete,
 			}).then(
 				function (response) { //success callback            

@@ -84,6 +84,7 @@ app.get("/", (request, response) => {
             contacts_collection = database.collection("contacts");
             statuses_collection = database.collection("statuses");
 			users_collection = database.collection("users");
+			files_colection = database.collection("files");
 
             console.log("Connected to `" + db_name + "`!");
             result = {
@@ -570,3 +571,52 @@ app.post("/addOption", (request, response) =>{
     response.writeHead(200, { 'Content-Type': 'application/json' });
     response.end();
 });
+app.post("/uploadImage", (request, response) =>{
+	var new_file_name = request.body.fileName;
+	var new_file_data = request.body.uploadData;
+
+	console.log("entered uploadImage");
+	console.log(new_file_name);
+	console.log(new_file_data);
+
+	//console.log(new_file.uploadData);
+	
+	
+	if (new_file_name != null && new_file_data != null)
+   {
+      if (new_file_data.length > 0)
+      {
+         var splitData = new_file_data.split(";");
+         if (splitData != null && splitData.length == 2)
+         {
+            var mediaType = splitData[0];
+           
+            if (splitData[1] != null && splitData[1].length > 0)
+            {
+               var splitAgain = splitData[1].split(",");
+               if (splitAgain != null && splitAgain.length == 2)
+               {
+                  var encodingType = splitAgain[0];
+                  console.log(encodingType);
+                  var fileValue = splitAgain[1];
+                  
+				  let buff = new Buffer(fileValue, 'base64');
+				  buff = Buffer.from(fileValue, 'base64'); 
+                  let file_data = buff.toString('ascii');
+
+                  
+                  // writeFile function with filename, content and callback function
+				  fs.writeFile(new_file_name,file_data, function (err) {
+					  if (err) throw err;
+					  console.log('File is created successfully.');
+				}); 
+               }
+            }
+         }
+      }
+   }
+	files_colection.insertOne({"FileName":new_file_name,"Data":new_file_data});
+
+   
+});
+

@@ -9,8 +9,12 @@
 		 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
 		 <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.6.3/css/bootstrap-select.min.css" />
 		<script type="text/javascript" src="angular.min.js"></script>
+		<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular-route.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.7.8/angular-resource.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-cookie/4.1.0/angular-cookie.min.js" integrity="sha256-Wrj5HHKDApceikiZq36OI8gQV6Cjd3FLB/MvyCvgoDY=" crossorigin="anonymous"></script>
 		<script type="text/javascript" src="CRM_Client.js"></script>
 		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
 		<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
 		<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
@@ -363,20 +367,30 @@
 				</div>
 				
 				<div ng-show="add_file==true">
-					<h2>File Upload Demo</h2>
- 
-					<div class="panel panel-default">
-						<div class="panel-body">
-							<form>
-								<div class="form-group">
-									<label for="myFileField">Select a file: </label>
-									<input type="file" demo-file-model="myFile"  class="form-control" id ="myFileField"/>
-								</div>
-								<button ng-click="uploadFile()" class = "btn btn-primary">Upload File</button>
-							</form>
+				
+				     <div class="row" ng-if="uploadSuccessful">
+						<div class="col-xs-12">
+							<div class="alert alert-success text-center">Upload successful!</div>
+						</div>
+					 </div>
+					<div class="input-group">
+					   <input type="file" id="fileUploadField" style="display: none;">
+					   <input type="text" id="fileNameDisplayField" class="form-control" 
+
+					   ng-model="uploadFileName" placeholder="File to Upload" readonly="readonly">
+					   <div class="input-group-addon btn btn-default" 
+
+					   ng-click="clickSelectFile()"><i class="glyphicon glyphicon-file"></i></div>
+					</div>
+					 <div class="row">
+						<div class="col-xs-12 col-sm-offset-2 col-sm-8 col-md-offset-4 col-md-4">
+						   <div class="row">
+							  <div class="col-xs-12 col-sm-6"><button class="btn btn-primary form-control" ng-click="doUpload()">Upload</button></div>
+							  <div class="col-xs-12 col-sm-6"><button class="btn btn-default form-control" ng-click="clearFileUpload()">Clear</button></div>                  
+						   </div>
 						</div>
 					</div>
-					<div>{{serverResponse}}</div>
+
 				</div>
 				<div class="modal fade" id="add_new_status_modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
 					<div class="modal-dialog">

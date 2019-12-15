@@ -1,55 +1,33 @@
 (function() {
-var app = angular.module("CRM", []);
+"use strict";
+var app = angular.module("CRM",  [ "ngResource"])
+.factory("sampleUploadService", [ "$resource",
+  function ($resource) {
+	 var svc = {};
+	 
+	 var restSvc = $resource(null, null, {
+		"uploadImage": {
+		   url: "./uploadImage",
+		   method: "post",
+		   isArray: false,
+		   data: {
+			  fileName: "@fileName",
+			  uploadData: "@uploadData"
+		   }
+		}
+	 });
 
-app.directive('demoFileModel', function ($parse) {
-        return {
-            restrict: 'A', //the directive can be used as an attribute only
- 
-            /*
-             link is a function that defines functionality of directive
-             scope: scope associated with the element
-             element: element on which this directive used
-             attrs: key value pair of element attributes
-             */
-            link: function (scope, element, attrs) {
-                var model = $parse(attrs.demoFileModel),
-                    modelSetter = model.assign; //define a setter for demoFileModel
- 
-                //Bind change event on the element
-                element.bind('change', function () {
-                    //Call apply on scope, it checks for value changes and reflect them on UI
-                    scope.$apply(function () {
-                        //set the model value
-                        modelSetter(scope, element[0].files[0]);
-                    });
-                });
-            }
-        };
-    });
-	 myApp.service('fileUploadService', function ($http, $q) {
- 
-        this.uploadFileToUrl = function (file, uploadUrl) {
-            //FormData, object of key/value pair for form fields and values
-            var fileFormData = new FormData();
-            fileFormData.append('file', file);
- 
-            var deffered = $q.defer();
-            $http.post(uploadUrl, fileFormData, {
-                transformRequest: angular.identity,
-                headers: {'Content-Type': undefined}
- 
-            }).success(function (response) {
-                deffered.resolve(response);
- 
-            }).error(function (response) {
-                deffered.reject(response);
-            });
- 
-            return deffered.promise;
-        }
-    });
+	 svc.uploadImage = function (imageUpload) {
+		return restSvc.uploadImage(imageUpload).$promise;
+	 };
+	 
+	 return svc;
+  }
+])
 
-	app.controller('CRM_controller', ['$scope','$http','$log','$timeout', function($scope, $http,$log,$timeout) {	
+
+
+.controller('CRM_controller', ['$scope','$http','$log','$timeout','sampleUploadService' ,function($scope, $http,$log,$timeout,sampleUploadService) {	
 
 	var contact_before_update;
 	var MAX_LETTERS_IN_NAME = 25;
@@ -87,18 +65,68 @@ app.directive('demoFileModel', function ($parse) {
 	$scope.options=[];
 	
  
-        $scope.uploadFile = function () {
-            var file = $scope.myFile;
-            var uploadUrl = "../server/service.php", //Url of webservice/api/server
-                promise = fileUploadService.uploadFileToUrl(file, uploadUrl);
- 
-            promise.then(function (response) {
-                $scope.serverResponse = response;
-            }, function () {
-                $scope.serverResponse = 'An error has occurred';
-            })
-        };
+$scope.clickSelectFile = function () {
+   angular.element("#fileUploadField").click();
+};
+angular.element("#fileUploadField").bind("change", function(evt) {
+   if (evt) {
+	    var fn = evt.target.value;
+		if (fn && fn.length > 0) {
+		   var idx = fn.lastIndexOf("/");
+		   if (idx >= 0 && idx < fn.length) {
+			  $scope.uploadFileName = fn.substring(idx+1);
+		   } else {
+			  idx = fn.lastIndexOf("\\");
+			  if (idx >= 0 && idx < fn.length) {
+				 $scope.uploadFileName = fn.substring(idx+1);
+			  }
+		   }
+		}
+		$scope.$apply();
 
+   }
+});
+
+$scope.doUpload = function () {
+   $scope.uploadSuccessful = false;
+   var elems = angular.element("#fileUploadField");
+   if (elems != null && elems.length > 0) {
+      if (elems[0].files && elems[0].files.length > 0) {
+         let fr = new FileReader();
+         fr.onload = function(e) {
+            if (fr.result && fr.result.length > 0) {
+               var uploadObj = {
+                  fileName: $scope.uploadFileName,
+                  uploadData: fr.result
+               };
+			   $log.log( fr.result);
+			   $log.log( $scope.uploadFileName);
+               
+               sampleUploadService.uploadImage(uploadObj).then(function(result) {
+                  if (result && result.success === true) {
+                     clearUploadData();
+                     $scope.uploadSuccessful = true;
+                  }
+               }, function(error) {
+                  if (error) {
+                     $log.log(error);
+                  }
+               });
+            }
+         };
+         
+         fr.readAsDataURL(elems[0].files[0]);
+      } else {
+         vm.uploadObj.validationSuccess = false;
+         vm.uploadObj.errorMsg = "No file has been selected for upload.";
+      }
+   }
+};
+
+function clearUploadData() {
+            $scope.uploadFileName = "";
+            angular.element("#fileUploadField").val(null);
+         }
 	
 
 	$http({method : "GET",

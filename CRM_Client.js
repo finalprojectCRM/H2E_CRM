@@ -38,10 +38,11 @@ var app = angular.module("CRM",  [ "ngResource"])
 	var incorect_password = false;
 	var incorect_current_password = false;
 	var missing_role_field = false;
+	var missing_status_field = false;
 	var delete_all_contacts_flag = false;
 	var delete_all_users_flag = false;
 	var username_to_delete;
-    var selected_statuses_for_role= [];
+    var selected_items= [];
 	
 	$scope.PhoneNumber_before_update = undefined;
 	$scope.account = false;
@@ -64,6 +65,8 @@ var app = angular.module("CRM",  [ "ngResource"])
 	$scope.contactsInfo=[];
 	$scope.users=[];
 	$scope.options=[];
+    $scope.roles=[];
+
 	
  
 $scope.clickSelectFile = function () {
@@ -426,6 +429,8 @@ function clearUploadData() {
 
 	   $scope.getContactsList();
 	   $scope.getOptionsList();
+	   $scope.getRolesList();
+
 	  
 	   
 	}	
@@ -443,12 +448,41 @@ function clearUploadData() {
 		else
 		{
 			
-			var role_with_statuses = {Role:$scope.role_from_modal, Statuses:selected_statuses_for_role};
+			var role_with_statuses = {Role:$scope.role_from_modal, Statuses:selected_items};
 			$http.post("http://localhost:3000/addRoleWithStatuses", {
 				role_with_statuses: role_with_statuses,
 			}).then(
 				function (response) { //success callback  
                   $scope.role_from_modal = undefined; 
+				  $scope.getRolesList();
+				},
+				function (response) { //failure callback
+					
+				}
+			);
+		}
+	
+	}
+	
+	$scope.save_new_status_roles = function()
+	{
+		if($scope.status_from_modal == undefined || $scope.status_from_modal == "")
+		{
+			$scope.message = "You must fill in the status field";
+			$scope.message_type = "ERROR";
+			angular.element(Message_Modal).modal("show");
+			missing_status_field = true;
+		}
+		else
+		{
+			
+			var status_with_roles = {Status:$scope.status_from_modal, Roles:selected_items};
+			$http.post("http://localhost:3000/addStatutsWithRoles", {
+				status_with_roles: status_with_roles,
+			}).then(
+				function (response) { //success callback  
+                  $scope.status_from_modal = undefined; 
+				  $scope.getOptionsList();
 				},
 				function (response) { //failure callback
 					
@@ -527,6 +561,23 @@ function clearUploadData() {
 	   
 	
 	}
+	
+	$scope.getRolesList = function()
+	{
+		$log.log("entered getRolesList() = function()");
+		$http.get("http://localhost:3000/getRoles").then(
+			function (response) {//success callback
+				$scope.roles = response.data.roles;//return the list of the statusOptions
+			},
+			function (response) {//failure callback
+			    $scope.message = response.data.error;
+				$scope.message_type = "ERROR";
+			    angular.element(Message_Modal).modal("show");
+			}	
+		);
+	   
+	
+	}
 
     //save the deatailes of contact before update
 	$scope.update_contact_function = function(contact)
@@ -548,15 +599,29 @@ function clearUploadData() {
 	}
 	
 	
-	$scope.selected_statuses = function(option)
+	$scope.selected_item = function(option)
 	{
-		selected_statuses_for_role.push(option);
-		$log.log(selected_statuses_for_role);
+		selected_items.push(option);
+		$log.log(selected_items);
 	}
 	
-	$scope.add_new_status_settings = function()
+	$scope.add_new_status_to_role = function()
 	{
-		angular.element(add_new_status_modal).modal("show");
+		
+		$log.log("entered add_new_role() = function()");
+		$http.get("http://localhost:3000/getRoles").then(
+			function (response) {//success callback
+				$scope.roles = response.data.roles;//return the list of the statusOptions
+			    angular.element(add_new_status_modal).modal("show");
+
+			},
+			function (response) {//failure callback
+			    $scope.message = response.data.error;
+				$scope.message_type = "ERROR";
+			    angular.element(Message_Modal).modal("show");
+			}	
+		);
+
 	}
 
     //save a new status in server
@@ -904,6 +969,11 @@ function clearUploadData() {
 		{
 			angular.element(add_new_role_modal).modal("show");
 		   missing_role_field =false;
+		}
+		if(missing_status_field ==true)
+		{
+			angular.element(add_new_status_modal).modal("show");
+			missing_status_field =false;
 		}
 	}
 	

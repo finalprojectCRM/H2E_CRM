@@ -85,7 +85,9 @@ app.get("/", (request, response) => {
             statuses_collection = database.collection("statuses");
 			users_collection = database.collection("users");
 			files_collection = database.collection("files");
-			roles_collection = database.collection("roles");
+			roles_with_statuses_collection = database.collection("roles with statuses");
+			statuses_with_roles_collection = database.collection("statuses with roles");
+
 
             console.log("Connected to `" + db_name + "`!");
             result = {
@@ -157,6 +159,8 @@ app.get("/CRM_Client.js", (request, response) =>{
 app.get("/firstSystemLoad", (request, response) =>{
 
         console.log("entered firstSystemLoad function");
+		   	check_exsisting_statuses_and_roles();
+
 			
 			users_collection.findOne({"UserName": "Admin"}).then(function(mongo_user) {
 			if(!mongo_user)//Admin not yet in system = mongo db users_collection is empty
@@ -374,6 +378,7 @@ app.post("/login", (request, response) =>{
 			});
 });
 
+
 // contact addition only if the contact does not exsist
 app.post("/addContact", (request, response) =>{
     console.log("addContact FUNCTION");
@@ -469,13 +474,7 @@ app.post("/deleteContact", (request, response) =>{
 // get the statuses list
 app.get("/getStatusOptions", (request, response) =>{
     console.log("entered getStatusOptions function");
-	check_exsisting_statuses_and_roles();
-
-		
-   
-
-
-//roles_collection.find().pretty();
+//roles_with_statuses_collection.find().pretty();
     statuses_collection.find({}).toArray((error, result) => {
         if(error) {
             return response.status(500).send(error);
@@ -485,14 +484,46 @@ app.get("/getStatusOptions", (request, response) =>{
     });
 });
 
+
+app.get("/getRoles",(request, response) =>{
+	
+	roles_with_statuses_collection.find({}).toArray((error, result) => {
+        if(error) {
+            return response.status(500).send(error);
+        }
+        response.writeHead(200, { 'Content-Type': 'application/json' });
+        response.end(JSON.stringify({"roles" :result}));
+    });
+	
+});
+app.post("/addStatutsWithRoles", (request, response) =>{
+	
+     var status_with_roles = request.body.status_with_roles;
+	 console.log("before updateOne");
+	 statuses_with_roles_collection.updateOne( { Status:status_with_roles.Status , Roles:status_with_roles.Roles },
+	  { $setOnInsert:{ Status:status_with_roles.Status , Roles:status_with_roles.Roles } },
+        { upsert: true }
+		,function(err, res) {
+     console.log("after updateOne");
+	 });
+	 
+    statuses_collection.updateOne(
+        {"Status": status_with_roles.Status},
+        { $setOnInsert:{"Status": status_with_roles.Status} },
+        { upsert: true }
+    )
+    response.writeHead(200, { 'Content-Type': 'application/json' });
+    response.end();
+});
+
 app.post("/addRoleWithStatuses", (request, response) =>{
 	
      var role_with_statuses = request.body.role_with_statuses;
 	 console.log("before updateOne");
-	 /*roles_collection.updateOne( { Role:role_with_statuses.Role },{ $addToSet: { Statuses: role_with_statuses.Statuses } },function(err, res) {
-     console.log("after updateOne");
-	 });*/
-	 roles_collection.insertOne( { Role:role_with_statuses.Role , Statuses:role_with_statuses.Statuses },function(err, res) {
+	 roles_with_statuses_collection.updateOne( { Role:role_with_statuses.Role , Statuses:role_with_statuses.Statuses }
+	 ,{ $setOnInsert:{ Role:role_with_statuses.Role , Statuses:role_with_statuses.Statuses } },
+        { upsert: true },
+		function(err, res) {
      console.log("after updateOne");
 	 });
 });
@@ -508,10 +539,10 @@ function check_exsisting_statuses_and_roles()
     }
 });
 
-    roles_collection.countDocuments(function (err, count) {
+    roles_with_statuses_collection.countDocuments(function (err, count) {
     if (!err && count === 0) {
 		console.log("no roles");
-         roles_collection.insertOne({Role:"תמיכה טכנית",Statuses:["בעיה טכנית"]});
+         roles_with_statuses_collection.insertOne({Role:"תמיכה טכנית",Statuses:["בעיה טכנית"]});
     }
 });
 		

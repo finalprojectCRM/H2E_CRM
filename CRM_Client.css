@@ -4,16 +4,15 @@ body
 {	
 	height:100%;
 	width:100%;
-    margin: 0;
-	/*background-image:url(background.jpg);your background image*/  
-	background-repeat:no-repeat;/*we want to have one single image not a repeated one*/  
-	background-size:cover;/*this sets the image to fullscreen covering the whole screen*/  
+    margin: 0; 
+	background-repeat:no-repeat; 
+	background-size:cover; 
 }
 #div-vertical
 {	
 	float: left;
-    height: 100vh;
-	width: 12%;
+    height: 120vh;
+	width: 14%;
 }
 
 #contacts_div
@@ -53,7 +52,7 @@ form
 .navbar {
 	background-color: #004d99;
 	padding-right:5%;
-	padding-top:15%;
+	padding-top:10%;
 	overflow: auto;
 	width: 50%;
 }
@@ -67,12 +66,14 @@ form
 	padding: 12px;
 	color: white;
 	float: left;
+	width: 100px;
+	height: 95px;
   
  }
 
 /* Navbar links on mouse-over */
 .navbar a:hover {
-  background-color: #000;
+  background-color: #ff0066;
   
 }
 

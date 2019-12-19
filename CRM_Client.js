@@ -37,11 +37,11 @@ var app = angular.module("CRM",  [ "ngResource"])
 	var logged_in_user;
 	var incorect_password = false;
 	var incorect_current_password = false;
+	var missing_role_field = false;
 	var delete_all_contacts_flag = false;
 	var delete_all_users_flag = false;
 	var username_to_delete;
-
-
+    var selected_statuses_for_role= [];
 	
 	$scope.PhoneNumber_before_update = undefined;
 	$scope.account = false;
@@ -58,6 +58,7 @@ var app = angular.module("CRM",  [ "ngResource"])
 	$scope.admin_page = false;
 	$scope.first_load = false;
 	$scope.Admin = false;
+	$scope.show_users = false;
 	
 
 	$scope.contactsInfo=[];
@@ -164,7 +165,7 @@ function clearUploadData() {
     $scope.validation_of_temp_password = function(tempPasswordFromClient)
 	{
 		$log.log("validation_of_temp_password :" + tempPasswordFromClient);
-		$http.post("http://34.245.149.214/verifyTemporaryPassword", {
+		$http.post("http://localhost:3000/verifyTemporaryPassword", {
 			tempPassword: tempPasswordFromClient,
 		}).then(
 			function (response) {//success callback
@@ -221,7 +222,7 @@ function clearUploadData() {
 			return;
 		}
 		var new_temp_password ={TempPassword:$scope.new_temporary_password};
-		$http.post("http://34.245.149.214/changeTemporaryPassword", {
+		$http.post("http://localhost:3000/changeTemporaryPassword", {
 			new_temp_password: new_temp_password,
 		}).then(
 			function (response) { //success callback
@@ -300,7 +301,7 @@ function clearUploadData() {
 				  eMail:$scope.registration_email,Password:$scope.registration_password};
 		$log.log("befor call server");
 		  
-		$http.post("http://34.245.149.214/addUser", {
+		$http.post("http://localhost:3000/addUser", {
 			user: user,
 		}).then(
 			function (response) { 
@@ -372,7 +373,7 @@ function clearUploadData() {
 		}
 				
 		var LoginUser={UserName:$scope.UserNameLogin, Password:$scope.PasswordLogin};
-		$http.post("http://34.245.149.214/login", {
+		$http.post("http://localhost:3000/login", {
 			LoginUser: LoginUser,
 		}).then(
 			function (response) { //success callback            
@@ -383,10 +384,12 @@ function clearUploadData() {
 					if(LoginUser.adminUser == true)
 					{
 						$scope.admin_page = true;
+						$scope.isAdmin =true;
 					}
 					else
 					{
 						$scope.admin_page = false;
+						$scope.isAdmin =false;
 					}
 					$scope.UserNameLogin = undefined;
 					$scope.PasswordLogin = undefined;
@@ -426,6 +429,50 @@ function clearUploadData() {
 	  
 	   
 	}	
+
+	
+	$scope.save_new_role_status = function()
+	{
+		if($scope.role_from_modal == undefined || $scope.role_from_modal == "")
+		{
+			$scope.message = "You must fill in the role field";
+			$scope.message_type = "ERROR";
+			angular.element(Message_Modal).modal("show");
+			missing_role_field = true;
+		}
+		else
+		{
+			
+			var role_with_statuses = {Role:$scope.role_from_modal, Statuses:selected_statuses_for_role};
+			$http.post("http://localhost:3000/addRoleWithStatuses", {
+				role_with_statuses: role_with_statuses,
+			}).then(
+				function (response) { //success callback  
+                  $scope.role_from_modal = undefined; 
+				},
+				function (response) { //failure callback
+					
+				}
+			);
+		}
+	
+	}
+	
+	$scope.add_new_role = function()
+	{
+		$log.log("entered add_new_role() = function()");
+		$http.get("http://localhost:3000/getStatusOptions").then(
+			function (response) {//success callback
+				$scope.options = response.data.statusOptions;//return the list of the statusOptions
+				angular.element(add_new_role_modal).modal("show");
+			},
+			function (response) {//failure callback
+			    $scope.message = response.data.error;
+				$scope.message_type = "ERROR";
+			    angular.element(Message_Modal).modal("show");
+			}	
+		);
+	}
 
     //show calendar
 	$scope.calendar_function = function()
@@ -467,7 +514,7 @@ function clearUploadData() {
 	$scope.getOptionsList = function()
 	{
 		$log.log("entered getStatusList() = function()");
-		$http.get("http://34.245.149.214/getStatusOptions").then(
+		$http.get("http://localhost:3000/getStatusOptions").then(
 			function (response) {//success callback
 				$scope.options = response.data.statusOptions;//return the list of the statusOptions
 			},
@@ -500,6 +547,13 @@ function clearUploadData() {
 		}
 	}
 	
+	
+	$scope.selected_statuses = function(option)
+	{
+		selected_statuses_for_role.push(option);
+		$log.log(selected_statuses_for_role);
+	}
+	
 	$scope.add_new_status_settings = function()
 	{
 		angular.element(add_new_status_modal).modal("show");
@@ -513,7 +567,7 @@ function clearUploadData() {
 			if($scope.status_from_modal != "")
 			{
 			    var new_status= {Status:$scope.status_from_modal};
-				$http.post("http://34.245.149.214/addOption", {
+				$http.post("http://localhost:3000/addOption", {
 				new_status: new_status,
 				}).then(
 				function (response) { //success callback
@@ -535,9 +589,10 @@ function clearUploadData() {
 		
 	//get the contacts list from server
 	$scope.getContactsList = function(){// get the list of the contacts
-		 $http.get("http://34.245.149.214/getContacts").then(
+		 $http.get("http://localhost:3000/getContacts").then(
 			function (response) {//success callback
 				$scope.contactsInfo = response.data.contacts;//return the list of the contacts
+				 angular.element(Message_Modal).modal("show");
 			},
 			function (response) {//failure callback
 				$scope.message = response.data.error;
@@ -548,13 +603,21 @@ function clearUploadData() {
 		
 	}
 	
-	$scope.getUsersList = function(){// get the list of the contacts
-		 $http.get("http://34.245.149.214/getUsers").then(
+	
+	$scope.getUsersList = function(flag){// get the list of the contacts
+		$log.log("flag : " + flag);
+		 $http.post("http://localhost:3000/getUsers", {	
+			status_flag: flag,
+		}).then(
 			function (response) {//success callback
-				$scope.users = response.data.users;//return the list of the contacts
+			$scope.users = response.data.users;//return the list of the contacts
+			if(response.data.deleteUser == true)
+			{
 				$log.log($scope.users.length);
 				$scope.message_type = "Choose user to delete";
 		        angular.element(delete_modal).modal("show");
+			}
+							
 			},
 			function (response) {//failure callback
 				$scope.message = response.data.error;
@@ -562,6 +625,11 @@ function clearUploadData() {
 			    angular.element(Message_Modal).modal("show");
 			}	
 		);
+		
+	}
+	$scope.get_users_function = function(flag){// get the list of the contacts
+		$scope.show_users = true;
+		$scope.getUsersList(flag);
 		
 	}
  
@@ -654,7 +722,7 @@ function clearUploadData() {
 	$scope.addNewContact = function(){
 				
 		var contact={Name:$scope.newName,Status:$scope.newStatus, PhoneNumber:$scope.newPhoneNumber, eMail:$scope.newEmail, Address:$scope.newAddress};
-		$http.post("http://34.245.149.214/addContact", {
+		$http.post("http://localhost:3000/addContact", {
 				contact: contact,
 			}).then(
 				function (response) { //success callback  
@@ -692,7 +760,7 @@ function clearUploadData() {
 	 //delete a contact from server
 	$scope.delete_contact_function = function(contact)
 	{
-		$http.post("http://34.245.149.214/deleteContact", {
+		$http.post("http://localhost:3000/deleteContact", {
 				contact: contact,
 			}).then(
 				function (response) { //success callback            
@@ -792,7 +860,7 @@ function clearUploadData() {
 		}
 	
 		var updated_contact={Name:contactInfoToUpdate.Name,Status:contactInfoToUpdate.Status, PhoneNumber:contactInfoToUpdate.PhoneNumber, eMail:contactInfoToUpdate.eMail, Address:contactInfoToUpdate.Address};
-		$http.post("http://34.245.149.214/updateContact", {
+		$http.post("http://localhost:3000/updateContact", {
 				contact_before_update: contact_before_update,updated_contact:updated_contact
 			}).then(
 				function (response) { //success callback   
@@ -832,6 +900,11 @@ function clearUploadData() {
 		   angular.element(validation_current_password_modal).modal("show");
 		   incorect_current_password =false;
 		}
+		if(missing_role_field == true)
+		{
+			angular.element(add_new_role_modal).modal("show");
+		   missing_role_field =false;
+		}
 	}
 	
 	$scope.change_password_function = function(new_password)
@@ -857,7 +930,7 @@ function clearUploadData() {
 			return;
 		}
 		var logged_in_new_password ={username:logged_in_user.UserName,new_password:$scope.new_password};
-		$http.post("http://34.245.149.214/changeCurrentPassword", {	
+		$http.post("http://localhost:3000/changeCurrentPassword", {	
 			logged_in_new_password: logged_in_new_password,
 		}).then(
 		   function (response) { //success callback
@@ -880,7 +953,7 @@ function clearUploadData() {
     $scope.verify_password = function(current_password)
 	{
 	  var logged_in_current_password ={username:logged_in_user.UserName , current_password:current_password};
-		$http.post("http://34.245.149.214/verificationCurrentPassword", {	
+		$http.post("http://localhost:3000/verificationCurrentPassword", {	
 			logged_in_current_password: logged_in_current_password,
 		}).then(
 			function (response) { //success callback
@@ -945,7 +1018,7 @@ function clearUploadData() {
 	{
 		$log.log("entered delete_all_contacts");
 
-		$http.get("http://34.245.149.214/deleteAllContacts").then(
+		$http.get("http://localhost:3000/deleteAllContacts").then(
 			function (response) {//success callback
 				$scope.message = response.data.message;
 				$scope.message_type = "SUCCESS";
@@ -961,7 +1034,7 @@ function clearUploadData() {
 	{
 		$log.log("entered delete_all_users");
 
-		$http.get("http://34.245.149.214/deleteAllUsers").then(
+		$http.get("http://localhost:3000/deleteAllUsers").then(
 			function (response) {//success callback
 				$scope.message = response.data.message;
 				$scope.message_type = "SUCCESS";
@@ -986,7 +1059,7 @@ function clearUploadData() {
 	
 	$scope.delete_user = function()
 	{
-		$http.post("http://34.245.149.214/deleteUser", {
+		$http.post("http://localhost:3000/deleteUser", {
 				username : username_to_delete,
 			}).then(
 				function (response) { //success callback            

@@ -10,7 +10,7 @@ const ObjectId = require("mongodb").ObjectID;
 const config = require('./mongo-config.json');
 
 const APP_NAME = require('os').hostname();
-const APP_PORT = 80;
+const APP_PORT = 3000;
 
 var database, contacts_collection, statuses_collection, users_collection;
 var app = Express();
@@ -84,7 +84,8 @@ app.get("/", (request, response) => {
             contacts_collection = database.collection("contacts");
             statuses_collection = database.collection("statuses");
 			users_collection = database.collection("users");
-			files_colection = database.collection("files");
+			files_collection = database.collection("files");
+			roles_collection = database.collection("roles");
 
             console.log("Connected to `" + db_name + "`!");
             result = {
@@ -161,7 +162,7 @@ app.get("/firstSystemLoad", (request, response) =>{
 			if(!mongo_user)//Admin not yet in system = mongo db users_collection is empty
 			{
 				users_collection.insertOne(
-                {"UserName": "Admin" ,"Name":"",
+                {"UserName": "Admin" ,"Role":"Administrator","Name":"",
 				  "eMail":"","Password":"", "TempPassword": firstTempPassword } , function(err, res){
                 if (err) throw err;});
 				response.writeHead(200, {'Content-Type': 'application/json' });
@@ -304,7 +305,7 @@ app.post("/addUser", (request, response) =>{
 				if (err) throw err;
 				
 				 response.writeHead(200, { 'Content-Type': 'application/json' });
-                 response.end(JSON.stringify({"user" :{"UserName":user.UserName, "Name":user.Name,
+                 response.end(JSON.stringify({"user" :{"UserName":user.UserName, "Role":"new in the system","Name":user.Name,
 				  "eMail":user.eMail,"Password":user.Password ,is_admin:false}}));
 				  });
 			  }
@@ -317,10 +318,12 @@ app.post("/addUser", (request, response) =>{
 					 users_collection.update({"UserName": "Admin"}, { $set:{"Name":user.Name,
 				     "eMail":user.eMail,"Password":user.Password}}, function(err, obj) {
                      if (err) throw err;
+					 
 					 response.writeHead(200, { 'Content-Type': 'application/json' });
                      response.end(JSON.stringify({"user" :{"UserName":user.UserName, "Name":user.Name,
 				     "eMail":user.eMail,"Password":user.Password ,is_admin: true}}));
                      console.log("admin register");
+					 
 
                 });
 				 }
@@ -335,6 +338,7 @@ app.post("/addUser", (request, response) =>{
 			  response.send({error: err})
 			});
 });
+
 
 app.post("/login", (request, response) =>{
 
@@ -414,17 +418,36 @@ app.get("/getContacts", (request, response) =>{
 
 });
 
-//get the list of contacts
-app.get("/getUsers", (request, response) =>{
-
-        console.log("entered getUsers function");
-        users_collection.find({UserName: { $ne: "Admin" }}).toArray((error, result) => {
+//get the list of users
+app.post("/getUsers", (request, response) =>{
+	
+		console.log("entered getUsers function");
+		console.log("status_flag : " + status_flag);
+		var status_flag = request.body.status_flag;
+		if(status_flag == "deleteUser")
+		{
+			users_collection.find({UserName: { $ne: "Admin" }}).toArray((error, result) => {
             if(error) {
                 return response.status(500).send(error);
             }
             response.writeHead(200, { 'Content-Type': 'application/json' });
-            response.end(JSON.stringify({"users" :result}));
-    });
+            response.end(JSON.stringify({"deleteUser":true,"users" :result}));
+			});
+		}
+		else if(status_flag == "showUsers")
+		{
+			users_collection.find({}).toArray((error, result) => {
+            if(error) {
+                return response.status(500).send(error);
+            }
+            response.writeHead(200, { 'Content-Type': 'application/json' });
+            response.end(JSON.stringify({"showUsers":true,"users" :result}));
+			});
+
+		}
+
+        
+        
 
 });
 
@@ -446,6 +469,13 @@ app.post("/deleteContact", (request, response) =>{
 // get the statuses list
 app.get("/getStatusOptions", (request, response) =>{
     console.log("entered getStatusOptions function");
+	check_exsisting_statuses_and_roles();
+
+		
+   
+
+
+//roles_collection.find().pretty();
     statuses_collection.find({}).toArray((error, result) => {
         if(error) {
             return response.status(500).send(error);
@@ -454,6 +484,38 @@ app.get("/getStatusOptions", (request, response) =>{
         response.end(JSON.stringify({"statusOptions" :result}));
     });
 });
+
+app.post("/addRoleWithStatuses", (request, response) =>{
+	
+     var role_with_statuses = request.body.role_with_statuses;
+	 console.log("before updateOne");
+	 /*roles_collection.updateOne( { Role:role_with_statuses.Role },{ $addToSet: { Statuses: role_with_statuses.Statuses } },function(err, res) {
+     console.log("after updateOne");
+	 });*/
+	 roles_collection.insertOne( { Role:role_with_statuses.Role , Statuses:role_with_statuses.Statuses },function(err, res) {
+     console.log("after updateOne");
+	 });
+});
+
+function check_exsisting_statuses_and_roles()
+{
+	console.log("check_exsisting_statuses_and_roles FUNCTION");
+	
+	statuses_collection.countDocuments(function (err, count) {
+    if (!err && count === 0) {
+		 console.log("no statuses");
+         statuses_collection.insertOne({"Status":"בעיה טכנית"});
+    }
+});
+
+    roles_collection.countDocuments(function (err, count) {
+    if (!err && count === 0) {
+		console.log("no roles");
+         roles_collection.insertOne({Role:"תמיכה טכנית",Statuses:["בעיה טכנית"]});
+    }
+});
+		
+}
 
 //update contact detailes only with phone number that does not exsist in the system
 app.post("/updateContact", (request, response) =>{
@@ -577,7 +639,7 @@ app.post("/uploadImage", (request, response) =>{
 
 	console.log("entered uploadImage");
 	console.log(new_file_name);
-	console.log(new_file_data);
+	//console.log(new_file_data);
 
 	//console.log(new_file.uploadData);
 	
@@ -589,33 +651,35 @@ app.post("/uploadImage", (request, response) =>{
          var splitData = new_file_data.split(";");
          if (splitData != null && splitData.length == 2)
          {
-            var mediaType = splitData[0];
+           // var mediaType = splitData[0];
            
             if (splitData[1] != null && splitData[1].length > 0)
             {
-               var splitAgain = splitData[1].split(",");
+               var splitAgain = splitData[1].split(",");//holds the data
                if (splitAgain != null && splitAgain.length == 2)
                {
-                  var encodingType = splitAgain[0];
-                  console.log(encodingType);
-                  var fileValue = splitAgain[1];
-                  
-				  let buff = new Buffer(fileValue, 'base64');
-				  buff = Buffer.from(fileValue, 'base64'); 
-                  let file_data = buff.toString('ascii');
+					//var encodingType = splitAgain[0];
+					//console.log(encodingType);
+					var fileData = splitAgain[1];
 
-                  
-                  // writeFile function with filename, content and callback function
-				  fs.writeFile(new_file_name,file_data, function (err) {
-					  if (err) throw err;
-					  console.log('File is created successfully.');
+					let buff = new Buffer(fileData, 'base64');
+					//console.log("#########################buff############################"+buff);
+					//buff = Buffer.from(fileData, 'base64'); 
+					let file_data = buff.toString('ascii');
+					console.log("#########################file_data############################"+file_data);
+
+					
+					// writeFile function with filename, content and callback function
+					fs.writeFile(new_file_name,file_data, function (err) {
+					if (err) throw err;
+					console.log('File is created successfully.');
 				}); 
                }
             }
          }
       }
    }
-	files_colection.insertOne({"FileName":new_file_name,"Data":new_file_data});
+	files_collection.insertOne({"FileName":new_file_name,"Data":new_file_data});
 
    
 });

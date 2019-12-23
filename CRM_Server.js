@@ -302,6 +302,7 @@ app.post("/addUser", (request, response) =>{
 
         console.log("entered addUser function");
 		var user = request.body.user;
+		    user = {"Role":"new in the system","UserName":user.UserName,"Name":user.Name,"eMail":user.eMail,"Password":user.Password }
 			  users_collection.findOne({"UserName": user.UserName}).then(function(mongo_user) {
 			  if(!mongo_user) 
 			  {
@@ -309,7 +310,7 @@ app.post("/addUser", (request, response) =>{
 				if (err) throw err;
 				
 				 response.writeHead(200, { 'Content-Type': 'application/json' });
-                 response.end(JSON.stringify({"user" :{"UserName":user.UserName, "Role":"new in the system","Name":user.Name,
+                 response.end(JSON.stringify({"user" :{"UserName":user.UserName,"Name":user.Name,
 				  "eMail":user.eMail,"Password":user.Password ,is_admin:false}}));
 				  });
 			  }
@@ -554,14 +555,20 @@ app.post("/updateContact", (request, response) =>{
     console.log("updateContact FUNCTION");
     var contact_before_update_body = request.body.contact_before_update;
     var contact_after_update_body = request.body.updated_contact;
-    contact_before_update = {"Name":contact_before_update_body.Name ,"Status" : contact_before_update_body.Status , "PhoneNumber":contact_before_update_body.PhoneNumber ,"eMail" : contact_before_update_body.eMail ,"Address" : contact_before_update_body.Address };
+    contact_before_update = {"Name":contact_before_update_body.Name ,"Category" : contact_before_update_body.Category , "Status" : contact_before_update_body.Status , "PhoneNumber":contact_before_update_body.PhoneNumber ,"eMail" : contact_before_update_body.eMail ,"Address" : contact_before_update_body.Address };
    
 	if(contact_after_update_body.PhoneNumber == contact_before_update_body.PhoneNumber)
 	{
-		contact_after_update = { $set: {"Name":contact_after_update_body.Name ,"Status" : contact_after_update_body.Status , "PhoneNumber":contact_after_update_body.PhoneNumber ,"eMail" : contact_after_update_body.eMail ,"Address" : contact_after_update_body.Address } };
+		contact_after_update = { $set: {"Name":contact_after_update_body.Name ,"Category" : contact_after_update_body.Category ,"Status" : contact_after_update_body.Status , "PhoneNumber":contact_after_update_body.PhoneNumber ,"eMail" : contact_after_update_body.eMail ,"Address" : contact_after_update_body.Address } };
 				contacts_collection.updateOne(contact_before_update, contact_after_update, function(err, res) {
 				if (err) throw err;
-				response.end(JSON.stringify({"contact_after_update" :{"Name":contact_after_update_body.Name ,"Status" : contact_after_update_body.Status , "PhoneNumber":contact_after_update_body.PhoneNumber ,"eMail" : contact_after_update_body.eMail ,"Address" : contact_after_update_body.Address } }));
+				contacts_collection.find({}).toArray((error, result) => {
+					if(error) {
+						return response.status(500).send(error);
+					}
+					response.writeHead(200, { 'Content-Type': 'application/json' });
+					response.end(JSON.stringify({"contacts" :result}));
+				});
 			    });
 	}
 	else
@@ -569,10 +576,16 @@ app.post("/updateContact", (request, response) =>{
 		contacts_collection.findOne({"PhoneNumber": contact_after_update_body.PhoneNumber}).then(function(result) {
 			  if(!result) 
 			  {
-				contact_after_update = { $set: {"Name":contact_after_update_body.Name ,"Status" : contact_after_update_body.Status , "PhoneNumber":contact_after_update_body.PhoneNumber ,"eMail" : contact_after_update_body.eMail ,"Address" : contact_after_update_body.Address } };
+				contact_after_update = { $set: {"Name":contact_after_update_body.Name ,"Category" : contact_after_update_body.Category,"Status" : contact_after_update_body.Status , "PhoneNumber":contact_after_update_body.PhoneNumber ,"eMail" : contact_after_update_body.eMail ,"Address" : contact_after_update_body.Address } };
 				contacts_collection.updateOne(contact_before_update, contact_after_update, function(err, res) {
 				if (err) throw err;
-				response.end(JSON.stringify({"contact_after_update" :{"Name":contact_after_update_body.Name ,"Status" : contact_after_update_body.Status , "PhoneNumber":contact_after_update_body.PhoneNumber ,"eMail" : contact_after_update_body.eMail ,"Address" : contact_after_update_body.Address } }));
+				contacts_collection.find({}).toArray((error, result) => {
+					if(error) {
+						return response.status(500).send(error);
+					}
+					response.writeHead(200, { 'Content-Type': 'application/json' });
+					response.end(JSON.stringify({"contacts" :result}));
+				});
 
 				  });
 			  }
@@ -585,6 +598,26 @@ app.post("/updateContact", (request, response) =>{
         });
 	}
 	
+});//update contact detailes only with phone number that does not exsist in the system
+app.post("/updateUser", (request, response) =>{
+//update contact
+    console.log("update users FUNCTION");
+    var user_before_update_body = request.body.user_before_update;
+    var user_after_update_body = request.body.updated_user;
+    user_before_update = {Role:user_before_update_body.Role,UserName:user_before_update_body.UserName, Name:user_before_update_body.Name, eMail:user_before_update_body.eMail};
+   
+	
+	user_after_update = { $set: {Role:user_after_update_body.Role,UserName:user_after_update_body.UserName, Name:user_after_update_body.Name, eMail:user_after_update_body.eMail}};
+	users_collection.updateOne(user_before_update, user_after_update, function(err, res) {
+	if (err) throw err;
+	users_collection.find({}).toArray((error, result) => {
+		if(error) {
+			return response.status(500).send(error);
+		}
+		response.writeHead(200, { 'Content-Type': 'application/json' });
+		response.end(JSON.stringify({"showUsers":true,"users" :result}));
+		});
+	});	
 });
 
 
@@ -626,8 +659,15 @@ app.post("/deleteUser", (request, response) =>{
 				  users_collection.deleteOne({"UserName":result.UserName}, function(err, obj) {
                     if (err) throw err;
                     console.log("1 user deleted");
-
+						users_collection.find({}).toArray((error, result) => {
+						if(error) {
+							return response.status(500).send(error);
+						}
+						response.writeHead(200, { 'Content-Type': 'application/json' });
+						response.end(JSON.stringify({"showUsers":true,"users" :result}));
+						});
                 });
+				
                  console.log("User name that found "+result.UserName);
 			  }
 			  

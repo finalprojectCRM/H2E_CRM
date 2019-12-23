@@ -194,7 +194,7 @@
 			
 			<div id="info_navbar">
 			<!--contacts table-->
-			    <form id="contacts_div" ng-show="show_users == true;"><!-- -->
+			    <form id="users_div" ng-show="show_users == true;"><!-- -->
 					<div class="input-group input-group">
 						<span class="input-group-addon">
 							<span class="glyphicon glyphicon-search" style="color:#003366" aria-hidden="true">
@@ -209,29 +209,29 @@
 								<tr class="table_head">
 									<th>Role</th>
 									<th>Name</th>
-									<th>Username</th>
+									<th ng-show="isAdmin==true" >Username</th>
 									<th>Email</th>
-									<th> </th>
-									<th> </th>
-									<th> </th>	
+									<th ng-show="isAdmin==true"> </th>
+									<th ng-show="isAdmin==true"> </th>
+									<th ng-show="isAdmin==true"> </th>	
 								</tr>
 							<thead>
 							<tbody>
 								<tr ng-repeat="userInfo in users | filter:search" ng-init="userIsEdit = false;">
 									<td ng-show="userIsEdit==false">{{userInfo.Role}}</td>
 									<td ng-show="userIsEdit==false">{{userInfo.Name}}</td>
-									<td ng-show="userIsEdit==false">{{userInfo.UserName}}</td> 
+									<td ng-show="userIsEdit==false && isAdmin==true">{{userInfo.UserName}}</td> 
 									<td ng-show="userIsEdit==false">{{userInfo.eMail}}</td>
 										
-									<td ng-show="userIsEdit==false && isAdmin==true"><i class="fa fa-edit" style="font-size:24px;color:#008fb3"  aria-hidden="true" ng-click = "userIsEdit =!userIsEdit;update_contact_function(userInfo)"></i></td>
+									<td ng-show="userIsEdit==false && isAdmin==true"><i class="fa fa-edit" style="font-size:24px;color:#008fb3"  aria-hidden="true" ng-click = "userIsEdit =!userIsEdit;update_user_function(userInfo)"></i></td>
 									<div ng-if="userIsEdit" class="form-group row" >
 										
 										
 										
 										<td ng-show="userIsEdit==true"><div class="form-group">
 											<select class="form-control"  ng-model="userInfo.Role" ng-change="onChange(userInfo.Role)">
-												<option value=''>-- Choose role --</option>
-												<option ng-repeat="option in options">{{option.Role}}</option>
+												 <option value='' disabled="disabled">-- Choose role  --</option>
+								                 <option ng-repeat="role in roles" > {{role.Role}}</style></option>
 											</select>
 
 										</div></td>
@@ -241,8 +241,8 @@
 										
 									</div>
 									
-									<td ng-show="isAdmin==true"><i class="fa fa-trash" style="font-size:24px;color:#003366" ng-show="userIsEdit==false" aria-hidden="true" ng-click = "delete_contact_function(userInfo)"></i></td>
-									<td ng-show="userIsEdit==true"><i class="fa fa-check-square-o" style="font-size:24px;color:#00e600" aria-hidden="true" ng-click = "save_updated(userInfo)"></i></td>
+									<td ng-show="isAdmin==true"><i class="fa fa-trash" style="font-size:24px;color:#003366" ng-show="userIsEdit==false" aria-hidden="true" ng-click = "delete_user(userInfo.UserName)"></i></td>
+									<td ng-show="userIsEdit==true"><i class="fa fa-check-square-o" style="font-size:24px;color:#00e600" aria-hidden="true" ng-click = "save_updated_user(userInfo)"></i></td>
 									 
 									 		
 								</tr>
@@ -264,8 +264,9 @@
 							<thead>
 
 								<tr class="table_head">
-									<th>Name</th>
+									<th>Category</th>
 									<th>Status</th>
+									<th>Name</th>
 									<th>Phone Number</th>
 									<th>Email</th>
 									<th>Address</th>
@@ -276,27 +277,31 @@
 							<thead>
 							<tbody>
 								<tr ng-repeat="contactInfo in contactsInfo | filter:search" ng-init="contactIsEdit = false;">
-										<td ng-show="contactIsEdit==false">{{contactInfo.Name}}</td>
+										<td ng-show="contactIsEdit==false">{{contactInfo.RoleCategory}}</td>
 										<td ng-show="contactIsEdit==false">{{contactInfo.Status}}</td>
+										<td ng-show="contactIsEdit==false">{{contactInfo.Name}}</td>
 										<td ng-show="contactIsEdit==false">{{contactInfo.PhoneNumber}}</td> 
 										<td ng-show="contactIsEdit==false">{{contactInfo.eMail}}</td>
 										<td ng-show="contactIsEdit==false">{{contactInfo.Address}}</td>	
 										
 									<td ng-show="contactIsEdit==false"><i class="fa fa-edit" style="font-size:24px;color:#008fb3"  aria-hidden="true" ng-click = "contactIsEdit =!contactIsEdit;update_contact_function(contactInfo)"></i></td>
-									<div ng-if="contactIsEdit" class="form-group row" >
+									<div ng-if="contactIsEdit" class="form-group row" >										
 										
-											<td ng-show="contactIsEdit==true"><input ng-model="contactInfo.Name" type="text" class="form-control" /></td>
-										
-										
-										<td ng-show="contactIsEdit==true"><div class="form-group">
-											<select class="form-control"  ng-model="contactInfo.Status" ng-change="onChange(contactInfo.Status)">
-												<option value=''>-- Choose status --</option>
-												<option ng-repeat="option in options">{{option.Status}}</option>
-												<option >add a new status</option>
+										<td ng-show="contactIsEdit==true"><div class="form-group">	
+											<select class="form-control" data-show-subtext="true" data-live-search="true" ng-model="role" ng-options="objRole as objRole.Role for objRole in roles "> <!---->
+												<option value='' disabled="disabled">-- Choose category --</option>
+												 <!--<optionng-repeat=" role in roles" > {{role.Role}}</style></option>-->
+											 </select>
+										</div></td>	
+										<td ng-show="contactIsEdit==true"><div class="form-group" ng-if="role">
+											<select class="form-control" ng-model="status" ng-options="status_role for status in role.Statuses" ng-change="onChange(status)"><!--  -->
+												<option value='' disabled="disabled">-- Choose status --</option>
+												<!--<option  ng-repeat="status in role.Statuses">{{status}}</option>-->
 											</select>
 
 										</div></td>
 										
+										<td ng-show="contactIsEdit==true"><input ng-model="contactInfo.Name" type="text" class="form-control" /></td>
 										<td ng-show="contactIsEdit==true"><input ng-model="contactInfo.PhoneNumber" type="text" class="form-control" /></td> 
 										
 										<td ng-show="contactIsEdit==true"><input ng-model="contactInfo.eMail" type="text" class="form-control" /></td>

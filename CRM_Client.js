@@ -30,6 +30,7 @@ var app = angular.module("CRM",  [ "ngResource"])
 .controller('CRM_controller', ['$scope','$http','$log','$timeout','sampleUploadService' ,function($scope, $http,$log,$timeout,sampleUploadService) {	
 
 	var contact_before_update;
+	var user_before_update;
 	var MAX_LETTERS_IN_NAME = 25;
 	var MAX_LETTERS_IN_ADDRESS = 35;
     var new_status_option = "add a new status";
@@ -54,6 +55,7 @@ var app = angular.module("CRM",  [ "ngResource"])
 	$scope.check_phone_enable = false;
 	$scope.show_update_expression = false;
 	$scope.get_new_contact_details = false;
+	$scope.show_settings = false;
 	$scope.login_page = false;
 	$scope.register_page = false;
 	$scope.admin_page = false;
@@ -422,6 +424,8 @@ function clearUploadData() {
 	{
 	   $scope.login_page = false;
 	   $scope.show_contacts = true;
+	   $scope.show_users = false;
+	   $scope.show_settings = false;
 	   $scope.show_update_expression = true;
 	   $scope.show_update_input = false;
 	   $scope.click = true;
@@ -448,6 +452,8 @@ function clearUploadData() {
 		else
 		{
 			
+			selected_items.push(new_status_option);
+			$log.log("new_status_option :"+new_status_option);
 			var role_with_statuses = {Role:$scope.role_from_modal, Statuses:selected_items};
 			$http.post("http://localhost:3000/addRoleWithStatuses", {
 				role_with_statuses: role_with_statuses,
@@ -514,6 +520,8 @@ function clearUploadData() {
 	   $scope.login_page = false;
 	   $scope.show_contacts = false;
 	   $scope.show_calendar = true;
+	   $scope.show_users = false;
+	   $scope.show_settings = false;
 
 	   $scope.search = "";
 	}
@@ -523,6 +531,7 @@ function clearUploadData() {
 	   $scope.login_page = false;
 	   $scope.show_contacts = false;
 	   $scope.show_settings = true;
+	   $scope.show_users = false;
 	   $scope.search = "";
 	}
 	//show the 
@@ -582,11 +591,18 @@ function clearUploadData() {
     //save the deatailes of contact before update
 	$scope.update_contact_function = function(contact)
 	{
-		contact_before_update = {Name:contact.Name,Status:contact.Status, PhoneNumber:contact.PhoneNumber, eMail:contact.eMail, Address:contact.Address};
+		contact_before_update = {Category:contact.Category, Name:contact.Name,Status:contact.Status, PhoneNumber:contact.PhoneNumber, eMail:contact.eMail, Address:contact.Address};
 		$log.log("contact name : "+contact.Name);
 		$scope.update_status = contact_before_update.Status;
 		 $log.log("contactIsEdit : "+$scope.contactIsEdit);
 
+        		
+	}
+	
+	$scope.update_user_function = function(user)
+	{
+		user_before_update = {Role:user.Role,Name:user.Name,UserName:user.UserName, eMail:user.eMail};
+		$log.log("user name : "+user.Name);
         		
 	}
 
@@ -657,12 +673,10 @@ function clearUploadData() {
 		 $http.get("http://localhost:3000/getContacts").then(
 			function (response) {//success callback
 				$scope.contactsInfo = response.data.contacts;//return the list of the contacts
-				 angular.element(Message_Modal).modal("show");
+				
 			},
 			function (response) {//failure callback
-				$scope.message = response.data.error;
-				$scope.message_type = "ERROR";
-			    angular.element(Message_Modal).modal("show");
+				
 			}	
 		);
 		
@@ -694,7 +708,10 @@ function clearUploadData() {
 	}
 	$scope.get_users_function = function(flag){// get the list of the contacts
 		$scope.show_users = true;
+		$scope.show_settings = false;
+		$scope.show_contacts = false;
 		$scope.getUsersList(flag);
+		$scope.getRolesList();
 		
 	}
  
@@ -843,6 +860,14 @@ function clearUploadData() {
 	{
 		$log.log("Status before: "+ contact_before_update.Status);
 		$log.log("Status after : "+ contactInfoToUpdate.Status);
+		$log.log("Category : "+ contactInfoToUpdate.Category);
+		
+		if($scope.role==null){
+		    $scope.message = "You must choose a category";
+		    $scope.message_type = "ERROR";
+			angular.element(Message_Modal).modal("show");
+			return;
+		}
 		if(contactInfoToUpdate.Name!=undefined)
 		{
 			if(contactInfoToUpdate.Name.length > MAX_LETTERS_IN_NAME){//check the length of the name
@@ -858,7 +883,7 @@ function clearUploadData() {
 			contactInfoToUpdate.Name="";
 		}
 		  
-		if(contactInfoToUpdate.Status==undefined || contactInfoToUpdate.Status=="") 
+		if(contactInfoToUpdate.Status==undefined || contactInfoToUpdate.Status=="") //###########################################$scope.status_role###############################
 		{
 			contactInfoToUpdate.Status="";
 		}
@@ -924,7 +949,7 @@ function clearUploadData() {
 		   contactInfoToUpdate.Address = "";
 		}
 	
-		var updated_contact={Name:contactInfoToUpdate.Name,Status:contactInfoToUpdate.Status, PhoneNumber:contactInfoToUpdate.PhoneNumber, eMail:contactInfoToUpdate.eMail, Address:contactInfoToUpdate.Address};
+		var updated_contact={Name:contactInfoToUpdate.Name, Category:contactInfoToUpdate.Category, Status:contactInfoToUpdate.Status, PhoneNumber:contactInfoToUpdate.PhoneNumber, eMail:contactInfoToUpdate.eMail, Address:contactInfoToUpdate.Address};
 		$http.post("http://localhost:3000/updateContact", {
 				contact_before_update: contact_before_update,updated_contact:updated_contact
 			}).then(
@@ -933,7 +958,7 @@ function clearUploadData() {
                    $log.log("phone exists response : "+response.data.phone_exists);				
 					if(!response.data.phone_exists)
 					{
-                          $scope.getContactsList();
+                          $scope.contactInfo=response.data.contacts;
 					}
 					//check if th phone already exsist
 					else
@@ -944,6 +969,56 @@ function clearUploadData() {
 					  
 					    
 					}					
+					
+				},
+				function (response) { //failure callback
+					
+					
+				}
+			);
+	}
+	
+	$scope.save_updated_user = function(userToUpdate)
+	{
+
+		var re_username = /^[a-zA-Z]{3,10}$/;
+		var re_name = /^[a-zA-Z\s\u0590-\u05fe]{2,20}$/;
+		
+		if(userToUpdate.Role==null){
+		    $scope.message = "You must choose role for user";
+		    $scope.message_type = "ERROR";
+			angular.element(Message_Modal).modal("show");
+			return;
+		}
+		
+		if(userToUpdate.UserName==undefined ||!re_username.test(userToUpdate.UserName)){
+		    $scope.message = "User name must contain only English letters ,minimum 3 leterrs and maximum 10 letters and no whitespace";
+		    $scope.message_type = "ERROR";
+			angular.element(Message_Modal).modal("show");
+			return;
+		}
+		if(userToUpdate.Name==undefined ||!re_name.test(userToUpdate.Name)){
+			$scope.message = "The name must contain only English or Hebrew letters ,minimum 2 leterrs and maximum 20 letters ";
+		    $scope.message_type = "ERROR";
+			angular.element(Message_Modal).modal("show");
+			return;
+		}
+		var re_email = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+		if(userToUpdate.eMail==undefined || !re_email.test(userToUpdate.eMail)){//check the email
+			$scope.message = "This email is invalid ";
+		    $scope.message_type = "ERROR";
+			angular.element(Message_Modal).modal("show");
+			return;
+		}
+		$log.log("Role:" + userToUpdate.Role);
+		var updated_user={Role:userToUpdate.Role,UserName:userToUpdate.UserName, Name:userToUpdate.Name, eMail:userToUpdate.eMail};
+		$http.post("http://localhost:3000/updateUser", {
+				user_before_update: user_before_update,updated_user:updated_user
+			}).then(
+				function (response) { //success callback   
+
+				$scope.users = response.data.users;
+                   				
 					
 				},
 				function (response) { //failure callback
@@ -1127,12 +1202,22 @@ function clearUploadData() {
 
 	}
 	
-	$scope.delete_user = function()
+	$scope.delete_user = function(flag)
 	{
+		$log.log(flag);
+		if(flag == undefined)
+		{
+			username_to_delete = username_to_delete;
+		}
+		else
+		{
+			username_to_delete = flag;
+		}
 		$http.post("http://localhost:3000/deleteUser", {
 				username : username_to_delete,
 			}).then(
-				function (response) { //success callback            
+				function (response) { //success callback   
+				$scope.users = response.data.users;
 				},
 				function (response) { //failure callback
 					

@@ -171,7 +171,8 @@
 					 <a href="#" class="dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 						<i style = "font-size: 50px; margin-bottom:10px" class="fa fa-user-circle-o fa-lg"></i>
 						</br>
-						<label class="text-primary" style = "font-size: 15px;">{{name_of_user}}</label>
+						<label class="text-primary" style = "font-size: 15px;">{{name_of_user}}</label></br>
+						<label class="text-primary" style = "font-size: 15px;">{{role_of_user}}</label>
 						<span class="caret"></span>
 						</a>
 						</br>
@@ -217,22 +218,22 @@
 								</tr>
 							<thead>
 							<tbody>
-								<tr ng-repeat="userInfo in users | filter:search" ng-init="userIsEdit = false;">
+								<tr ng-repeat="userInfo in users | filter:search" ng-init="userIsEdit = false;username='Admin'">
 									<td ng-show="userIsEdit==false">{{userInfo.Role}}</td>
 									<td ng-show="userIsEdit==false">{{userInfo.Name}}</td>
 									<td ng-show="userIsEdit==false && isAdmin==true">{{userInfo.UserName}}</td> 
 									<td ng-show="userIsEdit==false">{{userInfo.eMail}}</td>
-										
-									<td ng-show="userIsEdit==false && isAdmin==true"><i class="fa fa-edit" style="font-size:24px;color:#008fb3"  aria-hidden="true" ng-click = "userIsEdit =!userIsEdit;update_user_function(userInfo)"></i></td>
+
+									
+									<td ng-show="userIsEdit==false && isAdmin==true && username!=userInfo.UserName "><i class="fa fa-edit" style="font-size:24px;color:#008fb3"  aria-hidden="true" ng-click = "userIsEdit =!userIsEdit;update_user_function(userInfo)"></i></td>
 									<div ng-if="userIsEdit" class="form-group row" >
 										
 										
-										
-										<td ng-show="userIsEdit==true"><div class="form-group">
-											<select class="form-control"  ng-model="userInfo.Role" ng-change="onChange(userInfo.Role)">
+										<td ng-show="userIsEdit==true"><div class="form-group" >
+											<select class="form-control"  ng-model="userInfo.Role" ng-change="onChange(userInfo.Role)" >
 												 <option value='' disabled="disabled">-- Choose role  --</option>
 								                 <option ng-repeat="role in roles" > {{role.Role}}</style></option>
-											</select>
+										    </select>
 
 										</div></td>
 									    <td ng-show="userIsEdit==true">{{userInfo.Name}}</td>
@@ -241,7 +242,7 @@
 										
 									</div>
 									
-									<td ng-show="isAdmin==true"><i class="fa fa-trash" style="font-size:24px;color:#003366" ng-show="userIsEdit==false" aria-hidden="true" ng-click = "delete_user(userInfo.UserName)"></i></td>
+									<td ng-show="isAdmin==true && username!=userInfo.UserName "><i class="fa fa-trash" style="font-size:24px;color:#003366" ng-show="userIsEdit==false" aria-hidden="true" ng-click = "delete_user(userInfo.UserName)"></i></td>
 									<td ng-show="userIsEdit==true"><i class="fa fa-check-square-o" style="font-size:24px;color:#00e600" aria-hidden="true" ng-click = "save_updated_user(userInfo)"></i></td>
 									 
 									 		
@@ -277,7 +278,7 @@
 							<thead>
 							<tbody>
 								<tr ng-repeat="contactInfo in contactsInfo | filter:search" ng-init="contactIsEdit = false;">
-										<td ng-show="contactIsEdit==false">{{contactInfo.RoleCategory}}</td>
+										<td ng-show="contactIsEdit==false">{{contactInfo.Category.Role}}</td>
 										<td ng-show="contactIsEdit==false">{{contactInfo.Status}}</td>
 										<td ng-show="contactIsEdit==false">{{contactInfo.Name}}</td>
 										<td ng-show="contactIsEdit==false">{{contactInfo.PhoneNumber}}</td> 
@@ -287,15 +288,14 @@
 									<td ng-show="contactIsEdit==false"><i class="fa fa-edit" style="font-size:24px;color:#008fb3"  aria-hidden="true" ng-click = "contactIsEdit =!contactIsEdit;update_contact_function(contactInfo)"></i></td>
 									<div ng-if="contactIsEdit" class="form-group row" >										
 										
-										<td ng-show="contactIsEdit==true"><div class="form-group">	
-											<select class="form-control" data-show-subtext="true" data-live-search="true" ng-model="role" ng-options="objRole as objRole.Role for objRole in roles "> <!---->
-												<option value='' disabled="disabled">-- Choose category --</option>
+										<td ng-show="contactIsEdit==true"><div class="form-group" >	
+											<select class="form-control" data-show-subtext="true" data-live-search="true" ng-model="role" ng-options="objRole as objRole.Role for objRole in roles " ng-change="onChangeCategory(role)" ><!---->
+											
 												 <!--<optionng-repeat=" role in roles" > {{role.Role}}</style></option>-->
 											 </select>
 										</div></td>	
 										<td ng-show="contactIsEdit==true"><div class="form-group" ng-if="role">
-											<select class="form-control" ng-model="status" ng-options="status_role for status in role.Statuses" ng-change="onChange(status)"><!--  -->
-												<option value='' disabled="disabled">-- Choose status --</option>
+											<select class="form-control" ng-model="status_role" ng-options="status_role for status_role in role.Statuses" ng-change="onChange(status_role)"><!--  -->
 												<!--<option  ng-repeat="status in role.Statuses">{{status}}</option>-->
 											</select>
 
@@ -314,15 +314,27 @@
 									 		
 								</tr>
 								<tr ng-show="get_new_contact_details==true">
-									<td><input ng-model="newName" type="text" class="form-control" placeholder="Name" maxlength="25"/></td>
-									<td ><div class="form-group">
+									<!--<td ><div class="form-group">
 										<select class="form-control" id="status_select" ng-model="newStatus" ng-change="onChange(newStatus)">
 								            <option value=''>-- Choose status --</option>
 											<option ng-repeat="option in options">{{option.Status}}</option>
 											<option >add a new status</option>
 										</select>
 										
+									</div></td>-->
+									<td><div class="form-group" ng-init="role">	
+											<select class="form-control" data-show-subtext="true" data-live-search="true" ng-model="role" ng-options="objRole as objRole.Role disable when objRole.Role  === '-- Choose category --' for objRole in roles " ng-change="onChangeCategory(role)" ><!---->
+											
+												 <!--<optionng-repeat=" role in roles" > {{role.Role}}</style></option>-->
+											 </select>
+									</div></td>	
+									<td><div class="form-group" ng-if="role" ng-init="status_role">
+										<select class="form-control" ng-model="status_role" ng-options="status_role disable when status_role === '-- Choose status --'  for status_role in role.Statuses"  ng-change="onChange(status_role)"><!--  -->
+											<!--<option  ng-repeat="status in role.Statuses">{{status}}</option>-->
+										</select>
+
 									</div></td>
+									<td><input ng-model="newName" type="text" class="form-control" placeholder="Name" maxlength="25"/></td>
 									<td><input ng-model="newPhoneNumber"  type="text" placeholder="Phone Number"  class="form-control is-invalid" required /></td>
 									<td><input ng-model="newEmail" type="text" class="form-control" placeholder="Email" /></td>
 									<td><input ng-model="newAddress" type="text" class="form-control" placeholder="Address" maxlength="35"/></td>
@@ -331,6 +343,7 @@
 									
 								</tr>
 								<tr ng-show="show_contacts==true">
+									<td></td>
 									<td></td>
 									<td></td>
 									<td></td>

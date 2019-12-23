@@ -34,6 +34,8 @@ var app = angular.module("CRM",  [ "ngResource"])
 	var MAX_LETTERS_IN_NAME = 25;
 	var MAX_LETTERS_IN_ADDRESS = 35;
     var new_status_option = "add a new status";
+	var category;
+	var status_role;
 	var temp_password_from_server ;
 	var logged_in_user;
 	var incorect_password = false;
@@ -326,6 +328,7 @@ function clearUploadData() {
 					$scope.all_system = true;
 					$scope.account = true;
 					$scope.name_of_user = user_from_server.Name;
+					$scope.role_of_user = user_from_server.Role;
 					$scope.register_page = false;
 					
 					if(user_from_server.is_admin==true)
@@ -402,6 +405,8 @@ function clearUploadData() {
 					$scope.account = true;
 					$scope.login_page = false;
 					$scope.name_of_user = LoginUser.Name;
+					$log.log("role_of_user: "+LoginUser.Role);
+					$scope.role_of_user = LoginUser.Role;
 					$scope.all_system = true;
 
 				}
@@ -453,6 +458,7 @@ function clearUploadData() {
 		{
 			
 			selected_items.push(new_status_option);
+			selected_items.unshift(choose_status);
 			$log.log("new_status_option :"+new_status_option);
 			var role_with_statuses = {Role:$scope.role_from_modal, Statuses:selected_items};
 			$http.post("http://localhost:3000/addRoleWithStatuses", {
@@ -577,6 +583,8 @@ function clearUploadData() {
 		$http.get("http://localhost:3000/getRoles").then(
 			function (response) {//success callback
 				$scope.roles = response.data.roles;//return the list of the statusOptions
+				$scope.role = $scope.roles[0];
+				$scope.status_role = $scope.roles[1].Statuses[0];
 			},
 			function (response) {//failure callback
 			    $scope.message = response.data.error;
@@ -608,11 +616,19 @@ function clearUploadData() {
 
     //show the modal with a new status addition
 	$scope.onChange = function(option){
+		$log.log("option : "+option);
+		status_role = option;
 		if(option==new_status_option)
 		{
 		    angular.element(add_new_status_modal).modal("show");
 		}
 	}
+
+	$scope.onChangeCategory = function(option){
+		$log.log("option : "+option.Role);
+		category = option;
+	}
+	
 	
 	
 	$scope.selected_item = function(option)
@@ -719,6 +735,29 @@ function clearUploadData() {
     //check validation of all new contact fildes
 	$scope.check_and_save_details = function()
 	{
+	  if(category == undefined)
+	  {
+		    $scope.message = "You must choose a category";
+		    $scope.message_type = "ERROR";
+			angular.element(Message_Modal).modal("show");
+			return;
+	  }
+	if(status_role==undefined ||status_role=="") //###########################################$scope.status_role###############################
+	{
+		$scope.message = "You must choose a status";
+		$scope.message_type = "ERROR";
+		angular.element(Message_Modal).modal("show");
+		return;
+	}
+	else if (status_role==new_status_option)
+	{
+	
+		if (status_role==new_status_option)
+		{
+			status_role = "";
+		}
+		status_role = contact_before_update.Status;
+	}
 	  if($scope.newName!=undefined)
 	  {
 		var name = $scope.newName;
@@ -803,7 +842,7 @@ function clearUploadData() {
     //add a new contact to server
 	$scope.addNewContact = function(){
 				
-		var contact={Name:$scope.newName,Status:$scope.newStatus, PhoneNumber:$scope.newPhoneNumber, eMail:$scope.newEmail, Address:$scope.newAddress};
+		var contact={Name:$scope.newName, Category:category, Status:status_role, PhoneNumber:$scope.newPhoneNumber, eMail:$scope.newEmail, Address:$scope.newAddress};
 		$http.post("http://localhost:3000/addContact", {
 				contact: contact,
 			}).then(
@@ -816,7 +855,6 @@ function clearUploadData() {
 						$scope.newName=undefined;
 						$scope.newPhoneNumber=undefined;
 						$scope.newEmail=undefined;
-						$scope.newStatus=undefined;
 						$scope.newAddress=undefined;
 
 					}
@@ -856,13 +894,13 @@ function clearUploadData() {
 	
 	
 	//check validation of all updated contact fildes and if they corect are corcect send them to the server
-	$scope.save_updated = function(contactInfoToUpdate)
+	$scope.save_updated = function(contactInfoToUpdate,role)
 	{
 		$log.log("Status before: "+ contact_before_update.Status);
-		$log.log("Status after : "+ contactInfoToUpdate.Status);
-		$log.log("Category : "+ contactInfoToUpdate.Category);
+		$log.log("Status after : "+ $scope.status_role);
+		$log.log("Category : "+ role);
 		
-		if($scope.role==null){
+		if(category == undefined){
 		    $scope.message = "You must choose a category";
 		    $scope.message_type = "ERROR";
 			angular.element(Message_Modal).modal("show");
@@ -883,18 +921,21 @@ function clearUploadData() {
 			contactInfoToUpdate.Name="";
 		}
 		  
-		if(contactInfoToUpdate.Status==undefined || contactInfoToUpdate.Status=="") //###########################################$scope.status_role###############################
+		if(status_role==undefined ||status_role=="") //###########################################$scope.status_role###############################
 		{
-			contactInfoToUpdate.Status="";
+			$scope.message = "You must choose a status";
+		    $scope.message_type = "ERROR";
+			angular.element(Message_Modal).modal("show");
+			return;
 		}
-		else if (contactInfoToUpdate.Status==new_status_option)
+		else if (status_role==new_status_option)
 		{
 		
-		    if (contact_before_update.Status==new_status_option)
+		    if (status_role==new_status_option)
 			{
-			  contactInfoToUpdate.Status = "";
+				status_role = "";
 			}
-			contactInfoToUpdate.Status = contact_before_update.Status;
+			status_role = contact_before_update.Status;
 		}
 			
 		if(contactInfoToUpdate.PhoneNumber!=undefined && contactInfoToUpdate.PhoneNumber!= "")
@@ -949,7 +990,7 @@ function clearUploadData() {
 		   contactInfoToUpdate.Address = "";
 		}
 	
-		var updated_contact={Name:contactInfoToUpdate.Name, Category:contactInfoToUpdate.Category, Status:contactInfoToUpdate.Status, PhoneNumber:contactInfoToUpdate.PhoneNumber, eMail:contactInfoToUpdate.eMail, Address:contactInfoToUpdate.Address};
+		var updated_contact={Name:contactInfoToUpdate.Name, Category:category, Status:status_role, PhoneNumber:contactInfoToUpdate.PhoneNumber, eMail:contactInfoToUpdate.eMail, Address:contactInfoToUpdate.Address};
 		$http.post("http://localhost:3000/updateContact", {
 				contact_before_update: contact_before_update,updated_contact:updated_contact
 			}).then(
@@ -958,7 +999,7 @@ function clearUploadData() {
                    $log.log("phone exists response : "+response.data.phone_exists);				
 					if(!response.data.phone_exists)
 					{
-                          $scope.contactInfo=response.data.contacts;
+                         $scope.getContactsList();
 					}
 					//check if th phone already exsist
 					else

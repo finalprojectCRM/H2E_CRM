@@ -310,7 +310,7 @@ app.post("/addUser", (request, response) =>{
 				if (err) throw err;
 				
 				 response.writeHead(200, { 'Content-Type': 'application/json' });
-                 response.end(JSON.stringify({"user" :{"UserName":user.UserName,"Name":user.Name,
+                 response.end(JSON.stringify({"user" :{"Role": user.Role,"UserName":user.UserName,"Name":user.Name,
 				  "eMail":user.eMail,"Password":user.Password ,is_admin:false}}));
 				  });
 			  }
@@ -320,12 +320,12 @@ app.post("/addUser", (request, response) =>{
 				  
 				 if(mongo_user.UserName=="Admin" && mongo_user.Name=="" && mongo_user.eMail=="" && mongo_user.Password=="")
 				 {
-					 users_collection.update({"UserName": "Admin"}, { $set:{"Name":user.Name,
+					 users_collection.update({"UserName": "Admin"}, { $set:{"Role":"Administrator", "Name":user.Name,
 				     "eMail":user.eMail,"Password":user.Password}}, function(err, obj) {
                      if (err) throw err;
 					 
 					 response.writeHead(200, { 'Content-Type': 'application/json' });
-                     response.end(JSON.stringify({"user" :{"UserName":user.UserName, "Name":user.Name,
+                     response.end(JSON.stringify({"user" :{"Role":"Administrator","UserName":user.UserName, "Name":user.Name,
 				     "eMail":user.eMail,"Password":user.Password ,is_admin: true}}));
                      console.log("admin register");
 					 
@@ -365,7 +365,7 @@ app.post("/login", (request, response) =>{
                  response.writeHead(200, { 'Content-Type': 'application/json' });
 				 if(result.UserName == "Admin")
 				 {
-					 response.end(JSON.stringify({user_login :{"adminUser":true,"UserName":result.UserName, "Name":result.Name,
+					 response.end(JSON.stringify({user_login :{"adminUser":true,"Role":result.Role,"UserName":result.UserName, "Name":result.Name,
 				  "eMail":result.eMail,"Password":result.Password}}));
 				 }
 				 else
@@ -390,7 +390,7 @@ app.post("/addContact", (request, response) =>{
 			contacts_collection.findOne({"PhoneNumber": contact.PhoneNumber}).then(function(result) {
 			  if(!result) {
 				contacts_collection.insertOne(
-                {"Name": contact.Name , "Status" : contact.Status ,"PhoneNumber": contact.PhoneNumber, "eMail" : contact.eMail ,"Address" : contact.Address} , function(err, res){
+                {"Name": contact.Name ,  "Category":contact.Category, "Status":contact.Status,"PhoneNumber": contact.PhoneNumber, "eMail" : contact.eMail ,"Address" : contact.Address} , function(err, res){
                  if (err) throw err;});
 				 response.end();
 			  }
@@ -543,7 +543,8 @@ function check_exsisting_statuses_and_roles()
     roles_with_statuses_collection.countDocuments(function (err, count) {
     if (!err && count === 0) {
 		console.log("no roles");
-         roles_with_statuses_collection.insertOne({Role:"תמיכה טכנית",Statuses:["בעיה טכנית"]});
+		 roles_with_statuses_collection.insertOne({Role:"-- Choose category --"});
+         roles_with_statuses_collection.insertOne({Role:"תמיכה טכנית",Statuses:["-- Choose status --","בעיה טכנית"]});
     }
 });
 		

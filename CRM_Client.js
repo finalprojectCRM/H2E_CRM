@@ -34,6 +34,7 @@ var app = angular.module("CRM",  [ "ngResource"])
 	var MAX_LETTERS_IN_NAME = 25;
 	var MAX_LETTERS_IN_ADDRESS = 35;
     var new_status_option = "add a new status";
+    var status_header = "-- Choose status --";
 	var category;
 	var status_role;
 	var temp_password_from_server ;
@@ -456,9 +457,8 @@ function clearUploadData() {
 		}
 		else
 		{
-			
+			selected_items.unshift( status_header );
 			selected_items.push(new_status_option);
-			selected_items.unshift(choose_status);
 			$log.log("new_status_option :"+new_status_option);
 			var role_with_statuses = {Role:$scope.role_from_modal, Statuses:selected_items};
 			$http.post("http://localhost:3000/addRoleWithStatuses", {
@@ -475,6 +475,14 @@ function clearUploadData() {
 		}
 	
 	}
+	
+	$scope.display_role_list = function()
+	{
+		$scope.getRolesList();
+		angular.element(delete_role_modal).modal('show');
+	}
+
+	
 	
 	$scope.save_new_status_roles = function()
 	{
@@ -495,6 +503,9 @@ function clearUploadData() {
 				function (response) { //success callback  
                   $scope.status_from_modal = undefined; 
 				  $scope.getOptionsList();
+				  $scope.role = undefined;
+				  $scope.item = undefined;
+				  selected_items = [];
 				},
 				function (response) { //failure callback
 					
@@ -510,7 +521,10 @@ function clearUploadData() {
 		$http.get("http://localhost:3000/getStatusOptions").then(
 			function (response) {//success callback
 				$scope.options = response.data.statusOptions;//return the list of the statusOptions
+				$scope.item = $scope.options[0];
 				angular.element(add_new_role_modal).modal("show");
+				$scope.role_from_modal = undefined;
+				selected_items = [];
 			},
 			function (response) {//failure callback
 			    $scope.message = response.data.error;
@@ -566,6 +580,8 @@ function clearUploadData() {
 		$http.get("http://localhost:3000/getStatusOptions").then(
 			function (response) {//success callback
 				$scope.options = response.data.statusOptions;//return the list of the statusOptions
+				$scope.item = $scope.options[0];
+				$log.log("item: "+ $scope.item );
 			},
 			function (response) {//failure callback
 			    $scope.message = response.data.error;
@@ -584,7 +600,10 @@ function clearUploadData() {
 			function (response) {//success callback
 				$scope.roles = response.data.roles;//return the list of the statusOptions
 				$scope.role = $scope.roles[0];
-				$scope.status_role = $scope.roles[1].Statuses[0];
+				if($scope.roles[1]!=undefined)
+				{
+					$scope.status_role = $scope.roles[1].Statuses[0];
+				}
 			},
 			function (response) {//failure callback
 			    $scope.message = response.data.error;
@@ -631,9 +650,17 @@ function clearUploadData() {
 	
 	
 	
-	$scope.selected_item = function(option)
+	$scope.selected_item = function(option,flag)
 	{
-		selected_items.push(option);
+		
+		if(flag == 'new status')
+		{
+			selected_items.push(option.Status);
+		}
+        else
+		{
+			selected_items.push(option);
+		}			
 		$log.log(selected_items);
 	}
 	
@@ -644,6 +671,12 @@ function clearUploadData() {
 		$http.get("http://localhost:3000/getRoles").then(
 			function (response) {//success callback
 				$scope.roles = response.data.roles;//return the list of the statusOptions
+	            $scope.role = $scope.roles[0];
+				if($scope.roles[1]!=undefined)
+				{
+					$scope.status_role = $scope.roles[1].Statuses[0];
+				}
+				
 			    angular.element(add_new_status_modal).modal("show");
 
 			},
@@ -850,6 +883,7 @@ function clearUploadData() {
                     $log.log("phone exists response : "+response.data.phone_exists);					
 					if(!response.data.phone_exists)
 					{
+						$log.log("entered !response.data.phone_exists: ");					
 						$scope.get_new_contact_details=false;
 						$scope.getContactsList();
 						$scope.newName=undefined;
@@ -894,11 +928,11 @@ function clearUploadData() {
 	
 	
 	//check validation of all updated contact fildes and if they corect are corcect send them to the server
-	$scope.save_updated = function(contactInfoToUpdate,role)
+	$scope.save_updated = function(contactInfoToUpdate)
 	{
-		$log.log("Status before: "+ contact_before_update.Status);
-		$log.log("Status after : "+ $scope.status_role);
-		$log.log("Category : "+ role);
+		$log.log("Category before: "+ contact_before_update.Category.Role);
+		$log.log("Category after : "+ category);
+		
 		
 		if(category == undefined){
 		    $scope.message = "You must choose a category";
@@ -1025,7 +1059,7 @@ function clearUploadData() {
 		var re_username = /^[a-zA-Z]{3,10}$/;
 		var re_name = /^[a-zA-Z\s\u0590-\u05fe]{2,20}$/;
 		
-		if(userToUpdate.Role==null){
+		if($scope.role==null){
 		    $scope.message = "You must choose role for user";
 		    $scope.message_type = "ERROR";
 			angular.element(Message_Modal).modal("show");
@@ -1052,7 +1086,7 @@ function clearUploadData() {
 			return;
 		}
 		$log.log("Role:" + userToUpdate.Role);
-		var updated_user={Role:userToUpdate.Role,UserName:userToUpdate.UserName, Name:userToUpdate.Name, eMail:userToUpdate.eMail};
+		var updated_user={Role:category.Role,UserName:userToUpdate.UserName, Name:userToUpdate.Name, eMail:userToUpdate.eMail};
 		$http.post("http://localhost:3000/updateUser", {
 				user_before_update: user_before_update,updated_user:updated_user
 			}).then(
@@ -1265,6 +1299,25 @@ function clearUploadData() {
 				}
 			);
 		$log.log(username_to_delete);
+	}
+	
+	$scope.delete_role = function(role)
+	{
+		$log.log(role);
+		$http.post("http://localhost:3000/deleteRole", {
+				role : role.Role,
+			}).then(
+				function (response) { //success callback   
+				$scope.roles = response.data.roles;
+				$scope.role = undefined;
+				selected_items = undefined;
+				
+				},
+				function (response) { //failure callback
+					
+				}
+			);
+		
 	}
 	
 	

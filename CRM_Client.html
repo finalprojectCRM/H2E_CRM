@@ -230,9 +230,10 @@
 										
 										
 										<td ng-show="userIsEdit==true"><div class="form-group" >
-											<select class="form-control"  ng-model="userInfo.Role" ng-change="onChange(userInfo.Role)" >
-												 <option value='' disabled="disabled">-- Choose role  --</option>
-								                 <option ng-repeat="role in roles" > {{role.Role}}</style></option>
+											<select class="form-control"   ng-model="role" ng-options="objRole as objRole.Role disable when objRole.Role  === '-- Choose category for role --' for objRole in roles " ng-change="onChangeCategory(role)"  >
+								               
+											
+												 <!--<optionng-repeat=" role in roles" > {{role.Role}}</style></option>-->
 										    </select>
 
 										</div></td>
@@ -289,15 +290,16 @@
 									<div ng-if="contactIsEdit" class="form-group row" >										
 										
 										<td ng-show="contactIsEdit==true"><div class="form-group" >	
-											<select class="form-control" data-show-subtext="true" data-live-search="true" ng-model="role" ng-options="objRole as objRole.Role for objRole in roles " ng-change="onChangeCategory(role)" ><!---->
+											<select class="form-control" data-show-subtext="true" data-live-search="true" ng-model="role" ng-options="objRole as objRole.Role disable when objRole.Role  === '-- Choose category for role --' for objRole in roles " ng-change="onChangeCategory(role)" ><!---->
 											
 												 <!--<optionng-repeat=" role in roles" > {{role.Role}}</style></option>-->
 											 </select>
 										</div></td>	
 										<td ng-show="contactIsEdit==true"><div class="form-group" ng-if="role">
-											<select class="form-control" ng-model="status_role" ng-options="status_role for status_role in role.Statuses" ng-change="onChange(status_role)"><!--  -->
-												<!--<option  ng-repeat="status in role.Statuses">{{status}}</option>-->
-											</select>
+											
+											<select class="form-control" ng-model="status_role" ng-options="status_role disable when status_role === '-- Choose status --'  for status_role in role.Statuses"  ng-change="onChange(status_role)"><!--  -->
+											<!--<option  ng-repeat="status in role.Statuses">{{status}}</option>-->
+										    </select>
 
 										</div></td>
 										
@@ -323,13 +325,13 @@
 										
 									</div></td>-->
 									<td><div class="form-group" ng-init="role">	
-											<select class="form-control" data-show-subtext="true" data-live-search="true" ng-model="role" ng-options="objRole as objRole.Role disable when objRole.Role  === '-- Choose category --' for objRole in roles " ng-change="onChangeCategory(role)" ><!---->
+											<select class="form-control" data-show-subtext="true" data-live-search="true" ng-model="role" ng-options="objRole as objRole.Role disable when objRole.Role  === '-- Choose category for role --' for objRole in roles " ng-change="onChangeCategory(role)" ><!---->
 											
 												 <!--<optionng-repeat=" role in roles" > {{role.Role}}</style></option>-->
 											 </select>
 									</div></td>	
 									<td><div class="form-group" ng-if="role" ng-init="status_role">
-										<select class="form-control" ng-model="status_role" ng-options="status_role disable when status_role === '-- Choose status --'  for status_role in role.Statuses"  ng-change="onChange(status_role)"><!--  -->
+										<select class="form-control" ng-model="status_role" ng-options="status_role disable when status_role === '-- Choose status for role --'  for status_role in role.Statuses"  ng-change="onChange(status_role)"><!--  -->
 											<!--<option  ng-repeat="status in role.Statuses">{{status}}</option>-->
 										</select>
 
@@ -429,7 +431,7 @@
 							  <a tabindex="-1" href="#"><i style =" color: rgb(50, 118, 177);" class="fa fa-address-card-o fa-fw"></i> role settings</a>
 								  <ul class="dropdown-menu">
 									<li class="hover_color" ng-click="add_new_role()"><a href="#"><i style =" color: rgb(50, 118, 177);" class="fa fa-plus fa-fw"></i> add new role</a></li>
-									<li class="hover_color" ng-click="sign_out()"><a href="#"><i style =" color: rgb(50, 118, 177);" class="fa fa-trash fa-fw"></i> delete role   </a></li>
+									<li class="hover_color" ng-click="display_role_list()"><a href="#"><i style =" color: rgb(50, 118, 177);" class="fa fa-trash fa-fw"></i> delete role   </a></li>
 								  </ul>
 							  </li>
 						      <li class="dropdown-submenu">
@@ -503,10 +505,8 @@
 								</br>
 
                              <div class="row-fluid">
-							  <select class="form-control" data-show-subtext="true" data-live-search="true" ng-model="item" ng-change="selected_item(item)">
-							    <option value='' disabled="disabled">-- Choose status for role --</option>
-								<option ng-repeat="option in options" > {{option.Status}}</style></option>
-							  </select>
+							    <select class="form-control"   ng-model="item" ng-options="objStatus as objStatus.Status disable when objStatus.Status  === '-- Choose status --' for objStatus in options " ng-change="selected_item(item,'new status')"  >
+							    </select>
 							</div>
 						  </div>								
 						
@@ -560,10 +560,9 @@
 								</br>
 
                              <div class="row-fluid">
-							  <select class="form-control" data-show-subtext="true" data-live-search="true" ng-model="item" ng-change="selected_item(item)">
-							    <option value='' disabled="disabled">-- Choose role for status --</option>
-								<option ng-repeat="role in roles" > {{role.Role}}</style></option>
+							  <select class="form-control"   ng-model="role" ng-options="objRole as objRole.Role disable when objRole.Role  === '-- Choose category for role --' for objRole in roles " ng-change="selected_item(role)"  >
 							  </select>
+
 							</div>
 						  </div>								
 						
@@ -765,7 +764,7 @@
 				</div>
 			</div>
 			
-				<div class="modal fade" id="delete_modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+			<div class="modal fade" id="delete_modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
 				<div class="modal-dialog">
 					<div class="modal-content">
 						<!-- Modal Header -->
@@ -795,6 +794,45 @@
 										cancel
 							</button>
 							<button type="button" class="btn btn-primary" data-dismiss="modal" ng-click="delete_user()">
+										delete
+							</button>
+
+						</div>
+					</div>
+						<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+						  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
+						  <script src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.6.3/js/bootstrap-select.min.js"></script>
+				</div>
+			</div>
+			
+			<div class="modal fade" id="delete_role_modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+				<div class="modal-dialog">
+					<div class="modal-content">
+						<!-- Modal Header -->
+						<div class="modal-header">
+							<h4 class="modal-title" id="myModalLabel">
+								Choose role to delete
+							</h4>
+						</div>
+						</br>
+						<!-- Modal Body -->
+						<div class="modal-body">
+							
+							<div class="row-fluid">
+							   <select class="form-control"  ng-model="role" ng-options="objRole as objRole.Role disable when objRole.Role  === '-- Choose category for role --' for objRole in roles " ng-change="selected_item(role)"  >
+							  </select>
+							</div>
+						  </div>
+						  
+							  				
+						</br>
+						
+						<!-- Modal Footer -->
+						<div class="modal-footer">
+							<button type="button" class="btn btn-primary" data-dismiss="modal">
+										cancel
+							</button>
+							<button type="button" class="btn btn-primary" data-dismiss="modal" ng-click="delete_role(role)">
 										delete
 							</button>
 

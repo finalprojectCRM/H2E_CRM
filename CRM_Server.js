@@ -501,7 +501,7 @@ app.post("/addStatutsWithRoles", (request, response) =>{
 	
      var status_with_roles = request.body.status_with_roles;
 	 console.log("before updateOne");
-	 statuses_with_roles_collection.updateOne( { Status:status_with_roles.Status , Roles:status_with_roles.Roles },
+	 statuses_with_roles_collection.updateOne( { Status:status_with_roles.Status },
 	  { $setOnInsert:{ Status:status_with_roles.Status , Roles:status_with_roles.Roles } },
         { upsert: true }
 		,function(err, res) {
@@ -521,7 +521,7 @@ app.post("/addRoleWithStatuses", (request, response) =>{
 	
      var role_with_statuses = request.body.role_with_statuses;
 	 console.log("before updateOne");
-	 roles_with_statuses_collection.updateOne( { Role:role_with_statuses.Role , Statuses:role_with_statuses.Statuses }
+	 roles_with_statuses_collection.updateOne( { Role:role_with_statuses.Role }
 	 ,{ $setOnInsert:{ Role:role_with_statuses.Role , Statuses:role_with_statuses.Statuses } },
         { upsert: true },
 		function(err, res) {
@@ -536,6 +536,7 @@ function check_exsisting_statuses_and_roles()
 	statuses_collection.countDocuments(function (err, count) {
     if (!err && count === 0) {
 		 console.log("no statuses");
+         statuses_collection.insertOne({"Status":"-- Choose status for role --"});
          statuses_collection.insertOne({"Status":"בעיה טכנית"});
     }
 });
@@ -543,7 +544,7 @@ function check_exsisting_statuses_and_roles()
     roles_with_statuses_collection.countDocuments(function (err, count) {
     if (!err && count === 0) {
 		console.log("no roles");
-		 roles_with_statuses_collection.insertOne({Role:"-- Choose category --"});
+		 roles_with_statuses_collection.insertOne({Role:"-- Choose category for role --"});
          roles_with_statuses_collection.insertOne({Role:"תמיכה טכנית",Statuses:["-- Choose status --","בעיה טכנית"]});
     }
 });
@@ -677,6 +678,26 @@ app.post("/deleteUser", (request, response) =>{
 			}).catch(function(err) {
 			  response.send({error: err})
 			})
+});
+app.post("/deleteRole", (request, response) =>{
+//add new contact
+    console.log("entered deleteRole function");
+	var role_to_delete = request.body.role;
+	
+    console.log("role_to_delete:"+role_to_delete);
+	 
+	roles_with_statuses_collection.deleteOne({Role:role_to_delete}, function(err, obj) {
+		if (err) throw err;
+		console.log("1 user deleted");
+			roles_with_statuses_collection.find({}).toArray((error, result) => {
+			if(error) {
+				return response.status(500).send(error);
+			}
+			response.writeHead(200, { 'Content-Type': 'application/json' });
+			response.end(JSON.stringify({"roles" :result}));
+			});
+
+	});
 });
 
 app.post("/deleteStatus", (request, response) =>{

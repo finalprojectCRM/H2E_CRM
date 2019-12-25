@@ -508,6 +508,12 @@ app.post("/addStatutsWithRoles", (request, response) =>{
      console.log("after updateOne");
 	 });
 	 
+	 roles_with_statuses_collection.updateMany( { Role : status_with_roles.Roles }
+	 ,{$addToSet: {Statuses: status_with_roles.Status} },
+		function(err, res) {
+     console.log("after updateOne");
+	 });
+	 
     statuses_collection.updateOne(
         {"Status": status_with_roles.Status},
         { $setOnInsert:{"Status": status_with_roles.Status} },
@@ -645,13 +651,75 @@ app.get("/deleteAllUsers", (request, response) =>{
 
 });
 
+
+app.post("/deleteStatusFromRole", (request, response) =>{
+//add new contact
+    console.log("entered deleteStatusFromRole function");
+        var status_to_delete = request.body.status_to_delete;
+		console.log("status_to_delete.Role " + status_to_delete.Role);
+		console.log("status_to_delete.Status "+ status_to_delete.Status);
+        var Status =  status_to_delete.Status;
+		
+		
+        roles_with_statuses_collection.updateOne({Role:status_to_delete.Role}, {$pull: { Statuses: Status } } , function(err, obj) {
+		if (err) throw err;
+		console.log("1 status was deleted from role ");
+			roles_with_statuses_collection.find({}).toArray((error, result) => {
+			if(error) {
+				return response.status(500).send(error);
+			}
+			response.writeHead(200, { 'Content-Type': 'application/json' });
+			response.end(JSON.stringify({"roles" :result}));
+			});
+		});
+
+	
+});
+
+
+
+app.post("/deleteStatusFromSystem", (request, response) =>{
+//add new contact
+    console.log("entered deleteStatusFromSystem function");
+            var status_to_delete = request.body.status_to_delete;
+			
+            console.log("status_to_delete:"+status_to_delete);
+			statuses_collection.deleteOne({"Status":status_to_delete}, function(err, obj) {
+				if (err) throw err;
+				console.log("1 status deleted");
+				 statuses_collection.find({}).toArray((error, statuses) => {
+					if(error) {
+						return response.status(500).send(error);
+					}
+					var statuses = statuses;
+				});
+				roles_with_statuses_collection.updateOne({}, {$pull: { Statuses: status_to_delete } } , function(err, obj) {
+				if (err) throw err;
+				console.log("1 status was deleted from role ");
+					roles_with_statuses_collection.find({}).toArray((error, roles_statuses) => {
+					if(error) {
+						return response.status(500).send(error);
+					}
+					
+					var roles_statuses = roles_statuses;
+					
+					});
+				});
+
+             });
+			 
+			 response.writeHead(200, { 'Content-Type': 'application/json' });
+			 response.end(JSON.stringify({"statuses" :statuses,"roles":roles_statuses}));
+			
+});
+
 app.post("/deleteUser", (request, response) =>{
 //add new contact
     console.log("entered deleteUser function");
             var user_to_delete = request.body.username;
 			
             console.log("user_to_delete:"+user_to_delete+"check");
-                users_collection.findOne({"UserName":user_to_delete}).then(function(result) {
+              users_collection.findOne({"UserName":user_to_delete}).then(function(result) {
 			  if(!result) {
 				console.log("did not find user to delete ");
 			  }

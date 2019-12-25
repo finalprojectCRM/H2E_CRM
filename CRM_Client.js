@@ -46,6 +46,7 @@ var app = angular.module("CRM",  [ "ngResource"])
 	var delete_all_contacts_flag = false;
 	var delete_all_users_flag = false;
 	var username_to_delete;
+	var deleted_status;
     var selected_items= [];
 	
 	$scope.PhoneNumber_before_update = undefined;
@@ -335,10 +336,13 @@ function clearUploadData() {
 					if(user_from_server.is_admin==true)
 					{
 						$scope.admin_page = true;
+						$scope.isAdmin = true;
+						
 					}
 					else
 					{
 						$scope.admin_page = false;
+						$scope.isAdmin = false;
 					}
 					
 					$log.log(user_from_server.UserName);
@@ -657,11 +661,22 @@ function clearUploadData() {
 		{
 			selected_items.push(option.Status);
 		}
+		
+		else if(flag == 'new role')
+		{
+			selected_items.push(option.Role);
+		}
+		else if(flag == 'delete status')
+		{
+			deleted_status = option.Status;
+		}
+		
+		
         else
 		{
 			selected_items.push(option);
 		}			
-		$log.log(selected_items);
+		$log.log("selected_items :"+ selected_items);
 	}
 	
 	$scope.add_new_status_to_role = function()
@@ -775,7 +790,7 @@ function clearUploadData() {
 			angular.element(Message_Modal).modal("show");
 			return;
 	  }
-	if(status_role==undefined ||status_role=="") //###########################################$scope.status_role###############################
+	if(status_role==undefined ||status_role=="") 
 	{
 		$scope.message = "You must choose a status";
 		$scope.message_type = "ERROR";
@@ -955,7 +970,7 @@ function clearUploadData() {
 			contactInfoToUpdate.Name="";
 		}
 		  
-		if(status_role==undefined ||status_role=="") //###########################################$scope.status_role###############################
+		if(status_role==undefined ||status_role=="") 
 		{
 			$scope.message = "You must choose a status";
 		    $scope.message_type = "ERROR";
@@ -1202,6 +1217,77 @@ function clearUploadData() {
 		
 		
 	}
+	
+	$scope.delete_status_system_settings = function()
+	{
+		angular.element(delete_status_from_system_modal).modal("show");
+		$scope.getOptionsList();
+	}
+	
+	$scope.delete_status_from_system = function()
+	{
+		if(deleted_status == undefined){
+		    $scope.message = "You must choose a status";
+		    $scope.message_type = "ERROR";
+			angular.element(Message_Modal).modal("show");
+			return;
+		}
+		$http.post("http://localhost:3000/deleteStatusFromSystem", {
+				status_to_delete : deleted_status,
+			}).then(
+				function (response) { //success callback   
+				},
+				function (response) { //failure callback
+					
+				}
+			);
+	}
+	
+	
+	 $scope.delete_status_role_settings = function()
+	 {
+		 angular.element(delete_status_from_role_modal).modal("show");
+		 $scope.getRolesList();
+	 }
+	 
+	 $scope.delete_status_from_role = function()
+	 {
+		if(category == undefined){
+		    $scope.message = "You must choose a category";
+		    $scope.message_type = "ERROR";
+			angular.element(Message_Modal).modal("show");
+			return;
+		}
+		if(status_role==undefined ||status_role=="") 
+		{
+			$scope.message = "You must choose a status";
+		    $scope.message_type = "ERROR";
+			angular.element(Message_Modal).modal("show");
+			return;
+		}
+		
+		var status_to_delete = {Role:category.Role , Status:status_role}
+		$http.post("http://localhost:3000/deleteStatusFromRole", {
+				status_to_delete : status_to_delete
+			}).then(
+				function (response) { //success callback 
+				   $scope.roles = response.data.roles; 
+				   $scope.options = response.data.statuses;
+				   $scope.item = $scope.options[0];
+				   $scope.role = $scope.roles[0];
+					if($scope.roles[1]!=undefined)
+					{
+						$scope.status_role = $scope.roles[1].Statuses[0];
+					}
+					
+				},
+				function (response) { //failure callback
+					 
+					
+				}
+			);
+	 }
+	 
 	$scope.insure_delete_all_contacts = function()
 	{
 		$scope.message = "Are you sure you want to delede all the contacts from system ? if you press OK, all contacts will be deleted and the information will be lost. ";

@@ -12,7 +12,7 @@ const config = require('./mongo-config.json');
 const APP_NAME = require('os').hostname();
 const APP_PORT = 3000;
 
-var database, contacts_collection, statuses_collection, users_collection;
+var database, contacts_collection, statuses_collection, users_collection ,files_collection, roles_with_statuses_collection , statuses_with_roles_collection;
 var app = Express();
 var firstTempPassword = "12345678";
 
@@ -428,10 +428,13 @@ app.get("/getContacts", (request, response) =>{
 app.post("/getUsers", (request, response) =>{
 	
 		console.log("entered getUsers function");
-		console.log("status_flag : " + status_flag);
 		var status_flag = request.body.status_flag;
+				console.log("status_flag : " + status_flag);
+
 		if(status_flag == "deleteUser")
 		{
+			console.log("entered if with : " + status_flag);
+
 			users_collection.find({UserName: { $ne: "Admin" }}).toArray((error, result) => {
             if(error) {
                 return response.status(500).send(error);
@@ -508,11 +511,18 @@ app.post("/addStatutsWithRoles", (request, response) =>{
      console.log("after updateOne");
 	 });
 	 
-	 roles_with_statuses_collection.updateMany( { Role : status_with_roles.Roles }
-	 ,{$addToSet: {Statuses: status_with_roles.Status} },
-		function(err, res) {
-     console.log("after updateOne");
-	 });
+	     console.log("status_with_roles.Roles: "+ status_with_roles.Roles);
+
+	 
+	 for (let role of status_with_roles.Roles) {
+		 console.log("role: "+ role);
+		  roles_with_statuses_collection.updateOne( { Role : role }
+		 ,{$addToSet: {Statuses: status_with_roles.Status} },
+			function(err, res) {
+		 console.log("after updateOne");
+		 });
+  
+     }   
 	 
     statuses_collection.updateOne(
         {"Status": status_with_roles.Status},
@@ -533,6 +543,47 @@ app.post("/addRoleWithStatuses", (request, response) =>{
 		function(err, res) {
      console.log("after updateOne");
 	 });
+	  
+		  for (let status of role_with_statuses.Statuses) 
+		  {
+			if(status!="add a new status" && status!="-- Choose status --")
+			{
+			 console.log("status: "+ status);
+			  statuses_with_roles_collection.updateOne( { Status : status }
+			 ,{$addToSet: {Roles: role_with_statuses.Role} },{ upsert: true },
+				function(err, res) {
+			 console.log("after updateOne");
+			 });
+	  
+			} 
+	     }
+});
+app.post("/updateRole", (request, response) =>{
+	
+     var role_to_update = request.body.role_to_update;
+	 statuses = role_to_update.Statuses;
+	 console.log("before updateOne");
+	 roles_with_statuses_collection.updateOne( { Role:role_to_update.Role }
+	 ,{$addToSet: {Statuses:{$each :statuses}} },
+	  function(err, res) {
+     console.log("after updateOne");
+	 });
+	 var a = "add a new status";
+	 console.log("type of a: "+ typeof a);
+	  for (let status of role_to_update.Statuses) {
+		 if(status!="add a new status" && status!="-- Choose status --")
+		 {
+			 console.log("status: "+ status);
+			 console.log("type of status: "+ typeof status);
+			 
+			  statuses_with_roles_collection.updateOne({ Status:status}
+			 ,{$addToSet: {Roles: role_to_update.Role} },
+				function(err, res) {
+			 console.log("after updateOne");
+			 });
+		 }
+  
+     } 
 });
 
 function check_exsisting_statuses_and_roles()
@@ -548,10 +599,18 @@ function check_exsisting_statuses_and_roles()
 });
 
     roles_with_statuses_collection.countDocuments(function (err, count) {
-    if (!err && count === 0) {
+    if (!err && count === 0) 
+	{
 		console.log("no roles");
 		 roles_with_statuses_collection.insertOne({Role:"-- Choose category for role --"});
-         roles_with_statuses_collection.insertOne({Role:"תמיכה טכנית",Statuses:["-- Choose status --","בעיה טכנית"]});
+         roles_with_statuses_collection.insertOne({Role:"תמיכה טכנית",Statuses:["-- Choose status --","בעיה טכנית","add a new status"]});
+    }
+	});
+	statuses_with_roles_collection.countDocuments(function (err, count) {
+    if (!err && count === 0) {
+		console.log("no roles");
+		 statuses_with_roles_collection.insertOne({Status:"-- Choose status for role --"});
+         statuses_with_roles_collection.insertOne({Status:"בעיה טכנית",Roles:["-- Choose status for role --","תמיכה טכנית"]});
     }
 });
 		
@@ -682,18 +741,29 @@ app.post("/deleteStatusFromSystem", (request, response) =>{
 //add new contact
     console.log("entered deleteStatusFromSystem function");
             var status_to_delete = request.body.status_to_delete;
+			var statuses,roles_statuses,statuses_roles;
 			
             console.log("status_to_delete:"+status_to_delete);
 			statuses_collection.deleteOne({"Status":status_to_delete}, function(err, obj) {
 				if (err) throw err;
 				console.log("1 status deleted");
-				 statuses_collection.find({}).toArray((error, statuses) => {
+				 statuses_collection.find({}).toArray((error, result) => {
 					if(error) {
 						return response.status(500).send(error);
 					}
-					var statuses = statuses;
+					statuses = result;
 				});
-				roles_with_statuses_collection.updateOne({}, {$pull: { Statuses: status_to_delete } } , function(err, obj) {
+				statuses_with_roles_collection.deleteOne({"Status":status_to_delete}, function(err, obj) {
+				if (err) throw err;
+				console.log("1 status deleted");
+				 statuses_with_roles_collection.find({}).toArray((error, result) => {
+					if(error) {
+						return response.status(500).send(error);
+					}
+					statuses_roles = result;
+				});
+				});
+				roles_with_statuses_collection.updateMany({}, {$pull: {Statuses: {$in:[status_to_delete]}}  }, function(err, obj) {
 				if (err) throw err;
 				console.log("1 status was deleted from role ");
 					roles_with_statuses_collection.find({}).toArray((error, roles_statuses) => {
@@ -701,7 +771,7 @@ app.post("/deleteStatusFromSystem", (request, response) =>{
 						return response.status(500).send(error);
 					}
 					
-					var roles_statuses = roles_statuses;
+					 roles_statuses = roles_statuses;
 					
 					});
 				});
@@ -766,6 +836,19 @@ app.post("/deleteRole", (request, response) =>{
 			});
 
 	});
+	
+	statuses_with_roles_collection.updateMany({}, {$pull: {Roles: {$in:[role_to_delete]}}  }, function(err, obj) {
+		if (err) throw err;
+		console.log("1 status was deleted from role ");
+			statuses_with_roles_collection.find({}).toArray((error, roles_statuses) => {
+			if(error) {
+				return response.status(500).send(error);
+			}
+			
+			 roles_statuses = roles_statuses;
+			
+			});
+		});
 });
 
 app.post("/deleteStatus", (request, response) =>{

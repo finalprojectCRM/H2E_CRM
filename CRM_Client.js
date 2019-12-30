@@ -413,6 +413,10 @@ function clearUploadData() {
 					$log.log("role_of_user: "+LoginUser.Role);
 					$scope.role_of_user = LoginUser.Role;
 					$scope.all_system = true;
+					$scope.getOptionsList();
+					$scope.getRolesList();
+					
+					
 
 				}
 				else
@@ -647,9 +651,13 @@ function clearUploadData() {
 		}
 	}
 
-	$scope.onChangeCategory = function(option){
+	$scope.onChangeCategory = function(option,flag){
 		$log.log("option : "+option.Role);
 		category = option;
+		if(flag == 'update role')
+		{
+			category = option.Role;
+		}
 	}
 	
 	
@@ -657,7 +665,7 @@ function clearUploadData() {
 	$scope.selected_item = function(option,flag)
 	{
 		
-		if(flag == 'new status')
+		if(flag == 'new status' || flag == 'update role')
 		{
 			selected_items.push(option.Status);
 		}
@@ -678,6 +686,8 @@ function clearUploadData() {
 		}			
 		$log.log("selected_items :"+ selected_items);
 	}
+	
+	
 	
 	$scope.add_new_status_to_role = function()
 	{
@@ -704,33 +714,93 @@ function clearUploadData() {
 
 	}
 
-    //save a new status in server
-	$scope.save_new_status = function()
+	$scope.add_new_status_to_system = function()
 	{
-		if($scope.status_from_modal != undefined)
+		
+		$log.log("entered add_new_status_to_system() = function()");
+		$scope.getOptionsList();
+		angular.element(add_new_status_to_system_modal).modal("show");
+
+
+	}
+	
+    //save a new status in server
+	$scope.save_new_system_status = function()
+	{
+		if($scope.system_status_from_modal != undefined && $scope.system_status_from_modal != "")
 		{
-			if($scope.status_from_modal != "")
-			{
-			    var new_status= {Status:$scope.status_from_modal};
-				$http.post("http://localhost:3000/addOption", {
-				new_status: new_status,
-				}).then(
-				function (response) { //success callback
-                    $scope.newStatus="";
-                 // $scope.update_status=$scope.status_from_modal;				  
-                  $scope.getOptionsList();				
-				},
-				function (response) { //failure callback
-					$scope.message = response.data.error;
-					$scope.message_type = "ERROR";
-					angular.element(Message_Modal).modal("show");
-				}
-				);
+			var new_status= {Status:$scope.system_status_from_modal};
+			$http.post("http://localhost:3000/addOption", {
+			new_status: new_status,
+			}).then(
+			function (response) { //success callback
+				$scope.newStatus="";
+			 // $scope.update_status=$scope.status_from_modal;				  
+			  $scope.getOptionsList();				
+			},
+			function (response) { //failure callback
+				$scope.message = response.data.error;
+				$scope.message_type = "ERROR";
+				angular.element(Message_Modal).modal("show");
 			}
+			);
+			
+		}
+		else
+		{
+			$scope.message = "You must enter a status";
+			$scope.message_type = "ERROR";
+			angular.element(Message_Modal).modal("show");
+			
 		}
 		
-		$scope.status_from_modal =undefined;
+		$scope.system_status_from_modal =undefined;
 	}
+	
+	$scope.update_role = function()
+	{
+		        $log.log($scope.options);
+
+		angular.element(update_role_modal).modal("show");
+	}
+	$scope.update_role_with_statuses = function()
+	{
+		if(category == undefined){
+		    $scope.message = "You must choose a role";
+		    $scope.message_type = "ERROR";
+			angular.element(Message_Modal).modal("show");
+			return;
+		}
+		if(selected_items==undefined) 
+		{
+			$scope.message = "You must choose a status";
+		    $scope.message_type = "ERROR";
+			angular.element(Message_Modal).modal("show");
+			return;
+		}
+		
+		var role_to_update={Role:category,Statuses:selected_items};
+		$http.post("http://localhost:3000/updateRole", {
+				role_to_update: role_to_update,
+			}).then(
+				function (response) { //success callback  
+                   	
+					
+				},
+				function (response) { //failure callback
+					$scope.newName=undefined;
+					$scope.newPhoneNumber=undefined;
+					$scope.newEmail=undefined;
+					$scope.newAddress=undefined;
+					alert(response.data.error);
+				}
+			);
+		
+	}
+	
+	
+	
+	
 		
 	//get the contacts list from server
 	$scope.getContactsList = function(){// get the list of the contacts
@@ -753,7 +823,7 @@ function clearUploadData() {
 			status_flag: flag,
 		}).then(
 			function (response) {//success callback
-			$scope.users = response.data.users;//return the list of the contacts
+			$scope.users = response.data.users;//return the list of the users
 			if(response.data.deleteUser == true)
 			{
 				$log.log($scope.users.length);
@@ -1220,8 +1290,10 @@ function clearUploadData() {
 	
 	$scope.delete_status_system_settings = function()
 	{
-		angular.element(delete_status_from_system_modal).modal("show");
+			
+        angular.element(delete_status_from_system_modal).modal("show");
 		$scope.getOptionsList();
+
 	}
 	
 	$scope.delete_status_from_system = function()

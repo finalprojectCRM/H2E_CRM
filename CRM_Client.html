@@ -422,7 +422,13 @@
 							<li class="dropdown-submenu">
 							    <a tabindex="-1" href="#"><i style =" color: rgb(50, 118, 177);" class="fa fa-id-badge fa-fw"></i> status settings</a>
 								<ul class="dropdown-menu">
-									<li class="hover_color" ng-click="add_new_status_to_role()"><a href="#"><i style =" color: rgb(50, 118, 177);" class="fa fa-plus fa-fw"></i> add new status</a></li>
+									<li class="dropdown-submenu">
+									  <a tabindex="-1" href="#"><i style =" color: rgb(50, 118, 177);" class="fa fa-plus fa-fw"></i>add new status</a>
+										  <ul class="dropdown-menu">
+											<li class="hover_color " ng-click="add_new_status_to_system()"><a href="#"><i style =" color: rgb(50, 118, 177);" class="fa fa-plus fa-fw"></i> to system</a></li>
+											<li class="hover_color" ng-click="add_new_status_to_role()"><a href="#"><i style =" color: rgb(50, 118, 177);" class="fa fa-plus fa-fw"></i> to role   </a></li>
+										  </ul>
+									</li>
 									<li class="dropdown-submenu">
 									  <a tabindex="-1" href="#"><i style =" color: rgb(50, 118, 177);" class="fa fa-trash fa-fw"></i> delete status</a>
 										  <ul class="dropdown-menu">
@@ -437,6 +443,7 @@
 							  <a tabindex="-1" href="#"><i style =" color: rgb(50, 118, 177);" class="fa fa-address-card-o fa-fw"></i> role settings</a>
 								  <ul class="dropdown-menu">
 									<li class="hover_color" ng-click="add_new_role()"><a href="#"><i style =" color: rgb(50, 118, 177);" class="fa fa-plus fa-fw"></i> add new role</a></li>
+									<li class="hover_color" ng-click="update_role()"><a href="#"><i style =" color: rgb(50, 118, 177);" class="fa fa-edit fa-fw"></i> update role</a></li>
 									<li class="hover_color" ng-click="display_role_list()"><a href="#"><i style =" color: rgb(50, 118, 177);" class="fa fa-trash fa-fw"></i> delete role   </a></li>
 								  </ul>
 							  </li>
@@ -453,7 +460,7 @@
 					</div>
 				    
 				</div>
-				
+			
 				<div ng-show="add_file==true">
 				
 				     <div class="row" ng-if="uploadSuccessful">
@@ -480,319 +487,11 @@
 					</div>
 
 				</div>
-				<div class="modal fade" id="add_new_role_modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-					<div class="modal-dialog">
-						<div class="modal-content">
-							<!-- Modal Header -->
-							<div class="modal-header">
-								<button type="button" class="close" 
-								   data-dismiss="modal">
-									   <span aria-hidden="true">&times;</span>
-									   <span class="sr-only">Close</span>
-								</button>
-								<h4 class="modal-title" id="myModalLabel">
-									Add user role with matching statuses
-								</h4>
-							</div>
-							</br>
-							<!-- Modal Body -->
-							<div class="modal-body">
-								
-								<div class="form-horizontal" role="form">
-								  <div class="form-group">
-								  </br>
-									<div class="col-sm-10">
-										<input class="form-control" ng-model="role_from_modal" placeholder="Enter new role for user..."/>
-								    </div>
-								  </div>
-								  
-								</div>
-								
-								</br>
-
-                             <div class="row-fluid">
-							    <select class="form-control"   ng-model="item" ng-options="objStatus as objStatus.Status disable when objStatus.Status  === '-- Choose status --' for objStatus in options " ng-change="selected_item(item,'new status')"  >
-							    </select>
-							</div>
-						  </div>								
-						
-							</br>
-							<!-- Modal Footer -->
-							<div class="modal-footer">
-								<button type="button" class="btn btn-default"
-										data-dismiss="modal">
-											Close
-								</button>
-								<button type="button" class="btn btn-primary" ng-click="save_new_role_status()" data-dismiss="modal">
-									Save
-								</button>
-							</div>
-							
-						</div>
-							<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
-						  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
-						  <script src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.6.3/js/bootstrap-select.min.js"></script>
-					</div>
-				</div>
-				
-				<div class="modal fade" id="add_new_status_modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-					<div class="modal-dialog">
-						<div class="modal-content">
-							<!-- Modal Header -->
-							<div class="modal-header">
-								<button type="button" class="close" 
-								   data-dismiss="modal">
-									   <span aria-hidden="true">&times;</span>
-									   <span class="sr-only">Close</span>
-								</button>
-								<h4 class="modal-title" id="myModalLabel">
-									Add status to user role
-								</h4>
-							</div>
-							</br>
-							<!-- Modal Body -->
-							<div class="modal-body">
-								
-								<div class="form-horizontal" role="form">
-								  <div class="form-group">
-								  </br>
-									<div class="col-sm-10">
-										<input class="form-control" ng-model="status_from_modal" placeholder="Enter new status..."/>
-								    </div>
-								  </div>
-								  
-								</div>
-								
-								</br>
-
-                             <div class="row-fluid">
-							  <select class="form-control"   ng-model="role" ng-options="objRole as objRole.Role disable when objRole.Role  === '-- Choose category for role --' for objRole in roles " ng-change="selected_item(role,'new role')"  >
-							  </select>
-
-							</div>
-						  </div>								
-						
-							</br>
-							<!-- Modal Footer -->
-							<div class="modal-footer">
-								<button type="button" class="btn btn-default"
-										data-dismiss="modal">
-											Close
-								</button>
-								<button type="button" class="btn btn-primary" ng-click="save_new_status_roles()" data-dismiss="modal">
-									Save
-								</button>
-							</div>
-							
-						</div>
-							<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
-						  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
-						  <script src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.6.3/js/bootstrap-select.min.js"></script>
-					</div>
-				</div>
-				
-
-            	<div class="modal fade" id="validation_current_password_modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-					<div class="modal-dialog">
-						<div class="modal-content">
-							<!-- Modal Header -->
-							<div class="modal-header">
-								<button type="button" class="close" 
-								   data-dismiss="modal">
-									   <span aria-hidden="true">&times;</span>
-									   <span class="sr-only">Close</span>
-								</button>
-								<h4 class="modal-title" id="myModalLabel">
-									New Password
-								</h4>
-							</div>
-							
-							<!-- Modal Body -->
-							<div class="modal-body">
-								
-								<div class="form-horizontal" role="form">
-								  <div class="form-group">
-									<div class="col-sm-10">
-										</br>
-										<div class="input-group">
-											<span class="input-group-addon primary"><i class="fa fa-lock fa-lg"></i></span>
-											<input ng-model="current_password" type="password" class="form-control w-50 p-3"  placeholder="Enter your current password">	
-										</div>
-										</br>
-									</div>
-								  </div>
-								  
-								</div>				
-							</div>
-							
-							<!-- Modal Footer -->
-							<div class="modal-footer">
-								<button type="button" class="btn btn-default"
-										data-dismiss="modal">
-											Close
-								</button>
-								<button type="button" class="btn btn-primary" ng-click="verify_password(current_password)" data-dismiss="modal">
-									Verify
-								</button>
-							</div>
-						</div>
-					</div>
-				</div>
-	
 				
 			</div>
-			
-			<div class="modal fade" id="delete_status_from_role_modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-					<div class="modal-dialog">
-						<div class="modal-content">
-							<!-- Modal Header -->
-							<div class="modal-header">
-								<button type="button" class="close" 
-								   data-dismiss="modal">
-									   <span aria-hidden="true">&times;</span>
-									   <span class="sr-only">Close</span>
-								</button>
-								<h4 class="modal-title" id="myModalLabel">
-									Select status from a role to delete
-								</h4>
-							</div>
-							
-							<!-- Modal Body -->
-							<div class="modal-body">
-								
-								<div class="form-horizontal" role="form">
-								  <div class="form-group">
-									<div class="col-sm-10">
-										</br>
-										<select class="form-control" data-show-subtext="true" data-live-search="true" ng-model="role" ng-options="objRole as objRole.Role disable when objRole.Role  === '-- Choose category for role --' for objRole in roles " ng-change="onChangeCategory(role)" ></select>	
-										</br>
-										<div ng-if="role">
-											<select class="form-control" ng-model="status_role" ng-options="status_role disable when status_role === '-- Choose status --'  for status_role in role.Statuses"  ng-change="onChange(status_role)"><!--  -->
-										    </select>
-										</div>
-										</br>
-									</div>
-								  </div>
-								</div>				
-							</div>
-							
-							<!-- Modal Footer -->
-							<div class="modal-footer">
-								<button type="button" class="btn btn-default" data-dismiss="modal">
-											cancel
-								</button>
-								<button type="button" class="btn btn-primary" ng-click="delete_status_from_role()" data-dismiss="modal">
-									delete
-								</button>
-							</div>
-						</div>
-					</div>
-				</div>
-	
-				
-			</div>	
-
-			<div class="modal fade" id="delete_status_from_system_modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-					<div class="modal-dialog">
-						<div class="modal-content">
-							<!-- Modal Header -->
-							<div class="modal-header">
-								<button type="button" class="close" 
-								   data-dismiss="modal">
-									   <span aria-hidden="true">&times;</span>
-									   <span class="sr-only">Close</span>
-								</button>
-								<h4 class="modal-title" id="myModalLabel">
-									Select status to delete from system
-								</h4>
-							</div>
-							</br>
-							<!-- Modal Body -->
-							<div class="modal-body">	
-							</br>
-                             <div class="row-fluid">
-							    <select class="form-control" ng-model="item" ng-options="objStatus as objStatus.Status disable when objStatus.Status  === '-- Choose status --' for objStatus in options " ng-change="selected_item(item,'delete status')"  >
-							    </select>
-							</div>
-						  </div>								
-						
-							</br>
-							<!-- Modal Footer -->
-							<div class="modal-footer">
-								<button type="button" class="btn btn-default" data-dismiss="modal">
-											cancel
-								</button>
-								<button type="button" class="btn btn-primary" ng-click="delete_status_from_system()" data-dismiss="modal">
-									delete
-								</button>
-							</div>
-							
-						</div>
-							<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
-						  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
-						  <script src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.6.3/js/bootstrap-select.min.js"></script>
-					</div>
-				</div>
-				
-			
-			
-			<div class="modal fade" id="change_password_modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-					<div class="modal-dialog">
-						<div class="modal-content">
-							<!-- Modal Header -->
-							<div class="modal-header">
-								<button type="button" class="close" 
-								   data-dismiss="modal">
-									   <span aria-hidden="true">&times;</span>
-									   <span class="sr-only">Close</span>
-								</button>
-								<h4 class="modal-title" id="myModalLabel">
-									New Password
-								</h4>
-							</div>
-							
-							<!-- Modal Body -->
-							<div class="modal-body">
-								
-								<div class="form-horizontal" role="form">
-								  <div class="form-group">
-									<div class="col-sm-10">
-										</br>
-										<div class="input-group">
-											<span class="input-group-addon primary"><i class="fa fa-lock fa-lg"></i></span>
-											<input ng-model="new_password" type="password" class="form-control w-50 p-3"  placeholder="Enter new password">	
-										</div>
-										</br>
-										</br>
-										<div class="input-group">
-											<span class="input-group-addon primary"><i class="fa fa-lock fa-lg"></i></span>
-											<input ng-model="verify_new_password" type="password" class="form-control w-50 p-3"  placeholder="Enter Password again for validation">	
-										</div>
-										</br>
-									</div>
-								  </div>
-								  
-								</div>				
-							</div>
-							
-							<!-- Modal Footer -->
-							<div class="modal-footer">
-								<button type="button" class="btn btn-default"
-										data-dismiss="modal">
-											cancel
-								</button>
-								<button type="button" class="btn btn-primary" ng-click="change_password_function(new_password)" data-dismiss="modal">
-									change
-								</button>
-							</div>
-						</div>
-					</div>
-				</div>
-	
-				
-			</div>
-			
-			<div class="modal fade" id="Message_Modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+		</div>
+		
+		<div class="modal fade" id="Message_Modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
 				<div class="modal-dialog">
 					<div class="modal-content">
 						<!-- Modal Header -->
@@ -863,6 +562,114 @@
 					</div>
 				</div>
 			</div>
+			<div class="modal fade" id="validation_current_password_modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+				<div class="modal-dialog">
+					<div class="modal-content">
+						<!-- Modal Header -->
+						<div class="modal-header">
+							<button type="button" class="close" 
+							   data-dismiss="modal">
+								   <span aria-hidden="true">&times;</span>
+								   <span class="sr-only">Close</span>
+							</button>
+							<h4 class="modal-title" id="myModalLabel">
+								New Password
+							</h4>
+						</div>
+						
+						<!-- Modal Body -->
+						<div class="modal-body">
+							
+							<div class="form-horizontal" role="form">
+							  <div class="form-group">
+								<div class="col-sm-10">
+									</br>
+									<div class="input-group">
+										<span class="input-group-addon primary"><i class="fa fa-lock fa-lg"></i></span>
+										<input ng-model="current_password" type="password" class="form-control w-50 p-3"  placeholder="Enter your current password">	
+									</div>
+									</br>
+								</div>
+							  </div>
+							  
+							</div>				
+						</div>
+						
+						<!-- Modal Footer -->
+						<div class="modal-footer">
+							<button type="button" class="btn btn-default"
+									data-dismiss="modal">
+										Close
+							</button>
+							<button type="button" class="btn btn-primary" ng-click="verify_password(current_password)" data-dismiss="modal">
+								Verify
+							</button>
+						</div>
+					</div>
+				</div>
+			</div>
+	
+				
+					
+			
+			
+			<div class="modal fade" id="change_password_modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+				<div class="modal-dialog">
+					<div class="modal-content">
+						<!-- Modal Header -->
+						<div class="modal-header">
+							<button type="button" class="close" 
+							   data-dismiss="modal">
+								   <span aria-hidden="true">&times;</span>
+								   <span class="sr-only">Close</span>
+							</button>
+							<h4 class="modal-title" id="myModalLabel">
+								New Password
+							</h4>
+						</div>
+						
+						<!-- Modal Body -->
+						<div class="modal-body">
+							
+							<div class="form-horizontal" role="form">
+							  <div class="form-group">
+								<div class="col-sm-10">
+									</br>
+									<div class="input-group">
+										<span class="input-group-addon primary"><i class="fa fa-lock fa-lg"></i></span>
+										<input ng-model="new_password" type="password" class="form-control w-50 p-3"  placeholder="Enter new password">	
+									</div>
+									</br>
+									</br>
+									<div class="input-group">
+										<span class="input-group-addon primary"><i class="fa fa-lock fa-lg"></i></span>
+										<input ng-model="verify_new_password" type="password" class="form-control w-50 p-3"  placeholder="Enter Password again for validation">	
+									</div>
+									</br>
+								</div>
+							  </div>
+							  
+							</div>				
+						</div>
+						
+						<!-- Modal Footer -->
+						<div class="modal-footer">
+							<button type="button" class="btn btn-default"
+									data-dismiss="modal">
+										cancel
+							</button>
+							<button type="button" class="btn btn-primary" ng-click="change_password_function(new_password)" data-dismiss="modal">
+								change
+							</button>
+						</div>
+					</div>
+				</div>
+		</div>
+	
+				
+		
+			
+			
 			
 			<div class="modal fade" id="delete_modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
 				<div class="modal-dialog">
@@ -905,6 +712,307 @@
 				</div>
 			</div>
 			
+			<div class="modal fade" id="add_new_status_to_system_modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+					<div class="modal-dialog">
+						<div class="modal-content">
+							<!-- Modal Header -->
+							<div class="modal-header">
+								<button type="button" class="close" 
+								   data-dismiss="modal">
+									   <span aria-hidden="true">&times;</span>
+									   <span class="sr-only">Close</span>
+								</button>
+								<h4 class="modal-title" id="myModalLabel">
+									Add status to the system
+								</h4>
+							</div>
+							</br>
+							<!-- Modal Body -->
+							<div class="modal-body">
+								
+								<div class="form-horizontal" role="form">
+								  <div class="form-group">
+								  </br>
+									<div class="col-sm-10">
+										<input class="form-control" ng-model="system_status_from_modal" placeholder="Enter new status..."/>
+								    </div>
+								  </div>
+								  
+								</div>
+								
+								</br>
+						  </div>								
+						
+							</br>
+							<!-- Modal Footer -->
+							<div class="modal-footer">
+								<button type="button" class="btn btn-default"
+										data-dismiss="modal">
+											Close
+								</button>
+								<button type="button" class="btn btn-primary" ng-click="save_new_system_status()" data-dismiss="modal">
+									Save
+								</button>
+							</div>
+							
+						</div>
+					</div>
+				</div>
+				
+			
+			<div class="modal fade" id="add_new_status_modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+					<div class="modal-dialog">
+						<div class="modal-content">
+							<!-- Modal Header -->
+							<div class="modal-header">
+								<button type="button" class="close" 
+								   data-dismiss="modal">
+									   <span aria-hidden="true">&times;</span>
+									   <span class="sr-only">Close</span>
+								</button>
+								<h4 class="modal-title" id="myModalLabel">
+									Add status to user role
+								</h4>
+							</div>
+							</br>
+							<!-- Modal Body -->
+							<div class="modal-body">
+								
+								<div class="form-horizontal" role="form">
+								  <div class="form-group">
+								  </br>
+									<div class="col-sm-10">
+										<input class="form-control" ng-model="status_from_modal" placeholder="Enter new status..."/>
+								    </div>
+								  </div>
+								  
+								</div>
+								
+								</br>
+
+                             <div class="row-fluid">
+							  <select class="form-control"   ng-model="role" ng-options="objRole as objRole.Role disable when objRole.Role  === '-- Choose category for role --' for objRole in roles " ng-change="selected_item(role,'new role')"  >
+							  </select>
+
+							</div>
+						  </div>								
+						
+							</br>
+							<!-- Modal Footer -->
+							<div class="modal-footer">
+								<button type="button" class="btn btn-default"
+										data-dismiss="modal">
+											Close
+								</button>
+								<button type="button" class="btn btn-primary" ng-click="save_new_status_roles()" data-dismiss="modal">
+									Save
+								</button>
+							</div>
+							
+						</div>
+							<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+						  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
+						  <script src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.6.3/js/bootstrap-select.min.js"></script>
+					</div>
+				</div>
+				
+				<div class="modal fade" id="delete_status_from_system_modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+					<div class="modal-dialog">
+						<div class="modal-content">
+							<!-- Modal Header -->
+							<div class="modal-header">
+								<button type="button" class="close" 
+								   data-dismiss="modal">
+									   <span aria-hidden="true">&times;</span>
+									   <span class="sr-only">Close</span>
+								</button>
+								<h4 class="modal-title" id="myModalLabel">
+									Select status to delete from system
+								</h4>
+							</div>
+							</br>
+							<!-- Modal Body -->
+							<div class="modal-body">	
+							</br>
+                             <div class="row-fluid">
+							    <select class="form-control" ng-model="item" ng-options="objStatus as objStatus.Status disable when objStatus.Status  === '-- Choose status --' for objStatus in options " ng-change="selected_item(item,'delete status')"  >
+							    </select>
+							</div>
+						  </div>								
+						
+							</br>
+							<!-- Modal Footer -->
+							<div class="modal-footer">
+								<button type="button" class="btn btn-default" data-dismiss="modal">
+											cancel
+								</button>
+								<button type="button" class="btn btn-primary" ng-click="delete_status_from_system()" data-dismiss="modal">
+									delete
+								</button>
+							</div>
+							
+						</div>
+							<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+						  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
+						  <script src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.6.3/js/bootstrap-select.min.js"></script>
+					</div>
+				</div>
+				
+				<div class="modal fade" id="delete_status_from_role_modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+					<div class="modal-dialog">
+						<div class="modal-content">
+							<!-- Modal Header -->
+							<div class="modal-header">
+								<button type="button" class="close" 
+								   data-dismiss="modal">
+									   <span aria-hidden="true">&times;</span>
+									   <span class="sr-only">Close</span>
+								</button>
+								<h4 class="modal-title" id="myModalLabel">
+									Select status from a role to delete
+								</h4>
+							</div>
+							
+							<!-- Modal Body -->
+							<div class="modal-body">
+								
+								<div class="form-horizontal" role="form">
+								  <div class="form-group">
+									<div class="col-sm-10">
+										</br>
+										<select class="form-control" data-show-subtext="true" data-live-search="true" ng-model="role" ng-options="objRole as objRole.Role disable when objRole.Role  === '-- Choose category for role --' for objRole in roles " ng-change="onChangeCategory(role)" ></select>	
+										</br>
+										<div ng-if="role">
+											<select class="form-control" ng-model="status_role" ng-options="status_role disable when status_role === '-- Choose status --'  for status_role in role.Statuses"  ng-change="onChange(status_role)"><!--  -->
+										    </select>
+										</div>
+										</br>
+									</div>
+								  </div>
+								</div>				
+							</div>
+							
+							<!-- Modal Footer -->
+							<div class="modal-footer">
+								<button type="button" class="btn btn-default" data-dismiss="modal">
+											cancel
+								</button>
+								<button type="button" class="btn btn-primary" ng-click="delete_status_from_role()" data-dismiss="modal">
+									delete
+								</button>
+							</div>
+						</div>
+					</div>
+				</div>
+	
+				
+				
+
+
+							
+				<div class="modal fade" id="add_new_role_modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+					<div class="modal-dialog">
+						<div class="modal-content">
+							<!-- Modal Header -->
+							<div class="modal-header">
+								<button type="button" class="close" 
+								   data-dismiss="modal">
+									   <span aria-hidden="true">&times;</span>
+									   <span class="sr-only">Close</span>
+								</button>
+								<h4 class="modal-title" id="myModalLabel">
+									Add user role with matching statuses
+								</h4>
+							</div>
+							</br>
+							<!-- Modal Body -->
+							<div class="modal-body">
+								
+								<div class="form-horizontal" role="form">
+								  <div class="form-group">
+								  </br>
+									<div class="col-sm-10">
+										<input class="form-control" ng-model="role_from_modal" placeholder="Enter new role for user..."/>
+								    </div>
+								  </div>
+								  
+								</div>
+								
+								</br>
+
+                             <div class="row-fluid">
+							    <select class="form-control"   ng-model="item" ng-options="objStatus as objStatus.Status disable when objStatus.Status  === '-- Choose status --' for objStatus in options " ng-change="selected_item(item,'new status')"  >
+							    </select>
+							</div>
+						  </div>								
+						
+							</br>
+							<!-- Modal Footer -->
+							<div class="modal-footer">
+								<button type="button" class="btn btn-default"
+										data-dismiss="modal">
+											Close
+								</button>
+								<button type="button" class="btn btn-primary" ng-click="save_new_role_status()" data-dismiss="modal">
+									Save
+								</button>
+							</div>
+							
+						</div>
+							<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+						  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
+						  <script src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.6.3/js/bootstrap-select.min.js"></script>
+					</div>
+				</div>
+					
+			
+			<div class="modal fade" id="update_role_modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+					<div class="modal-dialog">
+						<div class="modal-content">
+							<!-- Modal Header -->
+							<div class="modal-header">
+								<button type="button" class="close" 
+								   data-dismiss="modal">
+									   <span aria-hidden="true">&times;</span>
+									   <span class="sr-only">Close</span>
+								</button>
+								<h4 class="modal-title" id="myModalLabel">
+									Select role and add to it additional statuses
+								</h4>
+							</div>
+							
+							<!-- Modal Body -->
+							<div class="modal-body">
+								
+								<div class="form-horizontal" role="form">
+								  <div class="form-group">
+									<div class="col-sm-10">
+										</br>
+										<select class="form-control" data-show-subtext="true" data-live-search="true" ng-model="role" ng-options="objRole as objRole.Role disable when objRole.Role  === '-- Choose category for role --' for objRole in roles " ng-change="onChangeCategory(role,'update role')" ></select>	
+										</br>
+										<div class="row-fluid">
+											<select class="form-control" ng-model="item" ng-options="objStatus as objStatus.Status disable when objStatus.Status  === '-- Choose status for role --' for objStatus in options " ng-change="selected_item(item,'update role')"  >
+											</select>
+										</div>
+										</br>
+									</div>
+								  </div>
+								</div>				
+							</div>
+							
+							<!-- Modal Footer -->
+							<div class="modal-footer">
+								<button type="button" class="btn btn-default" data-dismiss="modal">
+											cancel
+								</button>
+								<button type="button" class="btn btn-primary" ng-click="update_role_with_statuses()" data-dismiss="modal">
+									update
+								</button>
+							</div>
+						</div>
+					</div>
+				</div>
+			
 			<div class="modal fade" id="delete_role_modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
 				<div class="modal-dialog">
 					<div class="modal-content">
@@ -943,8 +1051,10 @@
 						  <script src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.6.3/js/bootstrap-select.min.js"></script>
 				</div>
 			</div>
-
-		</div>
+			
+				
+	
+			
 	</div>
 
 	</body>

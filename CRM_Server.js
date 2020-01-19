@@ -121,9 +121,9 @@ app.get("/bootstrap.min.css", (request, response) =>{
         });
 });
 //get angular
-app.get("/angular.min.js", (request, response) =>{//bring the angular file
+app.get("/bower_components/angular/angular.min.js", (request, response) =>{//bring the angular file
         console.log('--Rendering angular-js file--');
-        fs.readFile('./lib/angular.min.js', function (error, data) {
+        fs.readFile('./bower_components/angular/angular.min.js', function (error, data) {
             if (error) {
                 console.log('error has happand in angular.min.js', error)
             }
@@ -140,6 +140,101 @@ app.get("/CRM_Client.css", (request, response) =>{   //bring the CRM_Client.css 
                 console.log('error has happand in /CRM_Client.css', error)
             }
             response.writeHead(200, { 'Content-Type': "text/css" });
+            response.end(data);
+        });
+});
+
+//get CRM_Client.js
+app.get("/CRM_Client.js", (request, response) =>{
+        console.log('--Rendering CRM_Client.css file--');
+        fs.readFile('./CRM_Client.js', function (error, data) {
+            if (error) {
+                console.log('error has happand in /CRM_Client.js', error)
+            }
+            response.writeHead(200, { 'Content-Type':"text/javascript" });
+            response.end(data);
+        });
+});
+
+app.get("/bower_components/fullcalendar/dist/fullcalendar.css", (request, response) =>{
+        console.log('--Rendering fullcalendar.css file--');
+        fs.readFile('./bower_components/fullcalendar/dist/fullcalendar.css', function (error, data) {
+            if (error) {
+                console.log('error has happand in fullcalendar.css', error)
+            }
+            response.writeHead(200, { 'Content-Type':"text/css" });
+            response.end(data);
+        });
+});
+app.get("/datetimepicker.css", (request, response) =>{
+        console.log('--Rendering datetimepicker.css file--');
+        fs.readFile('./calendar/datetimepicker.css', function (error, data) {
+            if (error) {
+                console.log('error has happand in /datetimepicker.css', error)
+            }
+            response.writeHead(200, { 'Content-Type':"text/css" });
+            response.end(data);
+        });
+});
+
+app.get("/bower_components/moment/min/moment.min.js", (request, response) =>{
+        console.log('--Rendering moment.min.js file--');
+        fs.readFile('./bower_components/moment/min/moment.min.js', function (error, data) {
+            if (error) {
+                console.log('error has happand in /moment.min.js', error)
+            }
+            response.writeHead(200, { 'Content-Type':"text/javascript" });
+            response.end(data);
+        });
+});
+app.get("/bower_components/angular-ui-calendar/src/calendar.js", (request, response) =>{
+        console.log('--Rendering ui-calendar.js file--');
+        fs.readFile('./bower_components/angular-ui-calendar/src/calendar.js', function (error, data) {
+            if (error) {
+                console.log('error has happand in /ui-calendar.js', error)
+            }
+            response.writeHead(200, { 'Content-Type':"text/javascript" });
+            response.end(data);
+        });
+});
+app.get("/datetimepicker.js", (request, response) =>{
+        console.log('--Rendering datetimepicker.js file--');
+        fs.readFile('./calendar/datetimepicker.js', function (error, data) {
+            if (error) {
+                console.log('error has happand in /datetimepicker.js', error)
+            }
+            response.writeHead(200, { 'Content-Type':"text/javascript" });
+            response.end(data);
+        });
+});
+app.get("/bower_components/fullcalendar/dist/fullcalendar.min.js", (request, response) =>{
+        console.log('--Rendering fullcalendar.min.js file--');
+        fs.readFile('./bower_components/fullcalendar/dist/fullcalendar.min.js', function (error, data) {
+            if (error) {
+                console.log('error has happand in fullcalendar.min.js', error)
+            }
+            response.writeHead(200, { 'Content-Type':"text/javascript" });
+            response.end(data);
+        });
+});
+app.get("/bower_components/fullcalendar/dist/gcal.js", (request, response) =>{
+        console.log('--Rendering gcal.js file--');
+        fs.readFile('./bower_components/fullcalendar/dist/gcal.js', function (error, data) {
+            if (error) {
+                console.log('error has happand in gcal.js', error)
+            }
+            response.writeHead(200, { 'Content-Type':"text/javascript" });
+            response.end(data);
+        });
+});
+
+app.get("/bower_components/jquery/dist/jquery.min.js", (request, response) =>{
+        console.log('--Rendering jquery.min.js file--');
+        fs.readFile('./bower_components/jquery/dist/jquery.min.js', function (error, data) {
+            if (error) {
+                console.log('error has happand in jquery.min.js', error)
+            }
+            response.writeHead(200, { 'Content-Type':"text/javascript" });
             response.end(data);
         });
 });

@@ -2,27 +2,44 @@
 <html ng-app="CRM" >
 	<head>
 		 <meta name="viewport" content="width=device-width, initial-scale=1">
-		 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+		<!--<script type="text/javascript" src="bower_components/jquery/dist/jquery.min.js"></script>-->
 
-		 <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
+
 		 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js" integrity="sha384-b/U6ypiBEHpOf/4+1nzFpr53nxSS+GLCkfwBdFNTxtclqqenISfwAzpKaMNFNmj4" crossorigin="anonymous"></script>
-		 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
 		 <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.6.3/css/bootstrap-select.min.css" />
-		<script type="text/javascript" src="angular.min.js"></script>
-		<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular-route.js"></script>
-		<script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.7.8/angular-resource.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-cookie/4.1.0/angular-cookie.min.js" integrity="sha256-Wrj5HHKDApceikiZq36OI8gQV6Cjd3FLB/MvyCvgoDY=" crossorigin="anonymous"></script>
-		<script type="text/javascript" src="CRM_Client.js"></script>
+		<script type="text/javascript" src="bower_components/angular/angular.min.js"></script>
+		
 		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
 		<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
-		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
-		<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+		<!--<script src="https://stackpath.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>-->
 		<link rel="stylesheet" type="text/css" href="CRM_Client.css"></link>
+		<link rel="stylesheet" href="bower_components/fullcalendar/dist/fullcalendar.css"/>
+		<!-- jquery, moment, and angular have to get included before fullcalendar -->
+		<script type="text/javascript" src="bower_components/moment/min/moment.min.js"></script>
+		<script type="text/javascript" src="bower_components/angular-ui-calendar/src/calendar.js"></script>
+		<script type="text/javascript" src="bower_components/fullcalendar/dist/fullcalendar.min.js"></script>
+		<script type="text/javascript" src="bower_components/fullcalendar/dist/gcal.js"></script>
+		<script src="http://angular-ui.github.io/bootstrap/ui-bootstrap-tpls-0.13.0.min.js"></script>		 
+
+		<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular-route.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.8/angular-resource.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-cookie/4.1.0/angular-cookie.min.js" integrity="sha256-Wrj5HHKDApceikiZq36OI8gQV6Cjd3FLB/MvyCvgoDY=" crossorigin="anonymous"></script>
+
+		<link rel="stylesheet" href="datetimepicker.css" />
+		<script src="datetimepicker.js"></script>
+		<script type="text/javascript" src="CRM_Client.js"></script>
+						
+		
 	</head>
 	
 	<body>
+
 		<div ng-controller="CRM_controller"> 
+		
 		    
 		    <div ng-show="login_page==true" id="log_in">
 			
@@ -274,7 +291,7 @@
 									<th>Address</th>
 									<th> </th>
 									<th> </th>
-									<th> </th>	
+									<th> </th>
 								</tr>
 							<thead>
 							<tbody>
@@ -285,8 +302,10 @@
 										<td ng-show="contactIsEdit==false">{{contactInfo.PhoneNumber}}</td> 
 										<td ng-show="contactIsEdit==false">{{contactInfo.eMail}}</td>
 										<td ng-show="contactIsEdit==false">{{contactInfo.Address}}</td>	
-										
-									<td ng-show="contactIsEdit==false"><i class="fa fa-edit" style="font-size:24px;color:#008fb3"  aria-hidden="true" ng-click = "contactIsEdit =!contactIsEdit;update_contact_function(contactInfo)"></i></td>
+									
+									<td ng-show="contactIsEdit==false"><i class="fa fa-envelope" style="font-size:24px;color:#00b3b3" aria-hidden="true" ng-click = "sendMail()" ></i></td>
+									
+									<td ng-show="contactIsEdit==false"><i class="fa fa-edit" style="font-size:25px;color:#008fb3"  aria-hidden="true" ng-click = "contactIsEdit =!contactIsEdit;update_contact_function(contactInfo)"></i></td>
 									<div ng-if="contactIsEdit" class="form-group row" >										
 										
 										<td ng-show="contactIsEdit==true"><div class="form-group" >	
@@ -309,8 +328,8 @@
 										<td ng-show="contactIsEdit==true"><input ng-model="contactInfo.eMail" type="text" class="form-control" /></td>
 										<td ng-show="contactIsEdit==true"><input ng-model="contactInfo.Address" type="text" class="form-control" /></td>	
 									</div>
-									
-									<td><i class="fa fa-trash" style="font-size:24px;color:#003366" ng-show="contactIsEdit==false" aria-hidden="true" ng-click = "delete_contact_function(contactInfo)"></i></td>
+
+									<td ng-show="contactIsEdit==false"><i class="fa fa-trash" style="font-size:24px;color:#003366"  aria-hidden="true" ng-click = "delete_contact_function(contactInfo)"></i></td>
 									<td ng-show="contactIsEdit==true"><i class="fa fa-check-square-o" style="font-size:24px;color:#00e600" aria-hidden="true" ng-click = "save_updated(contactInfo)"></i></td>
 									 
 									 		
@@ -352,6 +371,7 @@
 									<td></td>
 									<td></td>
 									<td></td>
+									<td></td>
 									
 									<td ng-show="click==true"><i class="fa fa-user-plus" style="font-size:24px;color:#00cc99" ng-click="add_contact_function() "></i></td> 
 								</tr>
@@ -361,7 +381,59 @@
 					</div>
 				</form>
 				
-				<div ng-show="show_calendar==true" ui-calendar="uiConfig.calendar" class="span8 calendar" ng-model="eventSources"></div> 
+		<div ng-show="show_calendar==true" >
+				
+				  <div>
+						Event Title:
+
+								  <input type="text" ng-model="event.Title" />
+						  </div>
+						  <div>
+						  Start Date Time:
+								  <div class="dropdown">
+							  <a href="#" class="dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+								<div class="input-group">
+								  <input type="text" class="form-control" data-ng-model="event.startDate" />
+								  <span class="input-group-addon">
+									<i class="glyphicon glyphicon-calendar"></i>
+								  </span>
+								</div>
+							  </a>
+							  <ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
+								<datetimepicker data-ng-model="event.startDate" data-datetimepicker-config="{ dropdownSelector: '#dropdown2' }"></datetimepicker>
+							  </ul>
+							</div>
+						  </div>
+						  <div>
+
+
+						  End Date Time:
+								  <div class="dropdown">
+							  <a href="#" class="dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+								<div class="input-group">
+								  <input type="text" class="form-control" data-ng-model="event.endDate" />
+								  <span class="input-group-addon">
+									<i class="glyphicon glyphicon-calendar"></i>
+								  </span>
+								</div>
+							  </a>
+							  <ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
+								<datetimepicker data-ng-model="event.endDate" data-datetimepicker-config="{ dropdownSelector: '#dropdown3' }"></datetimepicker>
+							  </ul>
+							</div>
+							
+						  </div>
+						  <button type="button" class="btn btn-primary" ng-click="addEvent()">
+						  Add Event
+						</button>
+						  <button type="button" class="btn btn-primary" ng-click="showCal()">
+						  {{ showIt ? 'hide' : 'show'}} Calendar
+						</button>
+						  <button type="button" ng-click="renderCalender()" class="btn btn-default"> Render </button>
+						  <!--id="calendar_design"--> 
+						 <div ng-show="showIt">
+							<div id="calendar" ui-calendar="calendarConfig" ng-model="eventSources" calendar="myCalendar"></div>						  </div>
+						</div> 
                 <div ng-show="show_settings==true">
 					<div class="dropdown" id="users_settings_div" >
 					 <a href="#" class="dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -666,7 +738,47 @@
 				</div>
 		</div>
 	
-				
+			<div class="modal fade" id="add_event" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+				<div class="modal-dialog">
+					<div class="modal-content">
+						<div class="modal-header">
+							<h4 class="modal-title" id="myModalLabel">
+								New Task
+							</h4>
+						</div>
+						
+						<div class="modal-body">
+							
+							<div class="form-horizontal" role="form">
+							  <div class="form-group">
+								<div class="col-sm-10">
+								Title
+								</div></br>
+								<div class="col-sm-10">
+									<input class="form-control" ng-model="title" placeholder="Enter title..."/>
+								 </div><div class="col-sm-10"></br>
+								Date range:
+								</div></br>
+								<div class="col-sm-10">
+									<input class="form-control" ng-model="date"/>
+								 </div>
+							  </div>
+							  
+							</div>				
+						</div>
+						
+						<div class="modal-footer">
+							<button type="button" class="btn btn-primary" data-dismiss="modal">
+										cancel
+							</button>
+							<button type="button" class="btn btn-primary" data-dismiss="modal" ng-click="response_ok()">
+										ok
+							</button>
+
+						</div>
+					</div>
+				</div>
+			</div>	
 		
 			
 			
@@ -706,9 +818,9 @@
 
 						</div>
 					</div>
-						<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+						<!--<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
 						  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
-						  <script src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.6.3/js/bootstrap-select.min.js"></script>
+						  <script src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.6.3/js/bootstrap-select.min.js"></script>-->
 				</div>
 			</div>
 			
@@ -810,9 +922,9 @@
 							</div>
 							
 						</div>
-							<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+							<!--<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
 						  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
-						  <script src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.6.3/js/bootstrap-select.min.js"></script>
+						  <script src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.6.3/js/bootstrap-select.min.js"></script>-->
 					</div>
 				</div>
 				
@@ -852,9 +964,9 @@
 							</div>
 							
 						</div>
-							<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+							<!--<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
 						  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
-						  <script src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.6.3/js/bootstrap-select.min.js"></script>
+						  <script src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.6.3/js/bootstrap-select.min.js"></script>-->
 					</div>
 				</div>
 				
@@ -959,9 +1071,9 @@
 							</div>
 							
 						</div>
-							<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+							<!--<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
 						  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
-						  <script src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.6.3/js/bootstrap-select.min.js"></script>
+						  <script src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.6.3/js/bootstrap-select.min.js"></script>-->
 					</div>
 				</div>
 					
@@ -1046,9 +1158,9 @@
 
 						</div>
 					</div>
-						<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+						<!--<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
 						  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
-						  <script src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.6.3/js/bootstrap-select.min.js"></script>
+						  <script src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.6.3/js/bootstrap-select.min.js"></script>-->
 				</div>
 			</div>
 			

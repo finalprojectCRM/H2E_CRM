@@ -1,6 +1,6 @@
 (function() {
 "use strict";
-var app = angular.module("CRM",  [ "ngResource"])
+var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui.bootstrap.datetimepicker'])
 .factory("sampleUploadService", [ "$resource",
   function ($resource) {
 	 var svc = {};
@@ -27,7 +27,7 @@ var app = angular.module("CRM",  [ "ngResource"])
 
 
 
-.controller('CRM_controller', ['$scope','$http','$log','$timeout','sampleUploadService' ,function($scope, $http,$log,$timeout,sampleUploadService) {	
+.controller('CRM_controller', ['$scope','$compile','$http','$log','$timeout','sampleUploadService' ,'uiCalendarConfig',function($scope,$compile, $http,$log,$timeout,sampleUploadService,uiCalendarConfig) {	
 
 	var contact_before_update;
 	var user_before_update;
@@ -73,7 +73,118 @@ var app = angular.module("CRM",  [ "ngResource"])
 	$scope.options=[];
     $scope.roles=[];
 
+
 	
+	  $scope.renderCalender = function(calendar) {
+    console.log($scope.events)
+    uiCalendarConfig.calendars.myCalendar.fullCalendar('removeEventSource', $scope.events)
+  };
+  $scope.uiCalendarConfig = uiCalendarConfig;
+
+  $scope.events = [{
+    "id": "51c54235fb4c960b37000014",
+    "title": "Sample Event",
+    "start": "2020-01-26T08:00:00+08:00",
+    "end": "2020-01-27T10:00:00+08:00",
+    //"url": "http://google.com/",
+    "allDay": false
+  }];
+
+  $scope.eventSources = [$scope.events];
+
+  $scope.calendarConfig = {
+	header:{
+		left:'prev,next today',
+		center:'title',
+		right:'month,agendaWeek,agendaDay'
+	},
+	//height : 500,
+    selectable: true,
+    selectHelper: true,
+    editable: true,
+	eventLimit:true,
+	select: function(start, end, allDay, jsEvent) {
+		$log.log("start: "+ moment(start).format());
+		$log.log("end: "+ moment(end).format());
+		start
+
+        //$scope.openPopover(start, end, allDay, jsEvent);
+		angular.element(add_event).modal("show");
+
+    }
+  };
+  
+  
+  
+  $scope.eventRender = function( event, element, view ) { 
+        element.attr({'tooltip': event.title,
+                     'tooltip-append-to-body': true});
+        $compile(element)($scope);
+    };
+
+  $scope.addEvent = function() {
+    $scope.events.push({
+      title: $scope.event.Title,
+      start: $scope.event.startDate,
+      end: $scope.event.endDate
+    });
+    console.log($scope.pendingRequests);
+  };
+  $scope.showIt = true;
+  $scope.showCal = function() {
+    $scope.showIt = !$scope.showIt;
+    $scope.showIt && $timeout($scope.renderCalender);
+  };
+ 
+	
+$scope.sendMail=function()
+	{
+		$http.post("http://localhost:3000/sendEmail", {
+			
+		}).then(
+			function (response) { 
+			
+			   
+               
+					
+
+			},
+			function (response) { //failure callback
+				
+			}
+		);
+	}	
+	
+	$http({method : "GET",
+			url : "firstSystemLoad"
+		  }).then(function(response) {
+			  
+		$scope.first_load = false;
+		$scope.not_first_load = false;
+			  
+		if(response.data.admin_first_load == true || response.data.admin_changed_temp_password == false)//go to change password page
+		{
+			$scope.first_load = true;	
+			$scope.temp_password_page = true;
+			
+        }
+        else if(response.data.admin_changed_temp_password == true)//admin	
+		{
+			$scope.first_load = false;
+			$scope.not_first_load = true;
+			$scope.temp_password_page = true;
+		}			
+		else
+		{
+			$scope.login_page =true;
+			$scope.first_load = false;	
+		}
+			
+			  
+			  //$scope.register_page = true;
+			  //$scope.UserName = "Admin";
+			}, function (response) {
+    });	
  
 $scope.clickSelectFile = function () {
    angular.element("#fileUploadField").click();
@@ -139,36 +250,7 @@ function clearUploadData() {
          }
 	
 
-	$http({method : "GET",
-			url : "firstSystemLoad"
-		  }).then(function(response) {
-			  
-		$scope.first_load = false;
-		$scope.not_first_load = false;
-			  
-		if(response.data.admin_first_load == true || response.data.admin_changed_temp_password == false)//go to change password page
-		{
-			$scope.first_load = true;	
-			$scope.temp_password_page = true;
-			
-        }
-        else if(response.data.admin_changed_temp_password == true)//admin	
-		{
-			$scope.first_load = false;
-			$scope.not_first_load = true;
-			$scope.temp_password_page = true;
-		}			
-		else
-		{
-			$scope.login_page =true;
-			$scope.first_load = false;	
-		}
-			
-			  
-			  //$scope.register_page = true;
-			  //$scope.UserName = "Admin";
-			}, function (response) {
-    });
+	 
 	
 	
     $scope.validation_of_temp_password = function(tempPasswordFromClient)

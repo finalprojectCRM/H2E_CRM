@@ -12,7 +12,7 @@ const config = require('./mongo-config.json');
 const APP_NAME = require('os').hostname();
 const APP_PORT = 3000;
 
-var database, contacts_collection, statuses_collection, users_collection ,files_collection, roles_with_statuses_collection , statuses_with_roles_collection;
+var database, contacts_collection, statuses_collection, users_collection ,files_collection, roles_with_statuses_collection , statuses_with_roles_collection , colors_collection;
 var app = Express();
 var firstTempPassword = "12345678";
 
@@ -87,7 +87,7 @@ app.get("/", (request, response) => {
 			files_collection = database.collection("files");
 			roles_with_statuses_collection = database.collection("roles with statuses");
 			statuses_with_roles_collection = database.collection("statuses with roles");
-
+			colors_collection = database.collection("colors");
 
             console.log("Connected to `" + db_name + "`!");
             result = {
@@ -595,6 +595,17 @@ app.get("/getRoles",(request, response) =>{
     });
 	
 });
+app.get("/getRolesColors",(request, response) =>{
+	
+	colors_collection.find({}).toArray((error, result) => {
+        if(error) {
+            return response.status(500).send(error);
+        }
+        response.writeHead(200, { 'Content-Type': 'application/json' });
+        response.end(JSON.stringify({"colors" :result}));
+    });
+	
+});
 app.post("/addStatutsWithRoles", (request, response) =>{
 	
      var status_with_roles = request.body.status_with_roles;
@@ -632,8 +643,10 @@ app.post("/addRoleWithStatuses", (request, response) =>{
 	
      var role_with_statuses = request.body.role_with_statuses;
 	 console.log("before updateOne");
+	 
+	 colors_collection.insertOne({Color:role_with_statuses.Color});
 	 roles_with_statuses_collection.updateOne( { Role:role_with_statuses.Role }
-	 ,{ $setOnInsert:{ Role:role_with_statuses.Role , Statuses:role_with_statuses.Statuses } },
+	 ,{ $setOnInsert:{ Role:role_with_statuses.Role ,Color:role_with_statuses.Color, Statuses:role_with_statuses.Statuses } },
         { upsert: true },
 		function(err, res) {
      console.log("after updateOne");
@@ -698,12 +711,14 @@ function check_exsisting_statuses_and_roles()
 	{
 		console.log("no roles");
 		 roles_with_statuses_collection.insertOne({Role:"-- Choose category for role --"});
-         roles_with_statuses_collection.insertOne({Role:"תמיכה טכנית",Statuses:["-- Choose status --","בעיה טכנית","add a new status"]});
+         roles_with_statuses_collection.insertOne({Role:"תמיכה טכנית",Color:"#66ffff",Statuses:["-- Choose status --","בעיה טכנית","add a new status"]});
+		 colors_collection.insertOne({Color:"#66ffff"});
+
     }
 	});
 	statuses_with_roles_collection.countDocuments(function (err, count) {
     if (!err && count === 0) {
-		console.log("no roles");
+		console.log("no statuses");
 		 statuses_with_roles_collection.insertOne({Status:"-- Choose status for role --"});
          statuses_with_roles_collection.insertOne({Status:"בעיה טכנית",Roles:["-- Choose status for role --","תמיכה טכנית"]});
     }

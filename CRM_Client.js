@@ -45,9 +45,11 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 	var missing_status_field = false;
 	var delete_all_contacts_flag = false;
 	var delete_all_users_flag = false;
+	var missing_role_field_calendar = false;
 	var username_to_delete;
 	var deleted_status;
     var selected_items= [];
+	var start_date,end_date;
 	
 	$scope.PhoneNumber_before_update = undefined;
 	$scope.account = false;
@@ -66,12 +68,16 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 	$scope.first_load = false;
 	$scope.Admin = false;
 	$scope.show_users = false;
+	$scope.add_event = false;
+	
 	
 
 	$scope.contactsInfo=[];
 	$scope.users=[];
 	$scope.options=[];
     $scope.roles=[];
+	$scope.roles_colors=[];
+
 
 
 	
@@ -94,20 +100,34 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 
   $scope.calendarConfig = {
 	header:{
-		left:'prev,next today',
-		center:'title',
-		right:'month,agendaWeek,agendaDay'
+		 left: 'prev,next today',
+         center: 'title',
+         right: 'month,agendaWeek,agendaDay'
+	},
+	views: {
+        month: { columnHeaderFormat: 'ddd', displayEventEnd: true, eventLimit: 3 },
+        week: { columnHeaderFormat: 'ddd DD', titleRangeSeparator: ' \u2013 ' },
+        day: { columnHeaderFormat: 'dddd' },
+    },
+	columnFormat:{              
+		month: 'ddd',    
+		week: 'ddd D/M', 
+		day: 'dddd' 
 	},
 	//height : 500,
+	aspectRatio: 1.5,
     selectable: true,
     selectHelper: true,
     editable: true,
 	eventLimit:true,
 	select: function(start, end, allDay, jsEvent) {
-		$log.log("start: "+ moment(start).format());
+		$log.log("start: "+ moment(start).format("DD/MM/YYYY HH:mm"));
+		start_date = moment(start).format();
 		$log.log("end: "+ moment(end).format());
-		start
-
+		end_date = moment(end).format();
+		
+        $scope.date = moment(start).format("DD/MM/YYYY HH:mm")+ ' - ' + moment(end).format("DD/MM/YYYY HH:mm");
+        $scope.getRolesList();
         //$scope.openPopover(start, end, allDay, jsEvent);
 		angular.element(add_event).modal("show");
 
@@ -123,19 +143,37 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
     };
 
   $scope.addEvent = function() {
+	var date = $scope.date.split("-");
+    $log.log("start date : " + date[0]);
+    //$log.log("type "+typeof date[0]);
+	$log.log("end date : " + date[1]);
+    var start_date= moment(date[0], 'DD/MM/YYYY HH:mm').format("MM/DD/YYYY HH:mm");
+    var end_date= moment(date[1], 'DD/MM/YYYY HH:mm').format("MM/DD/YYYY HH:mm");
+	$log.log("start date : " + start_date);
+	$log.log("start date : " + end_date);
+    //$log.log("end date : " + formatDate(date[1]));
+	$log.log("$scope.role : "+$scope.role.Role);
+    if($scope.role.Role == undefined || $scope.role.Role == "" || $scope.role.Role == "-- Choose category for role --")
+	{   
+		$scope.message = "Category is a must field, please select one";
+		$scope.message_type = "ERROR";
+		angular.element(Message_Modal).modal("show");
+		missing_role_field_calendar= true;
+		return;
+	}
+	
+	
+
     $scope.events.push({
-      title: $scope.event.Title,
-      start: $scope.event.startDate,
-      end: $scope.event.endDate
+      title: $scope.title,
+      start: start_date,
+      end:  end_date,
+	  color: $scope.role.Color
     });
-    console.log($scope.pendingRequests);
+
+  //  console.log($scope.pendingRequests);
   };
-  $scope.showIt = true;
-  $scope.showCal = function() {
-    $scope.showIt = !$scope.showIt;
-    $scope.showIt && $timeout($scope.renderCalender);
-  };
- 
+
 	
 $scope.sendMail=function()
 	{
@@ -414,6 +452,9 @@ function clearUploadData() {
 					$scope.name_of_user = user_from_server.Name;
 					$scope.role_of_user = user_from_server.Role;
 					$scope.register_page = false;
+					$scope.getOptionsList();
+					$scope.getRolesList();
+					$scope.getRolesColorsList();
 					
 					if(user_from_server.is_admin==true)
 					{
@@ -497,6 +538,7 @@ function clearUploadData() {
 					$scope.all_system = true;
 					$scope.getOptionsList();
 					$scope.getRolesList();
+					$scope.getRolesColorsList();
 					
 					
 
@@ -526,6 +568,9 @@ function clearUploadData() {
 	   $scope.show_update_input = false;
 	   $scope.click = true;
 	   $scope.show_calendar = false;
+	   		$scope.account = true;
+		$scope.account = true;
+
 
 	   $scope.getContactsList();
 	   $scope.getOptionsList();
@@ -534,13 +579,47 @@ function clearUploadData() {
 	  
 	   
 	}	
+    
+	 $scope.check_exsisting_color = function(color)
+	 {
+		 $log.log("$scope.check_exsisting_color : color: "+ color);
+
+		 for(var item=0 ; item < $scope.roles_colors.length ; item++)
+		 {
+			$log.log("$scope.roles_colors[item].Color: "+ $scope.roles_colors[item].Color);
+
+			 if($scope.roles_colors[item].Color == color )
+			 {
+				 return true;
+			 }
+		 }
+		 return false;
+	 }
+
 
 	
 	$scope.save_new_role_status = function()
 	{
+		$log.log(document.getElementById("role_color").value);
+		var role_color = document.getElementById("role_color").value;
+		var color = role_color.toString();
+		$log.log("color: "+ color);
+
+		var existing_color = $scope.check_exsisting_color(color);
+		$log.log("existing_color: "+ existing_color);
+
 		if($scope.role_from_modal == undefined || $scope.role_from_modal == "")
 		{
 			$scope.message = "You must fill in the role field";
+			$scope.message_type = "ERROR";
+			angular.element(Message_Modal).modal("show");
+			missing_role_field = true;
+		}
+		else if(existing_color == true)
+		{
+            $log.log("entered existing_color: "+ existing_color);
+
+			$scope.message = "This color already exist, please choose different color";
 			$scope.message_type = "ERROR";
 			angular.element(Message_Modal).modal("show");
 			missing_role_field = true;
@@ -550,7 +629,7 @@ function clearUploadData() {
 			selected_items.unshift( status_header );
 			selected_items.push(new_status_option);
 			$log.log("new_status_option :"+new_status_option);
-			var role_with_statuses = {Role:$scope.role_from_modal, Statuses:selected_items};
+			var role_with_statuses = {Role:$scope.role_from_modal,Color:role_color, Statuses:selected_items};
 			$http.post("http://localhost:3000/addRoleWithStatuses", {
 				role_with_statuses: role_with_statuses,
 			}).then(
@@ -612,6 +691,7 @@ function clearUploadData() {
 			function (response) {//success callback
 				$scope.options = response.data.statusOptions;//return the list of the statusOptions
 				$scope.item = $scope.options[0];
+				$scope.getRolesColorsList();
 				angular.element(add_new_role_modal).modal("show");
 				$scope.role_from_modal = undefined;
 				selected_items = [];
@@ -632,16 +712,20 @@ function clearUploadData() {
 	   $scope.show_calendar = true;
 	   $scope.show_users = false;
 	   $scope.show_settings = false;
-
+	   $scope.account = false;
+       $scope.getRolesList();
 	   $scope.search = "";
 	}
    //show settings
 	$scope.settings_function = function()
 	{
+		$log.log("entered settings function");
+	   $scope.show_settings = true;
 	   $scope.login_page = false;
 	   $scope.show_contacts = false;
-	   $scope.show_settings = true;
 	   $scope.show_users = false;
+	   $scope.show_calendar = false;
+
 	   $scope.search = "";
 	}
 	//show the 
@@ -672,6 +756,23 @@ function clearUploadData() {
 				$scope.options = response.data.statusOptions;//return the list of the statusOptions
 				$scope.item = $scope.options[0];
 				$log.log("item: "+ $scope.item );
+			},
+			function (response) {//failure callback
+			    $scope.message = response.data.error;
+				$scope.message_type = "ERROR";
+			    angular.element(Message_Modal).modal("show");
+			}	
+		);
+	   
+	
+	}
+	$scope.getRolesColorsList = function()
+	{
+		$log.log("entered getStatusList() = function()");
+		$http.get("http://localhost:3000/getRolesColors").then(
+			function (response) {//success callback
+				$scope.roles_colors = response.data.colors;//return the list of the colors
+				$log.log("roles_colors : " + $scope.roles_colors);
 			},
 			function (response) {//failure callback
 			    $scope.message = response.data.error;
@@ -756,12 +857,12 @@ function clearUploadData() {
 		{
 			selected_items.push(option.Role);
 		}
+		
 		else if(flag == 'delete status')
 		{
 			deleted_status = option.Status;
 		}
-		
-		
+			
         else
 		{
 			selected_items.push(option);
@@ -926,6 +1027,8 @@ function clearUploadData() {
 		$scope.show_users = true;
 		$scope.show_settings = false;
 		$scope.show_contacts = false;
+		$scope.show_calendar = false;
+		$scope.account = true;
 		$scope.getUsersList(flag);
 		$scope.getRolesList();
 		
@@ -1291,6 +1394,11 @@ function clearUploadData() {
 		{
 			angular.element(add_new_status_modal).modal("show");
 			missing_status_field =false;
+		}
+		if(missing_role_field_calendar == true)
+		{
+			angular.element(add_event).modal("show");
+		   missing_role_field_calendar =false;
 		}
 	}
 	

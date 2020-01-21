@@ -25,6 +25,30 @@ body
 	
 	
 }
+#calendar_div
+{
+
+	margin-left:15%;
+	margin-top:5%;
+	float: left;
+	width:50%;
+	
+	
+}
+
+#map_lenged_div
+{
+    text-decoration: none;
+	text-align: center;
+	margin-right:4%;
+	margin-top:10%;
+	float: right;
+	width:10%;
+	
+	
+}
+
+
 #users_div
 {
 	font-size: 17px;

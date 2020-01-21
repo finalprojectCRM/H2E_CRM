@@ -381,16 +381,27 @@
 					</div>
 				</form>
 				
-		<div ng-show="show_calendar==true" >
+			<div ng-show="show_calendar==true">
 				
-				  <div>
+			<div id="calendar_div"   >
+		         
+				  
+						 
+						<div id="calendar" ui-calendar="calendarConfig" ng-model="eventSources" calendar="myCalendar"></div></br>
+						<button type="button" class="btn btn-primary" ng-click="add_event=true">
+						  Add Event
+				  </button>
+				  <div ng-show="add_event==true">
+				        <div>
 						Event Title:
 
-								  <input type="text" ng-model="event.Title" />
-						  </div>
+								  <input type="text" class="form-control"  ng-model="event.Title" />
+						 </div>
+						  
+						  
 						  <div>
 						  Start Date Time:
-								  <div class="dropdown">
+						  <div class="dropdown">
 							  <a href="#" class="dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 								<div class="input-group">
 								  <input type="text" class="form-control" data-ng-model="event.startDate" />
@@ -425,15 +436,33 @@
 						  </div>
 						  <button type="button" class="btn btn-primary" ng-click="addEvent()">
 						  Add Event
-						</button>
-						  <button type="button" class="btn btn-primary" ng-click="showCal()">
-						  {{ showIt ? 'hide' : 'show'}} Calendar
-						</button>
-						  <button type="button" ng-click="renderCalender()" class="btn btn-default"> Render </button>
-						  <!--id="calendar_design"--> 
-						 <div ng-show="showIt">
-							<div id="calendar" ui-calendar="calendarConfig" ng-model="eventSources" calendar="myCalendar"></div>						  </div>
-						</div> 
+				  </button>
+					</div>	 
+			  </div>
+                <div id="map_lenged_div" class="text-center">
+				 
+					<div class="text-info"><label style = "font-size: 16px;vertical-align: middle;"> Map lenged:</label></div>
+					<table align="right">
+						<thead class="text-center">
+
+							<tr class="text-primary">
+								<th style="padding-right:5px">Color</th>
+								<th>Role</th>
+							</tr>
+						<thead>
+						<tbody>
+							<tr ng-repeat="role in roles" ng-if="$index > 0">
+							<td style="padding-right:5px"> <svg style="display: block" width="40" height="7"> <rect width="40" height="7" ng-style="{fill:role.Color}" /></svg></td>
+							<td>{{role.Role}}</td>
+							</tr>
+						</tbody>
+					</table>
+					
+
+				</div>	 
+					
+			</div>	 
+					
                 <div ng-show="show_settings==true">
 					<div class="dropdown" id="users_settings_div" >
 					 <a href="#" class="dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -447,24 +476,6 @@
 							<li class="hover_color" ng-click="getUsersList('deleteUser')"><a href="#"><i style =" color: rgb(50, 118, 177);" class="fa fa-trash fa-fw"></i> delete user</a></li>
 							<li class="hover_color" ng-click="insure_delete_all_users()"><a href="#"><i style =" color: rgb(50, 118, 177);" class="fa fa-trash fa-fw"></i> delete all users</a></li>
 						</ul>
-		
-						
-						
-						
-						
-						
-						<!--
-						    <li class="dropdown-submenu" tabindex="-1" ><a href="#"><i style =" color: rgb(50, 118, 177);" class="fa fa-trash fa-fw"></i> delete user</a></li>
-							   <ul class="dropdown-menu">
-								   <li><a tabindex="-1" href="#"><div class="row-fluid">
-									  <select class="selectpicker" data-show-subtext="true" data-live-search="true">
-									     <option data-subtext="Rep Alabama">Mario Flores</option>
-										<option  ng-repeat="user in users" data-subtext="user.UserName"><i style =" color: rgb(50, 118, 177);" class="fa fa-trash fa-fw"></i>{{user.Name}}</option>
-									  </select>
-									</div></li>
-								</ul>
-							<li class="hover_color" ng-click="insure_delete_all_users()"><a href="#"><i style =" color: rgb(50, 118, 177);" class="fa fa-trash fa-fw"></i> delete all users</a></li>
-						-->
 						
 					</div>
 					
@@ -747,20 +758,32 @@
 							</h4>
 						</div>
 						
-						<div class="modal-body">
+						<div class="modal-body" >
 							
 							<div class="form-horizontal" role="form">
-							  <div class="form-group">
+							  <div class="form-group text-primary">
 								<div class="col-sm-10">
-								Title
-								</div></br>
+									<div>
+										<b>Category:</b>
+									</div>
+					
+							   </br>
+							   <div>
+								   <select class="form-control"  ng-model="role" ng-options="objRole as objRole.Role disable when objRole.Role  === '-- Choose category for role --' for objRole in roles " ng-change="selected_item(role)"  >
+								  </select></br>
+								  </div>
+							</div>
+
 								<div class="col-sm-10">
-									<input class="form-control" ng-model="title" placeholder="Enter title..."/>
+								<b>Title:</b>
+								</div>
+								<div class="col-sm-10">
+									</br><input class="form-control" ng-model="title" placeholder="Enter title..."/>
 								 </div><div class="col-sm-10"></br>
-								Date range:
+								<b>Date range:</b>
 								</div></br>
 								<div class="col-sm-10">
-									<input class="form-control" ng-model="date"/>
+									</br><input class="form-control" ng-model="date"/>
 								 </div>
 							  </div>
 							  
@@ -771,7 +794,7 @@
 							<button type="button" class="btn btn-primary" data-dismiss="modal">
 										cancel
 							</button>
-							<button type="button" class="btn btn-primary" data-dismiss="modal" ng-click="response_ok()">
+							<button type="button" class="btn btn-primary" data-dismiss="modal" ng-click="addEvent()">
 										ok
 							</button>
 
@@ -1051,6 +1074,20 @@
 								</div>
 								
 								</br>
+								
+								<div class="form-horizontal" role="form">
+								  <div class="form-group">
+								  </br>
+									<div class="col-sm-10">
+										Select role color: 
+										<input id="role_color" type="color" name="favcolor" value="#66ffff"/><br><br>								    </div>
+								  </div>
+								  
+								</div>
+								
+								</br>
+								
+
 
                              <div class="row-fluid">
 							    <select class="form-control"   ng-model="item" ng-options="objStatus as objStatus.Status disable when objStatus.Status  === '-- Choose status --' for objStatus in options " ng-change="selected_item(item,'new status')"  >

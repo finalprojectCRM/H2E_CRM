@@ -120,7 +120,6 @@ app.get("/bootstrap.min.css", (request, response) =>{
             response.end(data);
         });
 });
-//get angular
 app.get("/bower_components/angular/angular.min.js", (request, response) =>{//bring the angular file
         console.log('--Rendering angular-js file--');
         fs.readFile('./bower_components/angular/angular.min.js', function (error, data) {
@@ -131,6 +130,28 @@ app.get("/bower_components/angular/angular.min.js", (request, response) =>{//bri
             response.end(data);
         });
 });
+app.get("/select.js", (request, response) =>{
+        console.log('--Rendering select.js file--');
+        fs.readFile('./lib/select.js', function (error, data) {
+            if (error) {
+                console.log('error has happand in select.js', error)
+            }
+            response.writeHead(200, {"Content-Type": "text/javascript"});
+            response.end(data);
+        });
+});
+app.get("/select.css", (request, response) =>{
+        console.log('--Rendering select.css file--');
+        fs.readFile('./lib/select.css', function (error, data) {
+            if (error) {
+                console.log('error has happand in select.css', error)
+            }
+            response.writeHead(200, {"Content-Type": "text/css"});
+            response.end(data);
+        });
+});
+//get angular
+
 
 //get CSS
 app.get("/CRM_Client.css", (request, response) =>{   //bring the CRM_Client.css file

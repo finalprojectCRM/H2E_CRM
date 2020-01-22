@@ -9,8 +9,15 @@
 		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
 
 		 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js" integrity="sha384-b/U6ypiBEHpOf/4+1nzFpr53nxSS+GLCkfwBdFNTxtclqqenISfwAzpKaMNFNmj4" crossorigin="anonymous"></script>
+		 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.10.0/js/bootstrap-select.min.js"></script>
+		 <link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/select2/3.4.5/select2.css">
+
+		  <!-- ui-select files -->
+		  
+
 		 <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.6.3/css/bootstrap-select.min.css" />
 		<script type="text/javascript" src="bower_components/angular/angular.min.js"></script>
+		<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.2.18/angular-sanitize.js"></script>
 		
 		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
@@ -28,6 +35,8 @@
 		<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular-route.js"></script>
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.8/angular-resource.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-cookie/4.1.0/angular-cookie.min.js" integrity="sha256-Wrj5HHKDApceikiZq36OI8gQV6Cjd3FLB/MvyCvgoDY=" crossorigin="anonymous"></script>
+		<script src="select.js"></script>
+		  <link rel="stylesheet" href="select.css">
 
 		<link rel="stylesheet" href="datetimepicker.css" />
 		<script src="datetimepicker.js"></script>
@@ -761,8 +770,8 @@
 						<div class="modal-body" >
 							
 							<div class="form-horizontal" role="form">
-							  <div class="form-group text-primary">
-								<div class="col-sm-10">
+							  <div class="form-group ">
+								<div class="col-sm-10 text-primary">
 									<div>
 										<b>Category:</b>
 									</div>
@@ -773,22 +782,50 @@
 								  </select></br>
 								  </div>
 							</div>
+							
+							 <div class="col-sm-10"><input type="checkbox" ng-model="contact_task" /><em style =" color:#ff0066"> Task for contact</em></div>
+							 <div ng-if="contact_task">
+							  <div class="col-sm-10 text-primary">
+									<div>
+										</br><b>Select contant for task:</b>
+									</div>
+					
+							   </br>
+							  <div class="col-sm-4">
+								<ui-select ng-model="selections[$index]" ng-change="selectionChanged($index)" theme="bootstrap">
+								  <ui-select-match placeholder="Select contact...">{{$select.selected.Name}}</ui-select-match>
+								  <ui-select-choices repeat="contactInfo in contactsInfo | filter: $select.search track by $index">
+											<div ng-bind-html="contactInfo.Name | highlight: $select.search"></div>
+											<small ng-bind-html="contactInfo.PhoneNumber | highlight: $select.search"></small>
+								  </ui-select-choices>
+								</ui-select>
+							  </div>
+							</div>
+							</div>
+							 
+							
+							
 
-								<div class="col-sm-10">
-								<b>Title:</b>
+								<div class="col-sm-10 text-primary"></br>
+								<b>Task description:</b>
 								</div>
-								<div class="col-sm-10">
+								<div class="col-sm-10 text-primary">
 									</br><input class="form-control" ng-model="title" placeholder="Enter title..."/>
-								 </div><div class="col-sm-10"></br>
-								<b>Date range:</b>
+								 </div>
+								 <div class="col-sm-10 text-primary"></br>
+									<b>Date range:</b>
 								</div></br>
 								<div class="col-sm-10">
 									</br><input class="form-control" ng-model="date"/>
 								 </div>
 							  </div>
 							  
-							</div>				
+							  
+						  </div>
 						</div>
+
+							  
+						
 						
 						<div class="modal-footer">
 							<button type="button" class="btn btn-primary" data-dismiss="modal">

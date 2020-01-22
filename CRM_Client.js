@@ -1,6 +1,6 @@
 (function() {
 "use strict";
-var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui.bootstrap.datetimepicker'])
+var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui.bootstrap.datetimepicker','ngSanitize', 'ui.select'])
 .factory("sampleUploadService", [ "$resource",
   function ($resource) {
 	 var svc = {};
@@ -50,6 +50,7 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 	var deleted_status;
     var selected_items= [];
 	var start_date,end_date;
+	var selected_contact;
 	
 	$scope.PhoneNumber_before_update = undefined;
 	$scope.account = false;
@@ -69,6 +70,8 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 	$scope.Admin = false;
 	$scope.show_users = false;
 	$scope.add_event = false;
+	//$scope.selected.Name = undefined;
+	//$scope.selected.PhoneNumber = undefined;
 	
 	
 
@@ -81,20 +84,13 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 
 
 	
-	  $scope.renderCalender = function(calendar) {
+	$scope.renderCalender = function(calendar) {
     console.log($scope.events)
     uiCalendarConfig.calendars.myCalendar.fullCalendar('removeEventSource', $scope.events)
   };
   $scope.uiCalendarConfig = uiCalendarConfig;
 
-  $scope.events = [{
-    "id": "51c54235fb4c960b37000014",
-    "title": "Sample Event",
-    "start": "2020-01-26T08:00:00+08:00",
-    "end": "2020-01-27T10:00:00+08:00",
-    //"url": "http://google.com/",
-    "allDay": false
-  }];
+  $scope.events = [];
 
   $scope.eventSources = [$scope.events];
 
@@ -115,11 +111,15 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 		day: 'dddd' 
 	},
 	//height : 500,
+	
 	aspectRatio: 1.5,
     selectable: true,
     selectHelper: true,
     editable: true,
 	eventLimit:true,
+	renderCalender: $scope.renderCalender,
+	eventRender: $scope.eventRender,
+
 	select: function(start, end, allDay, jsEvent) {
 		$log.log("start: "+ moment(start).format("DD/MM/YYYY HH:mm"));
 		start_date = moment(start).format();
@@ -131,18 +131,30 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
         //$scope.openPopover(start, end, allDay, jsEvent);
 		angular.element(add_event).modal("show");
 
-    }
+    },
+	
+	
+	
   };
   
   
   
   $scope.eventRender = function( event, element, view ) { 
-        element.attr({'tooltip': event.title,
+        element.attr({'title': event.title,
                      'tooltip-append-to-body': true});
         $compile(element)($scope);
     };
+	
+ $scope.selections = [];
+  
+  $scope.selectionChanged = function(idx) {
+    $log.log(idx, $scope.selections[idx]);
+    selected_contact = $scope.selections[idx];
+  };
 
   $scope.addEvent = function() {
+
+	  
 	var date = $scope.date.split("-");
     $log.log("start date : " + date[0]);
     //$log.log("type "+typeof date[0]);
@@ -162,13 +174,16 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 		return;
 	}
 	
-	
+	var description = "Task for contact "+ selected_contact.Name +" "+ selected_contact.PhoneNumber+" : "+$scope.title;
+	$log.log("description: "+description);
+
 
     $scope.events.push({
-      title: $scope.title,
+      title: description,
       start: start_date,
       end:  end_date,
-	  color: $scope.role.Color
+	  color: $scope.role.Color,
+	  editable: true
     });
 
   //  console.log($scope.pendingRequests);
@@ -182,10 +197,6 @@ $scope.sendMail=function()
 		}).then(
 			function (response) { 
 			
-			   
-               
-					
-
 			},
 			function (response) { //failure callback
 				
@@ -455,6 +466,8 @@ function clearUploadData() {
 					$scope.getOptionsList();
 					$scope.getRolesList();
 					$scope.getRolesColorsList();
+					$scope.getContactsList();
+					$scope.getUsersList('showUsers');
 					
 					if(user_from_server.is_admin==true)
 					{
@@ -539,7 +552,8 @@ function clearUploadData() {
 					$scope.getOptionsList();
 					$scope.getRolesList();
 					$scope.getRolesColorsList();
-					
+					$scope.getContactsList();
+					$scope.getUsersList('showUsers');
 					
 
 				}
@@ -568,9 +582,8 @@ function clearUploadData() {
 	   $scope.show_update_input = false;
 	   $scope.click = true;
 	   $scope.show_calendar = false;
-	   		$scope.account = true;
-		$scope.account = true;
-
+	   $scope.account = true;
+		
 
 	   $scope.getContactsList();
 	   $scope.getOptionsList();
@@ -1679,6 +1692,11 @@ function clearUploadData() {
 		$scope.all_system = false;
 		$scope.login_page = true;
 		$scope.temp_password = "";
+	   $scope.show_contacts = false;
+	   $scope.show_users = false;
+	   $scope.show_settings = false;
+	   $scope.show_calendar = false;
+	   $scope.account = true;
 	}
 	
 

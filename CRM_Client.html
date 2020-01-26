@@ -285,7 +285,7 @@
 							<span class="glyphicon glyphicon-search" style="color:#003366" aria-hidden="true">
 							</span>
 						</span>	
-						<input  class="form-control-md-6" ng-model="search" placeholder="search...">
+						<input class="form-control-md-6" ng-model="search" placeholder="search...">
 					</div>
 					<div class="col-lg-20">
 						<table align="right" class="table table-hover-responsive"  class="text-center" >
@@ -318,14 +318,14 @@
 									<div ng-if="contactIsEdit" class="form-group row" >										
 										
 										<td ng-show="contactIsEdit==true"><div class="form-group" >	
-											<select class="form-control" data-show-subtext="true" data-live-search="true" ng-model="role" ng-options="objRole as objRole.Role disable when objRole.Role  === '-- Choose category for role --' for objRole in roles " ng-change="onChangeCategory(role)" ><!---->
+											<select class="form-control" ng-model="role_category.Role" ng-options="objRole as objRole.Role disable when objRole.Role  === '-- Choose category for role --' for objRole in roles " ng-change="onChangeCategory(role_category)" ><!---->
 											
 												 <!--<optionng-repeat=" role in roles" > {{role.Role}}</style></option>-->
 											 </select>
 										</div></td>	
-										<td ng-show="contactIsEdit==true"><div class="form-group" ng-if="role">
+										<td ng-show="contactIsEdit==true"><div class="form-group" ng-if="role_category">
 											
-											<select class="form-control" ng-model="status_role" ng-options="status_role disable when status_role === '-- Choose status --'  for status_role in role.Statuses"  ng-change="onChange(status_role)"><!--  -->
+											<select class="form-control" ng-model="status_role" ng-options="status_role disable when status_role === '-- Choose status --'  for status_role in role_category.Statuses"  ng-change="onChange(status_role)"><!--  -->
 											<!--<option  ng-repeat="status in role.Statuses">{{status}}</option>-->
 										    </select>
 
@@ -392,15 +392,15 @@
 				
 			<div ng-show="show_calendar==true">
 				
-			<div id="calendar_div"   >
+			<div id="calendar_div">
 		         
 				  
 						 
-						<div id="calendar" ui-calendar="calendarConfig" ng-model="eventSources" calendar="myCalendar"></div></br>
-						<button type="button" class="btn btn-primary" ng-click="add_event=true">
-						  Add Event
-				  </button>
-				  <div ng-show="add_event==true">
+					<div id="calendar" ui-calendar="calendarConfig" ng-model="eventSources" calendar="myCalendar"></div></br>
+					<button type="button" class="btn btn-primary" ng-click="add_event=true">
+					  Add Event
+					</button>
+					<div ng-show="add_event==true">
 				        <div>
 						Event Title:
 
@@ -840,8 +840,149 @@
 				</div>
 			</div>	
 		
+		
+		
 			
-			
+			<div class="modal fade" id="edit_or_delete_event" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+				<div class="modal-dialog">
+					<div class="modal-content">
+						<div class="modal-header">
+							<h4 class="modal-title" id="myModalLabel">
+								Edit / Delete task
+							</h4>
+						</div>
+						
+						<div class="modal-body">
+							
+							<div class="form-horizontal" role="form">
+								<div class="form-group ">
+									<div ng-show="taskIsEdit==true" class="col-sm-10 text-primary">
+										<div>
+											<b>Category:</b>
+										</div>
+						
+										</br>
+										<div>
+											<select class="form-control"  ng-model="role" ng-options="objRole as objRole.Role disable when objRole.Role  === '-- Choose category for role --' for objRole in roles " ng-change="selected_item(role)"  >
+											</select></br>
+										</div>
+									</div>
+									
+								<div  ng-show="taskIsEdit==false" class="col-sm-10 text-primary"></br>
+								  <b>Contact:</b>
+							   </div>
+							   <div ng-show="taskIsEdit==false" class="col-sm-10">
+								  </br>{{contact_event}}<a href=""><em style =" color:#ff0066;" ng-click="go_to_contact()"> go to contact</em></a>
+							  </div>
+							
+							    <div  ng-show="taskIsEdit==true" class="col-sm-10"><input type="checkbox" ng-model="contact_task" /><em style =" color:#ff0066"> Task for contact</em></div>
+							    <div ng-show="taskIsEdit==true" ng-if="contact_task">
+									<div class="col-sm-10 text-primary">
+										<div>
+											</br><b>Select contant for task:</b>
+										</div>
+						
+										</br>
+										<div class="col-sm-4">
+											<ui-select ng-model="selections[$index]" ng-change="selectionChanged($index)" theme="bootstrap">
+												<ui-select-match placeholder="Select contact...">{{$select.selected.Name}}</ui-select-match>
+												<ui-select-choices repeat="contactInfo in contactsInfo | filter: $select.search track by $index">
+													<div ng-bind-html="contactInfo.Name | highlight: $select.search"></div>
+													<small ng-bind-html="contactInfo.PhoneNumber | highlight: $select.search"></small>
+												</ui-select-choices>
+											</ui-select>
+										</div>
+									</div>
+							    </div>
+							 
+							
+							
+
+							<div  class="col-sm-10 text-primary"></br>
+								<b>Task description:</b>
+							</div>
+							<div ng-show="taskIsEdit==true" class="col-sm-10 text-primary">
+								</br><input class="form-control" ng-model="event_title" placeholder="Enter title..."/>
+							</div>
+							<div ng-show="taskIsEdit==false" class="col-sm-10">
+								</br>{{event_title}}
+							</div>
+							<div ng-show="taskIsEdit==false" class="col-sm-10 text-primary"></br>
+								<b>Date range:</b>
+							</div></br>
+							<div ng-show="taskIsEdit==false" class="col-sm-10">
+								</br>{{event_date}}
+							</div>
+							
+							
+							
+							<div  class="col-sm-10 text-primary" ng-show="taskIsEdit==true" >
+								</br><div><b>Start Date Time:<b></div>
+							  </br><div class="dropdown">
+								  <a href="#" class="dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+									<div class="input-group">
+									  <input type="text" class="form-control" data-ng-model="event_start" />
+									  <span class="input-group-addon">
+										<i class="glyphicon glyphicon-calendar"></i>
+									  </span>
+									</div>
+								  </a>
+								  <ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
+									<datetimepicker data-ng-model="event_start" data-datetimepicker-config="{ dropdownSelector: '#dropdown2' }"></datetimepicker>
+								  </ul>
+								</div>
+							 
+
+
+							  </br><div><b>End Date Time:</b></div>
+									  </br><div class="dropdown">
+								  <a href="#" class="dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+									<div class="input-group">
+									  <input type="text" class="form-control" data-ng-model="event_end" />
+									  <span class="input-group-addon">
+										<i class="glyphicon glyphicon-calendar"></i>
+									  </span>
+									</div>
+								  </a>
+								  <ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
+									<datetimepicker data-ng-model="event_end" data-datetimepicker-config="{ dropdownSelector: '#dropdown3' }"></datetimepicker>
+								  </ul>
+								</div>
+								
+							 
+							  
+								  
+							</div>
+						</div>
+						</div>
+						</div>
+					
+
+							  
+						
+						
+						<div class="modal-footer">
+							<div ng-show="taskIsEdit==false">
+								<button type="button" class="btn btn-default" >
+									<b><i style =" color:#ff0066" class="fa fa-edit fa-2x" ng-click="taskIsEdit=true"></i></b>
+								</button>
+								<button type="button" class="btn btn-default" data-dismiss="modal" ng-click="deleteEvent()">
+										<b><i style =" color: rgb(50, 118, 177);" class="fa fa-trash fa-2x"></i></b>
+								</button>
+							</div>
+							<div ng-show="taskIsEdit==true">
+								<button type="button" class="btn btn-primary" data-dismiss="modal">
+											cancel
+								</button>
+								<button type="button" class="btn btn-primary" data-dismiss="modal" ng-click="save_edit_event()">
+											save
+								</button>
+							</div>
+
+						</div>
+					</div>
+				</div>
+			</div>	
 			
 			<div class="modal fade" id="delete_modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
 				<div class="modal-dialog">

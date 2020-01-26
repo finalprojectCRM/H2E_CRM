@@ -51,6 +51,7 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
     var selected_items= [];
 	var start_date,end_date;
 	var selected_contact;
+	var edit_event_detailes;
 	
 	$scope.PhoneNumber_before_update = undefined;
 	$scope.account = false;
@@ -70,6 +71,10 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 	$scope.Admin = false;
 	$scope.show_users = false;
 	$scope.add_event = false;
+	$scope.taskIsEdit = false;
+
+
+	
 	//$scope.selected.Name = undefined;
 	//$scope.selected.PhoneNumber = undefined;
 	
@@ -118,7 +123,7 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
     editable: true,
 	eventLimit:true,
 	renderCalender: $scope.renderCalender,
-	eventRender: $scope.eventRender,
+	//eventRender: $scope.eventRender,
 
 	select: function(start, end, allDay, jsEvent) {
 		$log.log("start: "+ moment(start).format("DD/MM/YYYY HH:mm"));
@@ -129,17 +134,75 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
         $scope.date = moment(start).format("DD/MM/YYYY HH:mm")+ ' - ' + moment(end).format("DD/MM/YYYY HH:mm");
         $scope.getRolesList();
         //$scope.openPopover(start, end, allDay, jsEvent);
+		$scope.role = $scope.roles[0].Role;
+		$scope.contact_task = undefined;
+		$scope.title = undefined;
+	
 		angular.element(add_event).modal("show");
 
     },
+	eventClick: function(event, element) {
+	
+ 
+	edit_event_detailes = event;	
+	var title = event.title.split(":");
+
+    $scope.event_title = title[1];
+	$scope.event_start = event.start;
+	$scope.event_end = event.end;
+	$scope.contact_event = event.id;
+	$scope.event_date = moment(event.start).format("DD/MM/YYYY HH:mm")+ ' - ' + moment(event.end).format("DD/MM/YYYY HH:mm");
+	$scope.taskIsEdit = false;
+
+	angular.element(edit_or_delete_event).modal("show");
+	
+
+  }
 	
 	
 	
   };
   
+	$scope.save_edit_event = function() { 
+  
+
+    $log.log("edit");
+
+    edit_event_detailes.title = "Task for contact "+ selected_contact.Name +" "+ selected_contact.PhoneNumber+" : "+$scope.event_title;
+	edit_event_detailes.start = $scope.event_start;
+	edit_event_detailes.end = $scope.event_end;
+	edit_event_detailes.color = $scope.role.Color;
+	edit_event_detailes.id = selected_contact.Name +" "+ selected_contact.PhoneNumber;
+	uiCalendarConfig.calendars.myCalendar.fullCalendar('updateEvent', edit_event_detailes);
+	 
+	   
+
+		
+		
+   };
+   
+    $scope.go_to_contact = function() { 
+	
+		var contact_phone_number = $scope.contact_event.split(" "); 
+		$scope.get_contacts_function();
+		$log.log("contact_phone_number : "+ contact_phone_number);
+
+		$scope.search = contact_phone_number[1];
+	    angular.element(edit_or_delete_event).modal("hide");
+
+
+		
+		
+	};
   
   
-  $scope.eventRender = function( event, element, view ) { 
+  $scope.deleteEvent = function( event, element, view ) { 
+        uiCalendarConfig.calendars.myCalendar.fullCalendar('removeEvents', function (event) {
+				return event == edit_event_detailes;
+			});
+
+    };
+	$scope.eventRender = function( event, element, view ) { 
         element.attr({'title': event.title,
                      'tooltip-append-to-body': true});
         $compile(element)($scope);
@@ -150,7 +213,10 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
   $scope.selectionChanged = function(idx) {
     $log.log(idx, $scope.selections[idx]);
     selected_contact = $scope.selections[idx];
+	
   };
+  
+
 
   $scope.addEvent = function() {
 
@@ -175,22 +241,24 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 	}
 	
 	var description = "Task for contact "+ selected_contact.Name +" "+ selected_contact.PhoneNumber+" : "+$scope.title;
+	var contact = selected_contact.Name +" "+ selected_contact.PhoneNumber;
 	$log.log("description: "+description);
 
 
     $scope.events.push({
-      title: description,
-      start: start_date,
-      end:  end_date,
-	  color: $scope.role.Color,
-	  editable: true
+		title: description,
+		start: start_date,
+		end:  end_date,
+		color: $scope.role.Color,
+		id : contact,
+	    editable: true
     });
 
   //  console.log($scope.pendingRequests);
   };
 
 	
-$scope.sendMail=function()
+	$scope.sendMail=function()
 	{
 		$http.post("http://localhost:3000/sendEmail", {
 			
@@ -826,6 +894,11 @@ function clearUploadData() {
 		$log.log("contact name : "+contact.Name);
 		$scope.update_status = contact_before_update.Status;
 		 $log.log("contactIsEdit : "+$scope.contactIsEdit);
+		// $scope.role_category = contact.Category;
+		 $scope.role_category = contact.Category;
+		 $log.log("contact role : "+contact.Category.Role);
+
+		 $scope.status_role = contact.Status;
 
         		
 	}
@@ -1074,21 +1147,27 @@ function clearUploadData() {
 		}
 		status_role = contact_before_update.Status;
 	}
-	  if($scope.newName!=undefined)
+	
+	if($scope.newName==undefined || $scope.newName== "")
+	{//check the name
+		$scope.message_type = "ERROR";
+		$scope.message = "You must enter a name";
+		angular.element(Message_Modal).modal("show");
+		return;
+		
+	}
+	 else
 	  {
 		var name = $scope.newName;
 		if(name.length > MAX_LETTERS_IN_NAME){//check the length of the name
-		    $scope.message_type = "WARNNING";
-		    $scope.message = "This name is too long, therefore only "+ MAX_LETTERS_IN_NAME  +" characters including spaces will be saved";
-		    angular.element(Message_Modal).modal("show");
+			$scope.message_type = "WARNNING";
+			$scope.message = "This name is too long, therefore only "+ MAX_LETTERS_IN_NAME  +" characters including spaces will be saved";
+			angular.element(Message_Modal).modal("show");
 			$scope.newName=$scope.newName.slice(0, MAX_LETTERS_IN_NAME);
 			return;
 		}
 	  }
-	  else
-	  {
-		$scope.newName="";
-	  }
+	
 	  
 	  if($scope.newStatus==undefined || $scope.newStatus=="" || $scope.newStatus==new_status_option) 
 	  {
@@ -1223,7 +1302,15 @@ function clearUploadData() {
 			angular.element(Message_Modal).modal("show");
 			return;
 		}
-		if(contactInfoToUpdate.Name!=undefined)
+		if(contactInfoToUpdate.Name==undefined || contactInfoToUpdate.Name== "")
+		{//check the name
+			$scope.message_type = "ERROR";
+			$scope.message = "You must enter a name";
+			angular.element(Message_Modal).modal("show");
+			return;
+			
+		}
+		else
 		{
 			if(contactInfoToUpdate.Name.length > MAX_LETTERS_IN_NAME){//check the length of the name
 			$scope.message_type = "WARNNING";
@@ -1233,10 +1320,7 @@ function clearUploadData() {
 			return;
 			}
 		}
-		else
-		{
-			contactInfoToUpdate.Name="";
-		}
+		
 		  
 		if(status_role==undefined ||status_role=="") 
 		{

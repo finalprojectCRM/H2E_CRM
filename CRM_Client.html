@@ -301,6 +301,7 @@
 									<th> </th>
 									<th> </th>
 									<th> </th>
+									<th> </th>
 								</tr>
 							<thead>
 							<tbody>
@@ -310,17 +311,20 @@
 										<td ng-show="contactIsEdit==false">{{contactInfo.Name}}</td>
 										<td ng-show="contactIsEdit==false">{{contactInfo.PhoneNumber}}</td> 
 										<td ng-show="contactIsEdit==false">{{contactInfo.eMail}}</td>
-										<td ng-show="contactIsEdit==false">{{contactInfo.Address}}</td>	
+										<td ng-show="contactIsEdit==false">{{contactInfo.Address}}</td>
+										
 									
+									<td ng-show="contactIsEdit==false"><i  class="fa fa-calendar" style="font-size:24px;color:#cc99ff" aria-hidden="true" ng-click = "calendarContact(contactInfo)" ></i></td>
 									<td ng-show="contactIsEdit==false"><i class="fa fa-envelope" style="font-size:24px;color:#00b3b3" aria-hidden="true" ng-click = "sendMail()" ></i></td>
 									
 									<td ng-show="contactIsEdit==false"><i class="fa fa-edit" style="font-size:25px;color:#008fb3"  aria-hidden="true" ng-click = "contactIsEdit =!contactIsEdit;update_contact_function(contactInfo)"></i></td>
 									<div ng-if="contactIsEdit" class="form-group row" >										
 										
 										<td ng-show="contactIsEdit==true"><div class="form-group" >	
-											<select class="form-control" ng-model="role_category.Role" ng-options="objRole as objRole.Role disable when objRole.Role  === '-- Choose category for role --' for objRole in roles " ng-change="onChangeCategory(role_category)" ><!---->
+											<select class="form-control" ng-model="role_category" ng-options="objRole as objRole.Role disable when objRole.Role  === '-- Choose category for role --' for objRole in roles " ng-change="onChangeCategory(role_category)" ><!---->
 											
-												 <!--<optionng-repeat=" role in roles" > {{role.Role}}</style></option>-->
+												 <!--<optio
+												 nng-repeat=" role in roles" > {{role.Role}}</style></option>-->
 											 </select>
 										</div></td>	
 										<td ng-show="contactIsEdit==true"><div class="form-group" ng-if="role_category">
@@ -373,6 +377,7 @@
 									
 								</tr>
 								<tr ng-show="show_contacts==true">
+									<td></td>
 									<td></td>
 									<td></td>
 									<td></td>

@@ -49,6 +49,7 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 	var username_to_delete;
 	var deleted_status;
     var selected_items= [];
+	var history_array =[];
 	var start_date,end_date;
 	var selected_contact;
 	var edit_event_detailes;
@@ -174,7 +175,7 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 	edit_event_detailes.color = $scope.role.Color;
 	edit_event_detailes.id = selected_contact.Name +" "+ selected_contact.PhoneNumber;
 	uiCalendarConfig.calendars.myCalendar.fullCalendar('updateEvent', edit_event_detailes);
-	 
+	
 	   
 
 		
@@ -192,6 +193,16 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 
 
 		
+		
+	}; 
+	$scope.calendarContact = function(contact) { 
+	
+	    var event_id = contact.Name +" "+ contact.PhoneNumber;
+		$log.log("event_id : " + event_id);
+	    $scope.events = uiCalendarConfig.calendars.myCalendar.fullCalendar('clientEvents', event_id);
+	   
+		$log.log("$scope.events : " + $scope.events);
+	    $scope.calendar_function();
 		
 	};
   
@@ -895,10 +906,10 @@ function clearUploadData() {
 		$scope.update_status = contact_before_update.Status;
 		 $log.log("contactIsEdit : "+$scope.contactIsEdit);
 		// $scope.role_category = contact.Category;
-		 $scope.role_category = contact.Category;
+		// $scope.role_category = contact.Category;
 		 $log.log("contact role : "+contact.Category.Role);
 
-		 $scope.status_role = contact.Status;
+		 //$scope.status_role = contact.Status;
 
         		
 	}
@@ -1234,10 +1245,25 @@ function clearUploadData() {
 		$scope.addNewContact();
 	}
 	
+	$scope.getCurrentDate = function()
+	{
+		var date = new Date();
+		var dd = String(date.getDate()).padStart(2, '0');
+		var mm = String(date.getMonth() + 1).padStart(2, '0'); //January is 0!
+		var yyyy = date.getFullYear();
+
+		date = mm + '/' + dd + '/' + yyyy;
+		
+		return date;
+	}
+	
     //add a new contact to server
 	$scope.addNewContact = function(){
-				
-		var contact={Name:$scope.newName, Category:category, Status:status_role, PhoneNumber:$scope.newPhoneNumber, eMail:$scope.newEmail, Address:$scope.newAddress};
+		
+		var contact_history	= 'Date : ' + $scope.getCurrentDate() +'\nContact Addition ';
+		history_array.push(contact_history);
+		$log.log("contact_history :" + contact_history);
+		var contact={Name:$scope.newName, Category:category, Status:status_role, PhoneNumber:$scope.newPhoneNumber, eMail:$scope.newEmail, Address:$scope.newAddress, History:history_array};
 		$http.post("http://localhost:3000/addContact", {
 				contact: contact,
 			}).then(
@@ -1288,6 +1314,51 @@ function clearUploadData() {
 			);
 	}
 	
+	
+	$scope.changed_detailes = function(contactInfoToUpdate)
+	{
+		var updated_contact_history="";
+		var change = -1;
+		if(category!=contact_before_update.Category.Role)
+		{
+			updated_contact_history = "Role changed : " + contact_before_update.Category.Role+ " -> : " +category+"\n";
+			change =0;
+		}
+		if(status_role!= contact_before_update.Status)
+		{
+			updated_contact_history += "Status changed : " + contact_before_update.Status+ " -> : " + status_role +"\n";
+			change =0;
+		}
+		if(contactInfoToUpdate.Name != contact_before_update.Name)
+		{
+			updated_contact_history += "Name changed : " + contact_before_update.Name+ " -> : " + contactInfoToUpdate.Name +"\n";
+			change =0;
+		}
+		if(contactInfoToUpdate.PhoneNumber != contact_before_update.PhoneNumber)
+		{
+			updated_contact_history += "Phone number changed : " + contact_before_update.PhoneNumber+ " -> : " + contactInfoToUpdate.PhoneNumber +"\n";
+			change =0;
+		}
+		if(contactInfoToUpdate.eMail != contact_before_update.eMail)
+		{
+			updated_contact_history += "Email changed : " + contact_before_update.eMail+ " -> : " + contactInfoToUpdate.eMail +"\n";
+			change =0;
+		}
+		if(contactInfoToUpdate.Address != contact_before_update.Address)
+		{
+			updated_contact_history += "Address changed : " + contact_before_update.Address+ " -> : " + contactInfoToUpdate.Address +"\n";
+			change =0;
+		}
+		
+		if(change==0)
+		{
+			var contact_history=$scope.getCurrentDate()+"\nEdit Contact:\n"+updated_contact_history;
+			return contact_history;
+		}
+		
+		return -1;
+				
+	}
 	
 	//check validation of all updated contact fildes and if they corect are corcect send them to the server
 	$scope.save_updated = function(contactInfoToUpdate)
@@ -1390,8 +1461,18 @@ function clearUploadData() {
 		{
 		   contactInfoToUpdate.Address = "";
 		}
-	
-		var updated_contact={Name:contactInfoToUpdate.Name, Category:category, Status:status_role, PhoneNumber:contactInfoToUpdate.PhoneNumber, eMail:contactInfoToUpdate.eMail, Address:contactInfoToUpdate.Address};
+		
+		var contact_history = $scope.changed_detailes(contactInfoToUpdate);
+	 
+	    if(contact_history==-1)
+		{
+		   var updated_contact={Name:contactInfoToUpdate.Name, Category:category, Status:status_role, PhoneNumber:contactInfoToUpdate.PhoneNumber, eMail:contactInfoToUpdate.eMail, Address:contactInfoToUpdate.Address};
+		}
+		else
+		{
+		   var updated_contact={Name:contactInfoToUpdate.Name, Category:category, Status:status_role, PhoneNumber:contactInfoToUpdate.PhoneNumber, eMail:contactInfoToUpdate.eMail, Address:contactInfoToUpdate.Address,History:contact_history};
+
+		}
 		$http.post("http://localhost:3000/updateContact", {
 				contact_before_update: contact_before_update,updated_contact:updated_contact
 			}).then(

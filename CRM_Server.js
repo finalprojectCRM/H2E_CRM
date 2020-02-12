@@ -506,7 +506,7 @@ app.post("/addContact", (request, response) =>{
 			contacts_collection.findOne({"PhoneNumber": contact.PhoneNumber}).then(function(result) {
 			  if(!result) {
 				contacts_collection.insertOne(
-                {"Name": contact.Name ,  "Category":contact.Category, "Status":contact.Status,"PhoneNumber": contact.PhoneNumber, "eMail" : contact.eMail ,"Address" : contact.Address} , function(err, res){
+                {"Name": contact.Name ,  "Category":contact.Category, "Status":contact.Status,"PhoneNumber": contact.PhoneNumber, "eMail" : contact.eMail ,"Address" : contact.Address , History:contact.History} , function(err, res){
                  if (err) throw err;});
 				 response.end();
 			  }
@@ -758,7 +758,7 @@ app.post("/updateContact", (request, response) =>{
 	if(contact_after_update_body.PhoneNumber == contact_before_update_body.PhoneNumber)
 	{
 		contact_after_update = { $set: {"Name":contact_after_update_body.Name ,"Category" : contact_after_update_body.Category ,"Status" : contact_after_update_body.Status , "PhoneNumber":contact_after_update_body.PhoneNumber ,"eMail" : contact_after_update_body.eMail ,"Address" : contact_after_update_body.Address } };
-				contacts_collection.updateOne(contact_before_update, contact_after_update, function(err, res) {
+				contacts_collection.updateOne(contact_before_update, contact_after_update,{$addToSet: {History: contact_after_update.History}}, function(err, res) {
 				if (err) throw err;
 				contacts_collection.find({}).toArray((error, result) => {
 					if(error) {
@@ -775,7 +775,7 @@ app.post("/updateContact", (request, response) =>{
 			  if(!result) 
 			  {
 				contact_after_update = { $set: {"Name":contact_after_update_body.Name ,"Category" : contact_after_update_body.Category,"Status" : contact_after_update_body.Status , "PhoneNumber":contact_after_update_body.PhoneNumber ,"eMail" : contact_after_update_body.eMail ,"Address" : contact_after_update_body.Address } };
-				contacts_collection.updateOne(contact_before_update, contact_after_update, function(err, res) {
+				contacts_collection.updateOne(contact_before_update, contact_after_update,{$addToSet: {History: contact_after_update.History} } ,function(err, res) {
 				if (err) throw err;
 				contacts_collection.find({}).toArray((error, result) => {
 					if(error) {

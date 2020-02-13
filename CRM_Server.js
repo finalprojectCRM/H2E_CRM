@@ -130,6 +130,16 @@ app.get("/bower_components/angular/angular.min.js", (request, response) =>{//bri
             response.end(data);
         });
 });
+app.get("/bower_components/angular/angular.min.js.map", (request, response) =>{//bring the angular file
+        console.log('--Rendering angular-js file--');
+        fs.readFile('./bower_components/angular/angular.min.js.map', function (error, data) {
+            if (error) {
+                console.log('error has happand in angular.min.js.map', error)
+            }
+            response.writeHead(200, {"Content-Type": "text/javascript"});
+            response.end(data);
+        });
+});
 app.get("/select.js", (request, response) =>{
         console.log('--Rendering select.js file--');
         fs.readFile('./lib/select.js', function (error, data) {
@@ -197,6 +207,7 @@ app.get("/datetimepicker.css", (request, response) =>{
             response.end(data);
         });
 });
+
 
 app.get("/bower_components/moment/min/moment.min.js", (request, response) =>{
         console.log('--Rendering moment.min.js file--');
@@ -758,8 +769,15 @@ app.post("/updateContact", (request, response) =>{
 	if(contact_after_update_body.PhoneNumber == contact_before_update_body.PhoneNumber)
 	{
 		contact_after_update = { $set: {"Name":contact_after_update_body.Name ,"Category" : contact_after_update_body.Category ,"Status" : contact_after_update_body.Status , "PhoneNumber":contact_after_update_body.PhoneNumber ,"eMail" : contact_after_update_body.eMail ,"Address" : contact_after_update_body.Address } };
-				contacts_collection.updateOne(contact_before_update, contact_after_update,{$addToSet: {History: contact_after_update.History}}, function(err, res) {
+				contacts_collection.updateOne(contact_before_update, contact_after_update, function(err, res) {
 				if (err) throw err;
+				 contacts_collection.updateOne({ PhoneNumber:contact_after_update_body.PhoneNumber}
+				 ,{$addToSet: {History: contact_after_update_body.History}},
+					function(err, res) {
+				 console.log("after updateOne");
+				 });
+				
+				
 				contacts_collection.find({}).toArray((error, result) => {
 					if(error) {
 						return response.status(500).send(error);
@@ -775,8 +793,13 @@ app.post("/updateContact", (request, response) =>{
 			  if(!result) 
 			  {
 				contact_after_update = { $set: {"Name":contact_after_update_body.Name ,"Category" : contact_after_update_body.Category,"Status" : contact_after_update_body.Status , "PhoneNumber":contact_after_update_body.PhoneNumber ,"eMail" : contact_after_update_body.eMail ,"Address" : contact_after_update_body.Address } };
-				contacts_collection.updateOne(contact_before_update, contact_after_update,{$addToSet: {History: contact_after_update.History} } ,function(err, res) {
+				contacts_collection.updateOne(contact_before_update, contact_after_update ,function(err, res) {
 				if (err) throw err;
+				contacts_collection.updateOne({ PhoneNumber:contact_after_update_body.PhoneNumber}
+				 ,{$addToSet: {History: contact_after_update_body.History}},
+					function(err, res) {
+				 console.log("after updateOne");
+				 });
 				contacts_collection.find({}).toArray((error, result) => {
 					if(error) {
 						return response.status(500).send(error);

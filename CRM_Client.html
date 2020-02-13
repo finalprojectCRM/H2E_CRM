@@ -17,6 +17,8 @@
 
 		 <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.6.3/css/bootstrap-select.min.css" />
 		<script type="text/javascript" src="bower_components/angular/angular.min.js"></script>
+		
+
 		<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.2.18/angular-sanitize.js"></script>
 		
 		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
@@ -36,11 +38,12 @@
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.8/angular-resource.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-cookie/4.1.0/angular-cookie.min.js" integrity="sha256-Wrj5HHKDApceikiZq36OI8gQV6Cjd3FLB/MvyCvgoDY=" crossorigin="anonymous"></script>
 		<script src="select.js"></script>
-		  <link rel="stylesheet" href="select.css">
+		<link rel="stylesheet" href="select.css">
 
 		<link rel="stylesheet" href="datetimepicker.css" />
 		<script src="datetimepicker.js"></script>
 		<script type="text/javascript" src="CRM_Client.js"></script>
+		
 						
 		
 	</head>
@@ -343,6 +346,7 @@
 									</div>
 
 									<td ng-show="contactIsEdit==false"><i class="fa fa-trash" style="font-size:24px;color:#003366"  aria-hidden="true" ng-click = "delete_contact_function(contactInfo)"></i></td>
+									<td ng-show="contactIsEdit==false"> <a href="#" pop-over History="contactInfo.History", title="History">Show Pop over</a><td>
 									<td ng-show="contactIsEdit==true"><i class="fa fa-check-square-o" style="font-size:24px;color:#00e600" aria-hidden="true" ng-click = "save_updated(contactInfo)"></i></td>
 									 
 									 		
@@ -1384,10 +1388,15 @@
 				</div>
 			</div>
 			
-				
-	
 			
-	</div>
-
+			
+			
+		</div>
+	
+     <script type="text/ng-template" id="popover_template.html">
+				<ul class='unstyled'><li ng-repeat='contact_history in History'>{{contact_history}}</li>----------------</ul>
+			</script>
 	</body>
+	
+	
 </html>

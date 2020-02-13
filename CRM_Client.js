@@ -86,6 +86,9 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 	$scope.options=[];
     $scope.roles=[];
 	$scope.roles_colors=[];
+	
+	
+
 
 
 
@@ -1321,7 +1324,7 @@ function clearUploadData() {
 		var change = -1;
 		if(category!=contact_before_update.Category.Role)
 		{
-			updated_contact_history = "Role changed : " + contact_before_update.Category.Role+ " -> : " +category+"\n";
+			updated_contact_history = "Role changed : " + contact_before_update.Category.Role+ " -> : " +category.Role+"\n";
 			change =0;
 		}
 		if(status_role!= contact_before_update.Status)
@@ -1359,6 +1362,8 @@ function clearUploadData() {
 		return -1;
 				
 	}
+	
+	 
 	
 	//check validation of all updated contact fildes and if they corect are corcect send them to the server
 	$scope.save_updated = function(contactInfoToUpdate)
@@ -1865,5 +1870,35 @@ function clearUploadData() {
 	}
 	
 
-	}]);
+	}]).directive('popOver', function ($compile, $templateCache) {
+        var getTemplate = function () {
+            $templateCache.put('templateId.html', 'This is the content of the template');
+            console.log($templateCache.get("popover_template.html"));
+            return $templateCache.get("popover_template.html");
+        }
+        return {
+            restrict: "A",
+            transclude: true,
+            template: "<span ng-transclude></span>",
+            link: function (scope, element, attrs) {
+                var popOverContent;
+                if (scope.History) {
+                    var html = getTemplate();
+                    popOverContent = $compile(html)(scope);                    
+                    var options = {
+                        content: popOverContent,
+                        placement: "bottom",
+                        html: true,
+                        title: scope.title
+                    };
+                    $(element).popover(options);
+                }
+            },
+            scope: {
+                History: '=',
+                title: '@'
+            }
+        };
+    })
+
 })();

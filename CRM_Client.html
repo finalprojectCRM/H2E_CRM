@@ -17,6 +17,8 @@
 
 		 <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.6.3/css/bootstrap-select.min.css" />
 		<script type="text/javascript" src="bower_components/angular/angular.min.js"></script>
+		<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.4.5/angular-animate.js"></script>
+		<script src="//angular-ui.github.io/bootstrap/ui-bootstrap-tpls-0.13.4.js"></script>
 		
 
 		<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.2.18/angular-sanitize.js"></script>
@@ -305,6 +307,7 @@
 									<th> </th>
 									<th> </th>
 									<th> </th>
+									<th> </th>
 								</tr>
 							<thead>
 							<tbody>
@@ -346,11 +349,29 @@
 									</div>
 
 									<td ng-show="contactIsEdit==false"><i class="fa fa-trash" style="font-size:24px;color:#003366"  aria-hidden="true" ng-click = "delete_contact_function(contactInfo)"></i></td>
-									<td ng-show="contactIsEdit==false"> <a href="#" pop-over History="contactInfo.History", title="History">Show Pop over</a><td>
+									<td ng-show="contactIsEdit==false"> <i class="fa fa-history" style="font-size:24px;color:#003366"  ng-value="History = contactInfo.History" popover-template="'popover.html'" 
+            popover-placement="right" 
+            popover-trigger="click" 
+            type="button"
+            class="btn btn-default"></i>
+      
+    <script type="text/ng-template" id="popover.html">
+      <div>
+	  <label style="display: block;
+    text-align: center;
+    line-height: 150%;
+    font-size: .85em;">History:</label>
+         <pre><ul class='unstyled'><li ng-repeat='contact_history in History'>{{contact_history}}</li><b><hr></b></ul>
+</pre>
+      </div>
+    </script><td>
 									<td ng-show="contactIsEdit==true"><i class="fa fa-check-square-o" style="font-size:24px;color:#00e600" aria-hidden="true" ng-click = "save_updated(contactInfo)"></i></td>
 									 
 									 		
 								</tr>
+								<script type="text/ng-template" id="popover_template.html">
+									<ul class='unstyled'><li ng-repeat='contact_history in History'>{{contact_history}}</li>----------------</ul>
+								</script>
 								<tr ng-show="get_new_contact_details==true">
 									<!--<td ><div class="form-group">
 										<select class="form-control" id="status_select" ng-model="newStatus" ng-change="onChange(newStatus)">
@@ -381,6 +402,7 @@
 									
 								</tr>
 								<tr ng-show="show_contacts==true">
+									<td></td>
 									<td></td>
 									<td></td>
 									<td></td>
@@ -1393,9 +1415,7 @@
 			
 		</div>
 	
-     <script type="text/ng-template" id="popover_template.html">
-				<ul class='unstyled'><li ng-repeat='contact_history in History'>{{contact_history}}</li>----------------</ul>
-			</script>
+     
 	</body>
 	
 	

@@ -1,6 +1,6 @@
 (function() {
 "use strict";
-var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui.bootstrap.datetimepicker','ngSanitize', 'ui.select'])
+var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui.bootstrap.datetimepicker','ngSanitize', 'ui.select','ngAnimate'])
 .factory("sampleUploadService", [ "$resource",
   function ($resource) {
 	 var svc = {};
@@ -87,11 +87,12 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
     $scope.roles=[];
 	$scope.roles_colors=[];
 	
-	
 
 
-
-
+   $scope.history_of_contact = function(contact_history)
+   {
+	   $scope.History = contact_history;
+   }
 	
 	$scope.renderCalender = function(calendar) {
     console.log($scope.events)
@@ -1872,9 +1873,9 @@ function clearUploadData() {
 
 	}]).directive('popOver', function ($compile, $templateCache) {
         var getTemplate = function () {
-            $templateCache.put('templateId.html', 'This is the content of the template');
-            console.log($templateCache.get("popover_template.html"));
-            return $templateCache.get("popover_template.html");
+            $templateCache.put('popover.html', 'This is the content of the template');
+            console.log($templateCache.get("popover.html"));
+            return $templateCache.get("popover.html");
         }
         return {
             restrict: "A",

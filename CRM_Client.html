@@ -427,12 +427,12 @@
 				
 			<div ng-show="show_calendar==true">
 				
-			<div id="calendar_div" ng-init="show_outside=false">
+			<div id="calendar_div" >
 		         
 				  
 						 
 					<div id="calendar" ui-calendar="calendarConfig" ng-model="eventSources" calendar="myCalendar"></div></br>
-					<button type="button" class="btn btn-primary" ng-click="add_even_outside_calendar();show_outside=true">
+					<button type="button" class="btn btn-primary" ng-click="add_even_outside_calendar();">
 					  Add Event
 					</button>
 					
@@ -829,7 +829,7 @@
 		
 		
 	
-			<div class="modal fade" id="add_event" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+			<div class="modal fade" id="add_event_outside" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
 				<div class="modal-dialog">
 					<div class="modal-content">
 						<div class="modal-header">
@@ -884,17 +884,10 @@
 									</br><input class="form-control" ng-model="title" placeholder="Enter title..."/>
 								 </div>
 								 
-								 <div ng-if="show_outside">
-									 <div class="col-sm-10 text-primary"></br>
-										<b>Date range:</b>
-									</div></br>
-									<div class="col-sm-10">
-										</br><input class="form-control" ng-model="date"/>
-									 </div>
-								 </div>
-								 <div ng-if="!show_outside">
+								<div class="col-sm-10 text-primary">
+
 									 </br><div><b>Start Date Time:<b></div>
-							  </br><div class="dropdown">
+									</br><div class="dropdown">
 								  <a href="#" class="dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 									<div class="input-group">
 									  <input type="text" class="form-control" data-ng-model="event_start" />
@@ -924,7 +917,88 @@
 									<datetimepicker data-ng-model="event_end" data-datetimepicker-config="{ dropdownSelector: '#dropdown3' }"></datetimepicker>
 								  </ul>
 								</div>
-								 </div>
+							  </div>
+							  </div>
+							  
+						  </div>
+						</div>
+
+							  
+						
+						
+						<div class="modal-footer" >
+							<button type="button" class="btn btn-primary" data-dismiss="modal">
+										cancel
+							</button>
+							<button type="button" class="btn btn-primary" data-dismiss="modal" ng-click="addEvent();">
+										ok
+							</button>
+
+						</div>
+					</div>
+				</div>
+			</div>		
+			<div class="modal fade" id="add_event" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+				<div class="modal-dialog">
+					<div class="modal-content">
+						<div class="modal-header">
+							<h4 class="modal-title" id="myModalLabel">
+								New Task
+							</h4>
+						</div>
+						
+						<div class="modal-body" >
+							
+							<div class="form-horizontal" role="form">
+							  <div class="form-group ">
+								<div class="col-sm-10 text-primary">
+									<div>
+										<b>Category:</b>
+									</div>
+					
+							   </br>
+							   <div>
+								   <select class="form-control"  ng-model="role" ng-options="objRole as objRole.Role disable when objRole.Role  === '-- Choose category for role --' for objRole in roles " ng-change="selected_item(role)"  >
+								  </select></br>
+								  </div>
+							</div>
+							
+							 <div class="col-sm-10"><input type="checkbox" ng-model="contact_task" /><em style =" color:#ff0066"> Task for contact</em></div>
+							 <div ng-if="contact_task">
+							  <div class="col-sm-10 text-primary">
+									<div>
+										</br><b>Select contant for task:</b>
+									</div>
+					
+							   </br>
+							  <div class="col-sm-4">
+								<ui-select ng-model="selections[$index]" ng-change="selectionChanged($index)" theme="bootstrap">
+								  <ui-select-match placeholder="Select contact...">{{$select.selected.Name}}</ui-select-match>
+								  <ui-select-choices repeat="contactInfo in contactsInfo | filter: $select.search track by $index">
+											<div ng-bind-html="contactInfo.Name | highlight: $select.search"></div>
+											<small ng-bind-html="contactInfo.PhoneNumber | highlight: $select.search"></small>
+								  </ui-select-choices>
+								</ui-select>
+							  </div>
+							</div>
+							</div>
+							 
+							
+							
+
+								<div class="col-sm-10 text-primary"></br>
+								<b>Task description:</b>
+								</div>
+								<div class="col-sm-10 text-primary">
+									</br><input class="form-control" ng-model="title" placeholder="Enter title..."/>
+								</div>
+								 
+								<div class="col-sm-10 text-primary"></br>
+									<b>Date range:</b>
+								</div></br>
+								<div class="col-sm-10">
+									</br><input class="form-control" ng-model="date"/>
+								</div>
 							  </div>
 							  
 							  

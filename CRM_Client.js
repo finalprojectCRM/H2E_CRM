@@ -1,6 +1,6 @@
 (function() {
 "use strict";
-var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui.bootstrap.datetimepicker','ngSanitize', 'ui.select','ngAnimate'])
+var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui.bootstrap.datetimepicker','ngSanitize', 'ui.select','ngAnimate','toaster'])
 .factory("sampleUploadService", [ "$resource",
   function ($resource) {
 	 var svc = {};
@@ -27,7 +27,7 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 
 
 
-.controller('CRM_controller', ['$scope','$compile','$http','$log','$timeout','sampleUploadService' ,'uiCalendarConfig',function($scope,$compile, $http,$log,$timeout,sampleUploadService,uiCalendarConfig) {	
+.controller('CRM_controller', ['$scope','$compile','$http','$log','$timeout','sampleUploadService' ,'uiCalendarConfig','toaster',function($scope,$compile, $http,$log,$timeout,sampleUploadService,uiCalendarConfig,toaster) {	
 
 	var contact_before_update;
 	var user_before_update;
@@ -186,6 +186,8 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 		
    };
    
+   
+   
     $scope.go_to_contact = function() { 
 	
 		var contact_phone_number = $scope.contact_event.split(" "); 
@@ -194,6 +196,15 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 
 		$scope.search = contact_phone_number[1];
 	    angular.element(edit_or_delete_event).modal("hide");
+
+
+		
+		
+	}; 
+	$scope.add_even_outside_calendar = function() { 
+	
+		
+		angular.element(add_event).modal("show");
 
 
 		
@@ -273,7 +284,21 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
   };
 
 	
-	$scope.sendMail=function()
+	$scope.sendMailModal=function(contact_email)
+	{	
+		$log.log("contact_email :"+contact_email);
+		if(contact_email==""||contact_email==null )
+		{
+		   toaster.pop('error', "No email for this contact", "");
+		   return;
+		}
+		$scope.contact_email = contact_email;
+		angular.element(Email_modal).modal("show");
+
+		
+	}	
+	
+	$scope.sendMail=function(contact_email)
 	{
 		$http.post("http://localhost:3000/sendEmail", {
 			

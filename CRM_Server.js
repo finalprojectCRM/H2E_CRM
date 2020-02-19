@@ -512,13 +512,17 @@ app.post("/addContact", (request, response) =>{
     console.log("addContact FUNCTION");
         //add new contact
             var contact = request.body.contact;
-            console.log("contact: " + contact.Name);
+            console.log("contact: " + contact.History);
 			
 			contacts_collection.findOne({"PhoneNumber": contact.PhoneNumber}).then(function(result) {
 			  if(!result) {
+				  
 				contacts_collection.insertOne(
-                {"Name": contact.Name ,  "Category":contact.Category, "Status":contact.Status,"PhoneNumber": contact.PhoneNumber, "eMail" : contact.eMail ,"Address" : contact.Address , History:contact.History} , function(err, res){
-                 if (err) throw err;});
+				{"Name": contact.Name ,  "Category":contact.Category, "Status":contact.Status,"PhoneNumber": contact.PhoneNumber, "eMail" : contact.eMail ,"Address" : contact.Address , History:contact.History} , function(err, res){
+				 if (err) throw err;});
+				
+				 
+				
 				 response.end();
 			  }
 			  //check if the contact already exsists
@@ -1064,20 +1068,22 @@ app.post("/uploadImage", (request, response) =>{
 					//console.log("#########################buff############################"+buff);
 					//buff = Buffer.from(fileData, 'base64'); 
 					let file_data = buff.toString('ascii');
-					console.log("#########################file_data############################"+file_data);
+					//console.log("#########################file_data############################"+file_data);
 
 					
 					// writeFile function with filename, content and callback function
 					fs.writeFile(new_file_name,file_data, function (err) {
 					if (err) throw err;
 					console.log('File is created successfully.');
+					response.writeHead(200, { 'Content-Type': 'application/json' });
+                    response.end();
 				}); 
                }
             }
          }
       }
    }
-	files_collection.insertOne({"FileName":new_file_name,"Data":new_file_data});
+	files_collection.insertOne({"FileName":new_file_name});
 
    
 });

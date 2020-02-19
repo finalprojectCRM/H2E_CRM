@@ -349,21 +349,13 @@
 										<td ng-show="contactIsEdit==true"><input ng-model="contactInfo.eMail" type="text" class="form-control" /></td>
 										<td ng-show="contactIsEdit==true"><input ng-model="contactInfo.Address" type="text" class="form-control" /></td>	
 									</div>
-
+                             
 									<td ng-show="contactIsEdit==false"><i class="fa fa-trash" style="font-size:24px;color:#003366"  aria-hidden="true" ng-click = "delete_contact_function(contactInfo)"></i></td>
-									<td ng-show="contactIsEdit==false"> <i class="fa fa-history" style="font-size:24px;color:#003366"  ng-value="History = contactInfo.History" popover-template="'popover.html'" 
-            popover-placement="right" 
-            popover-trigger="click" 
-            type="button"
-            class="btn btn-default"></i>
+									<td ng-show="contactIsEdit==false"> <i class="fa fa-history" style="font-size:24px;color:#003366"  pop-over history="contactInfo.History", title="History"></i>
       
-    <script type="text/ng-template" id="popover.html">
+    <script type="text/ng-template" id="popover_template.html">
       <div>
-	  <label style="display: block;
-    text-align: center;
-    line-height: 150%;
-    font-size: .85em;">History:</label>
-         <pre><ul class='unstyled'><li ng-repeat='contact_history in History'>{{contact_history}}</li><b><hr></b></ul>
+         <pre><span ng-repeat='contact_history in history track by $index'>{{contact_history}}<b><hr></b></span>
 </pre>
       </div>
     </script><td>
@@ -371,9 +363,7 @@
 									 
 									 		
 								</tr>
-								<script type="text/ng-template" id="popover_template.html">
-									<ul class='unstyled'><li ng-repeat='contact_history in History'>{{contact_history}}</li>----------------</ul>
-								</script>
+								
 								<tr ng-show="get_new_contact_details==true">
 									<!--<td ><div class="form-group">
 										<select class="form-control" id="status_select" ng-model="newStatus" ng-change="onChange(newStatus)">
@@ -437,7 +427,7 @@
 					</button>
 					
 					</div>	 
-			  </div>
+			  
                 <div id="map_lenged_div" class="text-center">
 				 
 					<div class="text-info"><label style = "font-size: 16px;vertical-align: middle;"> Map lenged:</label></div>
@@ -532,7 +522,7 @@
 						      <li class="dropdown-submenu">
 							  <a tabindex="-1" href="#"><i style =" color: rgb(50, 118, 177);" class="fa fa-file-pdf-o fa-fw"></i> file settings</a>
 								  <ul class="dropdown-menu">
-									<li class="hover_color" ng-click="add_file=true"><a href="#"><i style =" color: rgb(50, 118, 177);" class="fa fa-plus fa-fw"></i> add new file</a></li>
+									<li class="hover_color" ng-click="add_file()"><a href="#"><i style =" color: rgb(50, 118, 177);" class="fa fa-plus fa-fw"></i> add new file</a></li>
 									<li class="hover_color" ng-click="sign_out()"><a href="#"><i style =" color: rgb(50, 118, 177);" class="fa fa-trash fa-fw"></i> delete file   </a></li>
 								  </ul>
 							  </li>
@@ -543,32 +533,7 @@
 				    
 				</div>
 			
-				<div ng-show="add_file==true">
 				
-				     <div class="row" ng-if="uploadSuccessful">
-						<div class="col-xs-12">
-							<div class="alert alert-success text-center">Upload successful!</div>
-						</div>
-					 </div>
-					<div class="input-group">
-					   <input type="file" id="fileUploadField" style="display: none;">
-					   <input type="text" id="fileNameDisplayField" class="form-control" 
-
-					   ng-model="uploadFileName" placeholder="File to Upload" readonly="readonly">
-					   <div class="input-group-addon btn btn-default" 
-
-					   ng-click="clickSelectFile()"><i class="glyphicon glyphicon-file"></i></div>
-					</div>
-					 <div class="row">
-						<div class="col-xs-12 col-sm-offset-2 col-sm-8 col-md-offset-4 col-md-4">
-						   <div class="row">
-							  <div class="col-xs-12 col-sm-6"><button class="btn btn-primary form-control" ng-click="doUpload()">Upload</button></div>
-							  <div class="col-xs-12 col-sm-6"><button class="btn btn-default form-control" ng-click="clearFileUpload()">Clear</button></div>                  
-						   </div>
-						</div>
-					</div>
-
-				</div>
 				
 			</div>
 		</div>
@@ -1559,7 +1524,57 @@
 						  <script src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.6.3/js/bootstrap-select.min.js"></script>-->
 				</div>
 			</div>
+			<div class="modal fade" id="add_file_modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+				<div class="modal-dialog">
+					<div class="modal-content">
+						<!-- Modal Header -->
+						<div class="modal-header">
+							<h4 class="modal-title" id="myModalLabel">
+								Add file to system
+							</h4>
+						</div>
+						</br>
+						<!-- Modal Body -->
+						<div class="modal-body">
+
+							<div class="form-horizontal" >
+								<div class="form control">
+									<div class="row" ng-if="uploadSuccessful">
+										<div class="col-sm-10">
+											<div class="alert alert-success text-center">Upload successful!</div>
+										</div>
+									 </div>
+									<div class="input-group col-sm-10">
+									   <input type="file" id="fileUploadField" style="display: none;">
+									   <input type="text" id="fileNameDisplayField" class="form-control" ng-model="uploadFileName" placeholder="File to Upload" readonly="readonly">
+									   <div class="input-group-addon btn btn-default" ng-click="clickSelectFile()"><i class="glyphicon glyphicon-file"></i></div>
+									</div>
+															
+									</br>
+								</div>
+							</div>
+						</div>
+						
+						 <toaster-container toaster-options="{'time-out': 3000}"></toaster-container>
+
+						
+						<!-- Modal Footer -->
+						<div class="modal-footer">
+							<button class="btn btn-default" ng-click="clearFileUpload()" >Clear</button>
+							<button class="btn btn-primary" ng-click="doUpload()" >
+										Upload
+							</button>
+
+						</div>
+					</div>
+						<!--<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+						  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
+						  <script src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.6.3/js/bootstrap-select.min.js"></script>-->
+				</div>
+			</div>
 			
+			
+		
 			
 			
 			

@@ -96,6 +96,7 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 
    $scope.show_delete_file_modal = function()
    {
+	    $scope.getFilesList();
 	   	angular.element(delete_file_modal).modal("show");
 
    }
@@ -1008,6 +1009,26 @@ $scope.doUpload = function () {
 			selected_items.push(option);
 		}			
 		$log.log("selected_items :"+ selected_items);
+	}
+	
+	$scope.delete_file = function(file)
+	{
+		
+	    $log.log("file :"+ file.FileName);
+
+		
+		var file = {FileName:file.FileName}
+		$http.post("http://localhost:3000/deleteFile", {
+				file: file,
+			}).then(
+				function (response) { //success callback  
+                    
+				},
+				function (response) { //failure callback
+					
+				}
+			);
+		
 	}
 	
 	

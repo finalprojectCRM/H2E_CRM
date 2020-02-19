@@ -618,6 +618,19 @@ app.post("/deleteContact", (request, response) =>{
             response.end();
 });
 
+app.post("/deleteFile", (request, response) =>{
+//add new contact
+    console.log("entered deleteContact function");
+            var file_to_delete = request.body.file;
+                files_collection.deleteOne({"FileName":file_to_delete.FileName}, function(err, obj) {
+                    if (err) throw err;
+                    console.log("1 document deleted");
+
+                });
+            response.writeHead(200, { 'Content-Type': 'application/json' });
+            response.end();
+});
+
 // get the statuses list
 app.get("/getStatusOptions", (request, response) =>{
     console.log("entered getStatusOptions function");

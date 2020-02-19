@@ -286,7 +286,7 @@ app.get("/CRM_Client.js", (request, response) =>{
 app.get("/firstSystemLoad", (request, response) =>{
 
         console.log("entered firstSystemLoad function");
-		   	check_exsisting_statuses_and_roles();
+		   	check_exsisting_statuses_and_roles_and_files();
 
 			
 			users_collection.findOne({"UserName": "Admin"}).then(function(mongo_user) {
@@ -554,6 +554,18 @@ app.get("/getContacts", (request, response) =>{
     });
 
 });
+app.get("/getFiles", (request, response) =>{
+
+        console.log("entered getFiles function");
+        files_collection.find({}).toArray((error, result) => {
+            if(error) {
+                return response.status(500).send(error);
+            }
+            response.writeHead(200, { 'Content-Type': 'application/json' });
+            response.end(JSON.stringify({"files" :result}));
+    });
+
+});
 
 //get the list of users
 app.post("/getUsers", (request, response) =>{
@@ -730,7 +742,7 @@ app.post("/updateRole", (request, response) =>{
      } 
 });
 
-function check_exsisting_statuses_and_roles()
+function check_exsisting_statuses_and_roles_and_files()
 {
 	console.log("check_exsisting_statuses_and_roles FUNCTION");
 	
@@ -739,6 +751,13 @@ function check_exsisting_statuses_and_roles()
 		 console.log("no statuses");
          statuses_collection.insertOne({"Status":"-- Choose status for role --"});
          statuses_collection.insertOne({"Status":"בעיה טכנית"});
+    }
+});
+	
+	files_collection.countDocuments(function (err, count) {
+    if (!err && count === 0) {
+		 console.log("no files");
+         files_collection.insertOne({"FileName":"-- Choose file --"});
     }
 });
 

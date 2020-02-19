@@ -87,13 +87,17 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 	$scope.users=[];
 	$scope.options=[];
     $scope.roles=[];
+    $scope.files=[];
 	$scope.roles_colors=[];
+	
+	
 	
 
 
-   $scope.history_of_contact = function(contact_history)
+   $scope.show_delete_file_modal = function()
    {
-	   $scope.History = contact_history;
+	   	angular.element(delete_file_modal).modal("show");
+
    }
 	
 	$scope.renderCalender = function(calendar) {
@@ -582,6 +586,8 @@ $scope.doUpload = function () {
 					$scope.getRolesList();
 					$scope.getRolesColorsList();
 					$scope.getContactsList();
+					$scope.getFilesList();
+
 					$scope.getUsersList('showUsers');
 					
 					if(user_from_server.is_admin==true)
@@ -668,6 +674,7 @@ $scope.doUpload = function () {
 					$scope.getRolesList();
 					$scope.getRolesColorsList();
 					$scope.getContactsList();
+					$scope.getFilesList();
 					$scope.getUsersList('showUsers');
 					
 
@@ -1123,6 +1130,19 @@ $scope.doUpload = function () {
 		 $http.get("http://localhost:3000/getContacts").then(
 			function (response) {//success callback
 				$scope.contactsInfo = response.data.contacts;//return the list of the contacts
+				
+			},
+			function (response) {//failure callback
+				
+			}	
+		);
+		
+	}		
+	//get the files list from server
+	$scope.getFilesList = function(){// get the list of the contacts
+		 $http.get("http://localhost:3000/getFiles").then(
+			function (response) {//success callback
+				$scope.files = response.data.files;//return the list of the contacts
 				
 			},
 			function (response) {//failure callback

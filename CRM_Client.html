@@ -523,7 +523,7 @@
 							  <a tabindex="-1" href="#"><i style =" color: rgb(50, 118, 177);" class="fa fa-file-pdf-o fa-fw"></i> file settings</a>
 								  <ul class="dropdown-menu">
 									<li class="hover_color" ng-click="add_file()"><a href="#"><i style =" color: rgb(50, 118, 177);" class="fa fa-plus fa-fw"></i> add new file</a></li>
-									<li class="hover_color" ng-click="sign_out()"><a href="#"><i style =" color: rgb(50, 118, 177);" class="fa fa-trash fa-fw"></i> delete file   </a></li>
+									<li class="hover_color" ng-click="show_delete_file_modal()"><a href="#"><i style =" color: rgb(50, 118, 177);" class="fa fa-trash fa-fw"></i> delete file   </a></li>
 								  </ul>
 							  </li>
 						
@@ -1555,14 +1555,53 @@
 							</div>
 						</div>
 						
-						 <toaster-container toaster-options="{'time-out': 3000}"></toaster-container>
 
 						
 						<!-- Modal Footer -->
 						<div class="modal-footer">
-							<button class="btn btn-default" ng-click="clearFileUpload()" >Clear</button>
+							<button class="btn btn-default" ng-click="clearFileUpload()" data-dismiss="modal" >Cancel</button>
 							<button class="btn btn-primary" ng-click="doUpload()" >
 										Upload
+							</button>
+
+						</div>
+					</div>
+						<!--<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+						  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
+						  <script src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.6.3/js/bootstrap-select.min.js"></script>-->
+				</div>
+			</div>
+			
+			
+			<div class="modal fade" id="delete_file_modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+				<div class="modal-dialog">
+					<div class="modal-content">
+						<!-- Modal Header -->
+						<div class="modal-header">
+							<h4 class="modal-title" id="myModalLabel">
+								Choose file to delete
+							</h4>
+						</div>
+						</br>
+						<!-- Modal Body -->
+						<div class="modal-body">
+							
+							<div class="row-fluid">
+							   <select class="form-control"  ng-model="file" ng-options="objFile as objFile.FileName disable when objFile.FileName  === '-- Choose file --' for objFile in files " ng-change="selected_item(file)"  >
+							  </select>
+							</div>
+						  </div>
+						  
+							  				
+						</br>
+						
+						<!-- Modal Footer -->
+						<div class="modal-footer">
+							<button type="button" class="btn btn-default" data-dismiss="modal">
+										cancel
+							</button>
+							<button type="button" class="btn btn-primary" data-dismiss="modal" ng-click="delete_file(file)">
+										delete
 							</button>
 
 						</div>

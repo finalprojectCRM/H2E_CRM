@@ -73,6 +73,8 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 	$scope.show_users = false;
 	$scope.add_event = false;
 	$scope.taskIsEdit = false;
+	$scope.show_outside = true;
+
 
 
 	
@@ -203,8 +205,7 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 	}; 
 	$scope.add_even_outside_calendar = function() { 
 	
-		
-		angular.element(add_event).modal("show");
+		angular.element(add_event_outside).modal("show");
 
 
 		

@@ -87,13 +87,18 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 	$scope.users=[];
 	$scope.options=[];
     $scope.roles=[];
+    $scope.files=[];
 	$scope.roles_colors=[];
+	
+	
 	
 
 
-   $scope.history_of_contact = function(contact_history)
+   $scope.show_delete_file_modal = function()
    {
-	   $scope.History = contact_history;
+	    $scope.getFilesList();
+	   	angular.element(delete_file_modal).modal("show");
+
    }
 	
 	$scope.renderCalender = function(calendar) {
@@ -396,16 +401,22 @@ $scope.doUpload = function () {
          
          fr.readAsDataURL(elems[0].files[0]);
       } else {
-         vm.uploadObj.validationSuccess = false;
-         vm.uploadObj.errorMsg = "No file has been selected for upload.";
+         toaster.pop('error', "No file has been selected for upload.", "");
+		 return;
       }
    }
 };
 
-function clearUploadData() {
-            $scope.uploadFileName = "";
-            angular.element("#fileUploadField").val(null);
-         }
+	function clearFileUpload()
+	{
+		$scope.uploadFileName = "";
+		angular.element("#fileUploadField").val(null);
+	}
+	$scope.add_file = function () 
+	{
+		angular.element(add_file_modal).modal("show");
+		
+	}
 	
 
 	 
@@ -576,6 +587,8 @@ function clearUploadData() {
 					$scope.getRolesList();
 					$scope.getRolesColorsList();
 					$scope.getContactsList();
+					$scope.getFilesList();
+
 					$scope.getUsersList('showUsers');
 					
 					if(user_from_server.is_admin==true)
@@ -662,6 +675,7 @@ function clearUploadData() {
 					$scope.getRolesList();
 					$scope.getRolesColorsList();
 					$scope.getContactsList();
+					$scope.getFilesList();
 					$scope.getUsersList('showUsers');
 					
 
@@ -997,6 +1011,26 @@ function clearUploadData() {
 		$log.log("selected_items :"+ selected_items);
 	}
 	
+	$scope.delete_file = function(file)
+	{
+		
+	    $log.log("file :"+ file.FileName);
+
+		
+		var file = {FileName:file.FileName}
+		$http.post("http://localhost:3000/deleteFile", {
+				file: file,
+			}).then(
+				function (response) { //success callback  
+                    
+				},
+				function (response) { //failure callback
+					
+				}
+			);
+		
+	}
+	
 	
 	
 	$scope.add_new_status_to_role = function()
@@ -1117,6 +1151,19 @@ function clearUploadData() {
 		 $http.get("http://localhost:3000/getContacts").then(
 			function (response) {//success callback
 				$scope.contactsInfo = response.data.contacts;//return the list of the contacts
+				
+			},
+			function (response) {//failure callback
+				
+			}	
+		);
+		
+	}		
+	//get the files list from server
+	$scope.getFilesList = function(){// get the list of the contacts
+		 $http.get("http://localhost:3000/getFiles").then(
+			function (response) {//success callback
+				$scope.files = response.data.files;//return the list of the contacts
 				
 			},
 			function (response) {//failure callback
@@ -1278,11 +1325,13 @@ function clearUploadData() {
 	$scope.getCurrentDate = function()
 	{
 		var date = new Date();
+		var MM = String(date.getMinutes()).padStart(2, '0');
+		var HH = String(date.getHours()).padStart(2, '0');
 		var dd = String(date.getDate()).padStart(2, '0');
 		var mm = String(date.getMonth() + 1).padStart(2, '0'); //January is 0!
 		var yyyy = date.getFullYear();
 
-		date = mm + '/' + dd + '/' + yyyy;
+		date = mm + '/' + dd + '/' + yyyy+' '+HH+':'+MM;
 		
 		return date;
 	}
@@ -1290,7 +1339,7 @@ function clearUploadData() {
     //add a new contact to server
 	$scope.addNewContact = function(){
 		
-		var contact_history	= 'Date : ' + $scope.getCurrentDate() +'\nContact Addition ';
+		var contact_history	= 'Date : ' + $scope.getCurrentDate() +'\n\nContact Addition\n ';
 		history_array.push(contact_history);
 		$log.log("contact_history :" + contact_history);
 		var contact={Name:$scope.newName, Category:category, Status:status_role, PhoneNumber:$scope.newPhoneNumber, eMail:$scope.newEmail, Address:$scope.newAddress, History:history_array};
@@ -1349,9 +1398,10 @@ function clearUploadData() {
 	{
 		var updated_contact_history="";
 		var change = -1;
-		if(category!=contact_before_update.Category.Role)
+		var contact_history = -1;
+		if(category.Role!=contact_before_update.Category.Role)
 		{
-			updated_contact_history = "Role changed : " + contact_before_update.Category.Role+ " -> : " +category.Role+"\n";
+			updated_contact_history = "Role changed : " + contact_before_update.Category.Role+ " <- : " +category.Role+"\n";
 			change =0;
 		}
 		if(status_role!= contact_before_update.Status)
@@ -1382,11 +1432,12 @@ function clearUploadData() {
 		
 		if(change==0)
 		{
-			var contact_history=$scope.getCurrentDate()+"\nEdit Contact:\n"+updated_contact_history;
-			return contact_history;
+		   contact_history="Date: "+$scope.getCurrentDate()+"\n\nContact Edit\n\n"+updated_contact_history+"\n";
+			
 		}
 		
-		return -1;
+		
+		return contact_history;
 				
 	}
 	
@@ -1395,6 +1446,8 @@ function clearUploadData() {
 	//check validation of all updated contact fildes and if they corect are corcect send them to the server
 	$scope.save_updated = function(contactInfoToUpdate)
 	{
+	 
+	    
 		$log.log("Category before: "+ contact_before_update.Category.Role);
 		$log.log("Category after : "+ category);
 		
@@ -1495,16 +1548,22 @@ function clearUploadData() {
 		}
 		
 		var contact_history = $scope.changed_detailes(contactInfoToUpdate);
-	 
-	    if(contact_history==-1)
-		{
-		   var updated_contact={Name:contactInfoToUpdate.Name, Category:category, Status:status_role, PhoneNumber:contactInfoToUpdate.PhoneNumber, eMail:contactInfoToUpdate.eMail, Address:contactInfoToUpdate.Address};
-		}
-		else
-		{
-		   var updated_contact={Name:contactInfoToUpdate.Name, Category:category, Status:status_role, PhoneNumber:contactInfoToUpdate.PhoneNumber, eMail:contactInfoToUpdate.eMail, Address:contactInfoToUpdate.Address,History:contact_history};
 
+		
+		if(contact_history==-1)
+		{
+			$log.log("contact_history: -1");
+
+			//$scope.getContactsList();
+
+			return;		
 		}
+		
+		
+		
+	   var updated_contact={Name:contactInfoToUpdate.Name, Category:category, Status:status_role, PhoneNumber:contactInfoToUpdate.PhoneNumber, eMail:contactInfoToUpdate.eMail, Address:contactInfoToUpdate.Address,History:contact_history};
+
+		
 		$http.post("http://localhost:3000/updateContact", {
 				contact_before_update: contact_before_update,updated_contact:updated_contact
 			}).then(
@@ -1897,11 +1956,26 @@ function clearUploadData() {
 	}
 	
 
-	}]).directive('popOver', function ($compile, $templateCache) {
+	
+
+	}]).directive('popOver', function ($compile, $templateCache,$log) {
+			$log.log(" body")
+
+			$('body').on('click', function (e) {
+			$('pop-over').each(function () {
+								$log.log("popOver in body")
+
+				//the 'is' for buttons that trigger popups
+				//the 'has' for icons within a button that triggers a popup
+				if (!$(this).is(e.target) && $(this).has(e.target).length === 0 && $('.pop-over').has(e.target).length === 0) {
+					$(this).popover('hide');
+				}
+			});
+		});
         var getTemplate = function () {
-            $templateCache.put('popover.html', 'This is the content of the template');
-            console.log($templateCache.get("popover.html"));
-            return $templateCache.get("popover.html");
+            $templateCache.put('templateId.html', 'This is the content of the template');
+            console.log($templateCache.get("popover_template.html"));
+            return $templateCache.get("popover_template.html");
         }
         return {
             restrict: "A",
@@ -1909,12 +1983,12 @@ function clearUploadData() {
             template: "<span ng-transclude></span>",
             link: function (scope, element, attrs) {
                 var popOverContent;
-                if (scope.History) {
+                if (scope.history) {
                     var html = getTemplate();
                     popOverContent = $compile(html)(scope);                    
                     var options = {
                         content: popOverContent,
-                        placement: "bottom",
+                        placement: "right",
                         html: true,
                         title: scope.title
                     };
@@ -1922,7 +1996,7 @@ function clearUploadData() {
                 }
             },
             scope: {
-                History: '=',
+                history: '=',
                 title: '@'
             }
         };

@@ -286,7 +286,7 @@ app.get("/CRM_Client.js", (request, response) =>{
 app.get("/firstSystemLoad", (request, response) =>{
 
         console.log("entered firstSystemLoad function");
-		   	check_exsisting_statuses_and_roles();
+		   	check_exsisting_statuses_and_roles_and_files();
 
 			
 			users_collection.findOne({"UserName": "Admin"}).then(function(mongo_user) {
@@ -512,13 +512,17 @@ app.post("/addContact", (request, response) =>{
     console.log("addContact FUNCTION");
         //add new contact
             var contact = request.body.contact;
-            console.log("contact: " + contact.Name);
+            console.log("contact: " + contact.History);
 			
 			contacts_collection.findOne({"PhoneNumber": contact.PhoneNumber}).then(function(result) {
 			  if(!result) {
+				  
 				contacts_collection.insertOne(
-                {"Name": contact.Name ,  "Category":contact.Category, "Status":contact.Status,"PhoneNumber": contact.PhoneNumber, "eMail" : contact.eMail ,"Address" : contact.Address , History:contact.History} , function(err, res){
-                 if (err) throw err;});
+				{"Name": contact.Name ,  "Category":contact.Category, "Status":contact.Status,"PhoneNumber": contact.PhoneNumber, "eMail" : contact.eMail ,"Address" : contact.Address , History:contact.History} , function(err, res){
+				 if (err) throw err;});
+				
+				 
+				
 				 response.end();
 			  }
 			  //check if the contact already exsists
@@ -547,6 +551,18 @@ app.get("/getContacts", (request, response) =>{
             }
             response.writeHead(200, { 'Content-Type': 'application/json' });
             response.end(JSON.stringify({"contacts" :result}));
+    });
+
+});
+app.get("/getFiles", (request, response) =>{
+
+        console.log("entered getFiles function");
+        files_collection.find({}).toArray((error, result) => {
+            if(error) {
+                return response.status(500).send(error);
+            }
+            response.writeHead(200, { 'Content-Type': 'application/json' });
+            response.end(JSON.stringify({"files" :result}));
     });
 
 });
@@ -594,6 +610,19 @@ app.post("/deleteContact", (request, response) =>{
             var contact_to_delete = request.body.contact;
             console.log("contact_to_delete :"+ contact_to_delete);
                 contacts_collection.deleteOne({"Name":contact_to_delete.Name ,"Status" : contact_to_delete.Status , "PhoneNumber":contact_to_delete.PhoneNumber ,"eMail" : contact_to_delete.eMail ,"Address" : contact_to_delete.Address }, function(err, obj) {
+                    if (err) throw err;
+                    console.log("1 document deleted");
+
+                });
+            response.writeHead(200, { 'Content-Type': 'application/json' });
+            response.end();
+});
+
+app.post("/deleteFile", (request, response) =>{
+//add new contact
+    console.log("entered deleteContact function");
+            var file_to_delete = request.body.file;
+                files_collection.deleteOne({"FileName":file_to_delete.FileName}, function(err, obj) {
                     if (err) throw err;
                     console.log("1 document deleted");
 
@@ -726,7 +755,7 @@ app.post("/updateRole", (request, response) =>{
      } 
 });
 
-function check_exsisting_statuses_and_roles()
+function check_exsisting_statuses_and_roles_and_files()
 {
 	console.log("check_exsisting_statuses_and_roles FUNCTION");
 	
@@ -735,6 +764,13 @@ function check_exsisting_statuses_and_roles()
 		 console.log("no statuses");
          statuses_collection.insertOne({"Status":"-- Choose status for role --"});
          statuses_collection.insertOne({"Status":"בעיה טכנית"});
+    }
+});
+	
+	files_collection.countDocuments(function (err, count) {
+    if (!err && count === 0) {
+		 console.log("no files");
+         files_collection.insertOne({"FileName":"-- Choose file --"});
     }
 });
 
@@ -1064,20 +1100,22 @@ app.post("/uploadImage", (request, response) =>{
 					//console.log("#########################buff############################"+buff);
 					//buff = Buffer.from(fileData, 'base64'); 
 					let file_data = buff.toString('ascii');
-					console.log("#########################file_data############################"+file_data);
+					//console.log("#########################file_data############################"+file_data);
 
 					
 					// writeFile function with filename, content and callback function
 					fs.writeFile(new_file_name,file_data, function (err) {
 					if (err) throw err;
 					console.log('File is created successfully.');
+					response.writeHead(200, { 'Content-Type': 'application/json' });
+                    response.end();
 				}); 
                }
             }
          }
       }
    }
-	files_collection.insertOne({"FileName":new_file_name,"Data":new_file_data});
+	files_collection.insertOne({"FileName":new_file_name});
 
    
 });

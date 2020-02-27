@@ -76,13 +76,6 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 	$scope.show_outside = true;
 
 
-
-	
-	//$scope.selected.Name = undefined;
-	//$scope.selected.PhoneNumber = undefined;
-	
-	
-
 	$scope.contactsInfo=[];
 	$scope.users=[];
 	$scope.options=[];
@@ -93,24 +86,35 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 	
 	
 
-
+	/*
+		a modal that pops up when press on delete file,
+		delete file by running over file list
+	*/
    $scope.show_delete_file_modal = function()
-   {
+   {	
+		//get file list
 	    $scope.getFilesList();
 	   	angular.element(delete_file_modal).modal("show");
 
    }
-	
+	/*
+		a function to render the calendar
+	*/
 	$scope.renderCalender = function(calendar) {
-    console.log($scope.events)
-    uiCalendarConfig.calendars.myCalendar.fullCalendar('removeEventSource', $scope.events)
+    //console.log($scope.events)
+		uiCalendarConfig.calendars.myCalendar.fullCalendar('removeEventSource', $scope.events)
   };
+  
+  /*
+	calendar parameters
+  */
   $scope.uiCalendarConfig = uiCalendarConfig;
-
   $scope.events = [];
-
   $scope.eventSources = [$scope.events];
 
+  /*
+	format of calendar components
+  */
   $scope.calendarConfig = {
 	header:{
 		 left: 'prev,next today',
@@ -127,7 +131,6 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 		week: 'ddd D/M', 
 		day: 'dddd' 
 	},
-	//height : 500,
 	
 	aspectRatio: 1.5,
     selectable: true,
@@ -135,176 +138,264 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
     editable: true,
 	eventLimit:true,
 	renderCalender: $scope.renderCalender,
-	//eventRender: $scope.eventRender,
 
+	/*
+		select date whith clicking trigger 
+		and save start and end date in format : "DD/MM/YYYY HH:mm"
+	*/
 	select: function(start, end, allDay, jsEvent) {
 		$log.log("start: "+ moment(start).format("DD/MM/YYYY HH:mm"));
+		//get start date
 		start_date = moment(start).format();
 		$log.log("end: "+ moment(end).format());
+		//get end date
 		end_date = moment(end).format();
 		
+		//date in format = 'starn date' - 'end date' 
         $scope.date = moment(start).format("DD/MM/YYYY HH:mm")+ ' - ' + moment(end).format("DD/MM/YYYY HH:mm");
+		//get roles list
         $scope.getRolesList();
-        //$scope.openPopover(start, end, allDay, jsEvent);
 		$scope.role = $scope.roles[0].Role;
 		$scope.contact_task = undefined;
 		$scope.title = undefined;
 	
+		//show modal of add event
 		angular.element(add_event).modal("show");
 
     },
+	
+	/*
+		event trigger : click on the task in calenda to edit or delete it 
+	*/
 	eventClick: function(event, element) {
-	
- 
-	edit_event_detailes = event;	
-	var title = event.title.split(":");
+		//get details of edit event
+		edit_event_detailes = event;
+		
+		//if a contact was not selected for the event, the event id is = "-1"
+		if(edit_event_detailes.id != "-1")
+		{
+			//split title by ':'	
+			var title = event.title.split(":");
+			
+			//save the event id
+			$scope.contact_event = event.id;
+			
+			//save the event title
+			$scope.event_title = title[1];
+			
+			//when contactSelected = true then there is a contact selected 
+		    $scope.contactSelected = true;
 
-    $scope.event_title = title[1];
-	$scope.event_start = event.start;
-	$scope.event_end = event.end;
-	$scope.contact_event = event.id;
-	$scope.event_date = moment(event.start).format("DD/MM/YYYY HH:mm")+ ' - ' + moment(event.end).format("DD/MM/YYYY HH:mm");
-	$scope.taskIsEdit = false;
+		}
+		
+		//if no contact was selected for the event then $scope.contactSelected = false;
+		else
+		{
+			$scope.event_title = event.title;
+		    $scope.contactSelected = false;
+		}
 
-	angular.element(edit_or_delete_event).modal("show");
-	
+			
+		$scope.event_start = event.start;
+		$scope.event_end = event.end;
+		$scope.event_date = moment(event.start).format("DD/MM/YYYY HH:mm")+ ' - ' + moment(event.end).format("DD/MM/YYYY HH:mm");
+		$scope.taskIsEdit = false;
 
-  }
-	
+			//show modal for edit or delete event
+			angular.element(edit_or_delete_event).modal("show");
+		}
+		
 	
 	
   };
-  
+	
+	/*
+		save edit event details :
+		ID, title, start and end date, color of event
+		
+	*/
 	$scope.save_edit_event = function() { 
-  
-
-    $log.log("edit");
-
-    edit_event_detailes.title = "Task for contact "+ selected_contact.Name +" "+ selected_contact.PhoneNumber+" : "+$scope.event_title;
-	edit_event_detailes.start = $scope.event_start;
-	edit_event_detailes.end = $scope.event_end;
-	edit_event_detailes.color = $scope.role.Color;
-	edit_event_detailes.id = selected_contact.Name +" "+ selected_contact.PhoneNumber;
-	uiCalendarConfig.calendars.myCalendar.fullCalendar('updateEvent', edit_event_detailes);
-	
-	   
-
+		//$log.log("edit");
 		
+		edit_event_detailes.title = "Task for contact "+ selected_contact.Name +" "+ selected_contact.PhoneNumber+" : "+$scope.event_title;
+		edit_event_detailes.start = $scope.event_start;
+		edit_event_detailes.end = $scope.event_end;
+		edit_event_detailes.color = $scope.role.Color;
+		edit_event_detailes.id = selected_contact.Name +" "+ selected_contact.PhoneNumber;
 		
-   };
+		//update the event details in the calendar
+		uiCalendarConfig.calendars.myCalendar.fullCalendar('updateEvent', edit_event_detailes);	
+	};
    
-   
-   
+	/*
+		when click on task for contact 
+		go to the contact from contacts list
+	*/
     $scope.go_to_contact = function() { 
-	
-		var contact_phone_number = $scope.contact_event.split(" "); 
-		$scope.get_contacts_function();
-		$log.log("contact_phone_number : "+ contact_phone_number);
+		
+		//get contacts phone number as an ID 
+		var contact_phone_number = $scope.contact_event.split(" ");
 
+		//get contacts list	
+		$scope.get_contacts_function();
+
+		//put contacts phone number in search bar 
 		$scope.search = contact_phone_number[1];
+		
+		//hide the 'edit_or_delete_event' modal 
 	    angular.element(edit_or_delete_event).modal("hide");
 
-
-		
-		
 	}; 
+	
+	//add event from button outside of the calendar
 	$scope.add_even_outside_calendar = function() { 
 	
+		//show 'add_event_outside' modal
 		angular.element(add_event_outside).modal("show");
 
-
-		
-		
 	}; 
+	
+	
 	$scope.calendarContact = function(contact) { 
 	
-	    var event_id = contact.Name +" "+ contact.PhoneNumber;
+	    /*var event_id = contact.Name +" "+ contact.PhoneNumber;
 		$log.log("event_id : " + event_id);
 	    $scope.events = uiCalendarConfig.calendars.myCalendar.fullCalendar('clientEvents', event_id);
 	   
-		$log.log("$scope.events : " + $scope.events);
+		$log.log("$scope.events : " + $scope.events);*/
 	    $scope.calendar_function();
 		
 	};
   
-  
-  $scope.deleteEvent = function( event, element, view ) { 
+   
+	$scope.deleteEvent = function( event, element, view ) { 
         uiCalendarConfig.calendars.myCalendar.fullCalendar('removeEvents', function (event) {
+			
+			/*
+				delete event from mongodb 
+				and from cotacts events list 
+			*/
 				return event == edit_event_detailes;
 			});
 
     };
+	
 	$scope.eventRender = function( event, element, view ) { 
-        element.attr({'title': event.title,
-                     'tooltip-append-to-body': true});
-        $compile(element)($scope);
+          $(element).popover({title: event.title, content: event.description, trigger: 'hover', placement: 'auto right', delay: {"hide": 300 }});             
+
     };
 	
- $scope.selections = [];
+	//array of contacts
+	$scope.selections = [];
   
-  $scope.selectionChanged = function(idx) {
-    $log.log(idx, $scope.selections[idx]);
-    selected_contact = $scope.selections[idx];
+	/*
+		select contact from contacts list in the edit or delete modal
+	*/
+	$scope.selectionChanged = function(idx) {
+		$log.log(idx, $scope.selections[idx]);
+		
+		//save details of selected contact
+		selected_contact = $scope.selections[idx];
 	
-  };
+	};
   
 
+	/*
+		a function for adding a task from calendar when press on a day in calendar,
+		there is an option to add a the task for a spesific contact 
+	*/
+	$scope.addEvent = function(task_with_contact) {
+		/*
+			save the dates in a range of dates in the task in format 'start_date - end_date'
+			by splitting with "-"
+		*/
+		var date = $scope.date.split("-");
+		$log.log("start date : " + date[0]);
+		$log.log("task_with_contact : " + task_with_contact);
+		//$log.log("type "+typeof date[0]);
+		$log.log("end date : " + date[1]);
+		var start_date= moment(date[0], 'DD/MM/YYYY HH:mm').format("MM/DD/YYYY HH:mm");
+		var end_date= moment(date[1], 'DD/MM/YYYY HH:mm').format("MM/DD/YYYY HH:mm");
+		$log.log("start date : " + start_date);
+		$log.log("start date : " + end_date);
+		//$log.log("end date : " + formatDate(date[1]));
+		$log.log("$scope.role : "+$scope.role.Role);
+		
+		//check if the role category was selected in the task modal - this is a must field
+		if($scope.role.Role == undefined || $scope.role.Role == "" || $scope.role.Role == "-- Choose category for role --")
+		{   
+			$scope.message = "Category is a must field, please select one";
+			$scope.message_type = "ERROR";
+			angular.element(Message_Modal).modal("show");
+			missing_role_field_calendar= true;
+			return;
+		}
+		
+		//check if the title field was filled in the task modal - this is a must field
+		if($scope.title == undefined || $scope.title == "")
+		{   
+			$scope.message = "Title is a must field, please fill it in";
+			$scope.message_type = "ERROR";
+			angular.element(Message_Modal).modal("show");
+			missing_role_field_calendar= true;
+			return;
+		}
+		
+		/*
+			check if the task was chosen for a spesific contact - optional
+			then id = "contact name" + " contact phone number"
+		*/
+		if(task_with_contact==true)
+		{
+			var description = "Task for contact "+ selected_contact.Name +" "+ selected_contact.PhoneNumber+" : "+$scope.title;
+			var contact = selected_contact.Name +" "+ selected_contact.PhoneNumber;
+		}
+		
+		//if the task is not for a spesific contact -> id of contact = '-1'
+		else
+		{
+			var description = $scope.title;
+			var contact = -1;	
+		}
+		
+		$log.log("description: "+description);
 
-  $scope.addEvent = function() {
+		//add (push) event with details to events list
+		$scope.events.push({
+			title: description,
+			start: start_date,
+			end:  end_date,
+			color: $scope.role.Color,
+			id : contact,
+			editable: true
+		});
 
-	  
-	var date = $scope.date.split("-");
-    $log.log("start date : " + date[0]);
-    //$log.log("type "+typeof date[0]);
-	$log.log("end date : " + date[1]);
-    var start_date= moment(date[0], 'DD/MM/YYYY HH:mm').format("MM/DD/YYYY HH:mm");
-    var end_date= moment(date[1], 'DD/MM/YYYY HH:mm').format("MM/DD/YYYY HH:mm");
-	$log.log("start date : " + start_date);
-	$log.log("start date : " + end_date);
-    //$log.log("end date : " + formatDate(date[1]));
-	$log.log("$scope.role : "+$scope.role.Role);
-    if($scope.role.Role == undefined || $scope.role.Role == "" || $scope.role.Role == "-- Choose category for role --")
-	{   
-		$scope.message = "Category is a must field, please select one";
-		$scope.message_type = "ERROR";
-		angular.element(Message_Modal).modal("show");
-		missing_role_field_calendar= true;
-		return;
-	}
-	
-	var description = "Task for contact "+ selected_contact.Name +" "+ selected_contact.PhoneNumber+" : "+$scope.title;
-	var contact = selected_contact.Name +" "+ selected_contact.PhoneNumber;
-	$log.log("description: "+description);
+	//  console.log($scope.pendingRequests);
+    };
 
-
-    $scope.events.push({
-		title: description,
-		start: start_date,
-		end:  end_date,
-		color: $scope.role.Color,
-		id : contact,
-	    editable: true
-    });
-
-  //  console.log($scope.pendingRequests);
-  };
-
-	
-	$scope.sendMailModal=function(contact_email)
+	//modal for sending mail to a contact
+	$scope.sendMailModal = function(contact_email)
 	{	
 		$log.log("contact_email :"+contact_email);
-		if(contact_email==""||contact_email==null )
+		//check if the contact that was pressed on has an email address
+		if(contact_email == "" || contact_email == null )
 		{
 		   toaster.pop('error', "No email for this contact", "");
 		   return;
 		}
+		
+		//save the chosen contacts email
 		$scope.contact_email = contact_email;
 		angular.element(Email_modal).modal("show");
 
 		
 	}	
 	
-	$scope.sendMail=function(contact_email)
+	/*
+		send email function and http post call to server 
+		with contact and email details
+	*/
+	$scope.sendMail = function(contact_email)
 	{
 		$http.post("http://localhost:3000/sendEmail", {
 			
@@ -318,133 +409,178 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 		);
 	}	
 	
+	
+	//first load of system when conect to it
 	$http({method : "GET",
 			url : "firstSystemLoad"
 		  }).then(function(response) {
 			  
 		$scope.first_load = false;
 		$scope.not_first_load = false;
-			  
+		
+		/*
+			check if this is the first load of the system - 
+			means that administrator has not yet changed the temporary password 
+			that he got with the system	- then change now
+		*/	
 		if(response.data.admin_first_load == true || response.data.admin_changed_temp_password == false)//go to change password page
 		{
+			//save 'first_load = true'
 			$scope.first_load = true;	
+			
+			//present the temp password page 
 			$scope.temp_password_page = true;
 			
         }
-        else if(response.data.admin_changed_temp_password == true)//admin	
+		
+		/*
+			if admin had changed the temporary password 
+			so then it is not the firt load to yhe system
+		*/
+        else if(response.data.admin_changed_temp_password == true)	
 		{
+			//save taht not first load 'first_load = false'
 			$scope.first_load = false;
+			
+			//save that is not the first load 'not_first_load = true' 
 			$scope.not_first_load = true;
+			
+			//present the tamp password page for login in to the system
 			$scope.temp_password_page = true;
-		}			
+		}
+
+		/*
+			after entering the system with the temp password 
+			presents the login page for inserting personal details
+			for admin the usae name field will be filled in automaticly 
+			by the default with "Administrator" 
+		*/
 		else
 		{
-			$scope.login_page =true;
+			$scope.login_page = true;
 			$scope.first_load = false;	
 		}
 			
-			  
-			  //$scope.register_page = true;
-			  //$scope.UserName = "Admin";
 			}, function (response) {
     });	
  
-$scope.clickSelectFile = function () {
-   angular.element("#fileUploadField").click();
-};
-angular.element("#fileUploadField").bind("change", function(evt) {
-   if (evt) {
-	    var fn = evt.target.value;
-		if (fn && fn.length > 0) {
-		   var idx = fn.lastIndexOf("/");
-		   if (idx >= 0 && idx < fn.length) {
-			  $scope.uploadFileName = fn.substring(idx+1);
-		   } else {
-			  idx = fn.lastIndexOf("\\");
-			  if (idx >= 0 && idx < fn.length) {
-				 $scope.uploadFileName = fn.substring(idx+1);
-			  }
-		   }
-		}
-		$scope.$apply();
+ 
+	//a function for clicking on select file to system
+	$scope.clickSelectFile = function () {
+	   angular.element("#fileUploadField").click();
+	};
+	angular.element("#fileUploadField").bind("change", function(evt) {
+	    if (evt) 
+		{
+			var fn = evt.target.value;
+			if (fn && fn.length > 0) 
+			{
+				var idx = fn.lastIndexOf("/");
+				if (idx >= 0 && idx < fn.length) 
+			    {
+					$scope.uploadFileName = fn.substring(idx+1);
+			    } 
+				else 
+				{
+					idx = fn.lastIndexOf("\\");
+					if (idx >= 0 && idx < fn.length) 
+					{
+						$scope.uploadFileName = fn.substring(idx+1);
+				    }
+			   }
+			}
+			$scope.$apply();
 
-   }
-});
+	    }
+	});
+    /*
+		a function for uploading a file
+	*/
+	$scope.doUpload = function () {
+	    $scope.uploadSuccessful = false;
+	    var elems = angular.element("#fileUploadField");
+	    if (elems != null && elems.length > 0) {
+		    if (elems[0].files && elems[0].files.length > 0) 
+			{
+				let fr = new FileReader();
+				fr.onload = function(e) {
+					if (fr.result && fr.result.length > 0) {
+				   	    var uploadObj = {
+							fileName: $scope.uploadFileName,
+							uploadData: fr.result
+						};
+					    $log.log( fr.result);
+					    $log.log( $scope.uploadFileName);
+					   
+					    sampleUploadService.uploadImage(uploadObj).then(function(result) {
+						    if (result && result.success === true) {
+							    clearUploadData();
+								$scope.uploadSuccessful = true;
+						  }
+					    }, function(error) {
+						    if (error) {
+								$log.log(error);
+						  }
+					    });
+					}
+				 };
+				 
+				 fr.readAsDataURL(elems[0].files[0]);
+		    } 
+			else {
+				toaster.pop('error', "No file has been selected for upload.", "");
+				return;
+		    }
+	    }
+	};
 
-$scope.doUpload = function () {
-   $scope.uploadSuccessful = false;
-   var elems = angular.element("#fileUploadField");
-   if (elems != null && elems.length > 0) {
-      if (elems[0].files && elems[0].files.length > 0) {
-         let fr = new FileReader();
-         fr.onload = function(e) {
-            if (fr.result && fr.result.length > 0) {
-               var uploadObj = {
-                  fileName: $scope.uploadFileName,
-                  uploadData: fr.result
-               };
-			   $log.log( fr.result);
-			   $log.log( $scope.uploadFileName);
-               
-               sampleUploadService.uploadImage(uploadObj).then(function(result) {
-                  if (result && result.success === true) {
-                     clearUploadData();
-                     $scope.uploadSuccessful = true;
-                  }
-               }, function(error) {
-                  if (error) {
-                     $log.log(error);
-                  }
-               });
-            }
-         };
-         
-         fr.readAsDataURL(elems[0].files[0]);
-      } else {
-         toaster.pop('error', "No file has been selected for upload.", "");
-		 return;
-      }
-   }
-};
-
+	//clear the field of the file name that has been uploaded
 	function clearFileUpload()
 	{
 		$scope.uploadFileName = "";
 		angular.element("#fileUploadField").val(null);
 	}
+	
+	//add file to system function
 	$scope.add_file = function () 
 	{
+		//show modal for add file
 		angular.element(add_file_modal).modal("show");
 		
 	}
 	
-
-	 
-	
-	
+	/*
+		a validation function with http.post request to server for temporary password
+		checks if the temp password from client side 
+		is equal to the temp password in server side
+	*/
     $scope.validation_of_temp_password = function(tempPasswordFromClient)
 	{
-		$log.log("validation_of_temp_password :" + tempPasswordFromClient);
+		//$log.log("validation_of_temp_password :" + tempPasswordFromClient);
 		$http.post("http://localhost:3000/verifyTemporaryPassword", {
 			tempPassword: tempPasswordFromClient,
 		}).then(
 			function (response) {//success callback
-			$log.log("response.data.verified :" + response.data.verified);
-			
-			if(response.data.verified == true)//verified passwords (not for Admin user)
+
+			//verified passwords (not for Admin user)
+			if(response.data.verified == true)
 			{
 				$scope.new_temp_password_page = false;
 				$scope.temp_password_page = false;
 				$scope.register_page =true;
 			}
-			else if(response.data.admin_changed_temp_password == false)//admin did not yet change temp password that he got with the system  			
+			
+			//admin did not yet change temp password that he got with the system
+			else if(response.data.admin_changed_temp_password == false)  			
 			{
 				$scope.new_temp_password_page = true;
 				$scope.temp_password_page = false;
 				
 				$scope.register_page = false;
 			}
-			else if(response.data.admin_changed_temp_password == true)//admin changed temp password that he got with the system  			
+			
+			//admin changed temp password that he got with the system
+			else if(response.data.admin_changed_temp_password == true)  			
 			{
 				$scope.new_temp_password_page = false;
 				$scope.temp_password_page = false;
@@ -452,81 +588,88 @@ $scope.doUpload = function () {
 				$scope.registration_user_name = "Admin";
 				$scope.Admin = true;
 			}
-			else//not correct temprorary password
+			
+			//not correct temprorary password
+			else
 			{
 				$scope.message = response.data.not_verified;
 				$scope.message_type = "ERROR";
 				angular.element(Message_Modal).modal("show");
 			}
 			},
-			function (response) {//failure callback
+			
+			//failure callback
+			function (response) {
 			    
 			}	
 		);	
 	}
 	
-	$scope.change_temp_password=function()
+	/*
+		a function for administrator for changing the temp password
+	*/
+	$scope.change_temp_password = function()
 	{
+		//a regular expression for a valid password
 		var re_password = /^((?!.*[\s])(?=.*[A-Z])(?=.*\d))(?=.*?[#?!@$%^&*-]).{8,15}$/;
-		if($scope.new_temporary_password==undefined || !re_password.test($scope.new_temporary_password)){//check the length of the password
+		
+		//check the length of the password and if it fits the regular expression pattern
+		if($scope.new_temporary_password==undefined || !re_password.test($scope.new_temporary_password)){
 			$scope.message = "The password must contain at least 8 to 15 characters , at least : one capital letter or one small letter, one number, and one of the following special characters: #?! @ $% ^ & * -";
 		    $scope.message_type = "ERROR";
 			angular.element(Message_Modal).modal("show");
 			return;
 		}
-		if($scope.new_temporary_password!=$scope.new_temporary_validation_password){//check if the two password equals
+		
+		//check if the two password equals
+		if($scope.new_temporary_password!=$scope.new_temporary_validation_password){
 			$scope.message = "The two passwords do not match";
 		    $scope.message_type = "ERROR";
 			angular.element(Message_Modal).modal("show");
 		    $scope.new_temporary_validation_password=undefined;
 			return;
 		}
+		
+		//an http request to server to update the temporary password
 		var new_temp_password ={TempPassword:$scope.new_temporary_password};
 		$http.post("http://localhost:3000/changeTemporaryPassword", {
 			new_temp_password: new_temp_password,
 		}).then(
 			function (response) { //success callback
 			  
-					$scope.new_temporary_password = $scope.new_temporary_validation_password = undefined ;
-					$scope.register_page = true;
-					$scope.registration_user_name = "Admin";
-					$scope.Admin = true;
+				$scope.new_temporary_password = $scope.new_temporary_validation_password = undefined ;
+				$scope.register_page = true;
+				$scope.registration_user_name = "Admin";
+				$scope.Admin = true;
+				$scope.new_temp_password_page = false;
+				$scope.first_load = false;
 					
-					
-					
-					$scope.new_temp_password_page=false;
-					$scope.first_load=false;
-					
-					
-			
-					
-
 			},
 			function (response) { //failure callback
 				
 			}
 		);
-		
-		
-		
 	}
 	
-	
-	
-	
-
-	$scope.signUp=function()
-	{//user sign up,check and register 
-	   
-	
+	/*
+		when a user signes up / registers to the system 
+		this function checks validation of users details 
+		and send them when all are valid to server in an http post request
+	*/
+	$scope.signUp = function()
+	{
 	    var re_username = /^[a-zA-Z]{3,10}$/;
 		var re_name = /^[a-zA-Z\s\u0590-\u05fe]{2,20}$/;
+		
+		//check if user name has been entered and if it is valid according to the matching regular expression pattern
 		if($scope.registration_user_name==undefined ||!re_username.test($scope.registration_user_name)){
 		    $scope.message = "User name must contain only English letters ,minimum 3 leterrs and maximum 10 letters and no whitespace";
 		    $scope.message_type = "ERROR";
 			angular.element(Message_Modal).modal("show");
 			return;
 		}
+		
+		//check if the name has been entered and if it is valid according to the matching regular expression pattern
 		if($scope.registration_name==undefined ||!re_name.test($scope.registration_name)){
 			$scope.message = "The name must contain only English or Hebrew letters ,minimum 2 leterrs and maximum 20 letters ";
 		    $scope.message_type = "ERROR";
@@ -534,20 +677,26 @@ $scope.doUpload = function () {
 			return;
 		}
 		var re_email = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-		if($scope.registration_email==undefined || !re_email.test($scope.registration_email)){//check the email
+		
+		//check if the email has been entered and if it is valid according to the matching regular expression pattern
+		if($scope.registration_email==undefined || !re_email.test($scope.registration_email)){
 			$scope.message = "This email is invalid ";
 		    $scope.message_type = "ERROR";
 			angular.element(Message_Modal).modal("show");
 			return;
 		}
 		var re_password = /^((?!.*[\s])(?=.*[A-Z])(?=.*\d))(?=.*?[#?!@$%^&*-]).{8,15}$/;
-		if($scope.registration_password==undefined || !re_password.test($scope.registration_password)){//check the length of the password
+		
+		//check if a password has been entered and if it is valid according to the matching regular expression pattern
+		if($scope.registration_password==undefined || !re_password.test($scope.registration_password)){
 			$scope.message = "The password must contain at least 8 to 15 characters , at least : one capital letter or one small letter, one number, and one of the following special characters: #?! @ $% ^ & * -";
 		    $scope.message_type = "ERROR";
 			angular.element(Message_Modal).modal("show");
 			return;
 		}
-		if($scope.registration_password!=$scope.registration_validation_password){//check if the two password equals
+		
+		//check if the validation password is equal to the first password that was entered
+		if($scope.registration_password!=$scope.registration_validation_password){
 			$scope.message = "The two passwords do not match";
 		    $scope.message_type = "ERROR";
 			angular.element(Message_Modal).modal("show");
@@ -556,33 +705,41 @@ $scope.doUpload = function () {
 		}
 		
 		
-		
+		//save users valid details as a json object
 		var user={UserName:$scope.registration_user_name, Name:$scope.registration_name,
 				  eMail:$scope.registration_email,Password:$scope.registration_password};
 		$log.log("befor call server");
-		  
+		 //call server with http request
 		$http.post("http://localhost:3000/addUser", {
 			user: user,
 		}).then(
-			function (response) { 
+			function (response) { //success callback
 			
+				//get response from server
 			    var user_from_server = response.data.user;
 				logged_in_user = user_from_server;
-			   //success callback
+			    
+				//check if this user name does not exist already
                	if(!response.data.user_exists)	
 				{
 					$log.log(user_from_server.Name);
+					
+					//clear all fields in registration page
 					$scope.registration_user_name = undefined;
 					$scope.registration_name = undefined;
 					$scope.registration_email = undefined;
 					$scope.registration_password = undefined;
 					$scope.registration_validation_password = undefined;
+					
+					//show menu system components and user profile of account
 					$scope.menu = true;
 					$scope.all_system = true;
 					$scope.account = true;
 					$scope.name_of_user = user_from_server.Name;
 					$scope.role_of_user = user_from_server.Role;
 					$scope.register_page = false;
+					
+					//get lists of : optiont, roles, roles colors, contacts and files
 					$scope.getOptionsList();
 					$scope.getRolesList();
 					$scope.getRolesColorsList();
@@ -591,12 +748,15 @@ $scope.doUpload = function () {
 
 					$scope.getUsersList('showUsers');
 					
+					//if user logged in is administrator show admin page and update that admin is logged in -> $scope.isAdmin = true
 					if(user_from_server.is_admin==true)
 					{
 						$scope.admin_page = true;
 						$scope.isAdmin = true;
 						
 					}
+					
+					//if not admin logged in hide admin page and update that not admin logged in -> $scope.isAdmin = false
 					else
 					{
 						$scope.admin_page = false;
@@ -606,6 +766,8 @@ $scope.doUpload = function () {
 					$log.log(user_from_server.UserName);
 					
 				}
+				
+				//if this user name already exists in system -> show error modal
 				else
 				{
 					$scope.message = response.data.user_exists;
@@ -623,8 +785,15 @@ $scope.doUpload = function () {
 		);
 	}
 	
-	$scope.login=function(){//log in user
+	/*
+		a function for login to system after the user is registed already
+		login with user name and password 
+		and verify details with thoes at server by sending the data in http request
+	*/
+	$scope.login = function(){
 	$log.log("UserNameLogin "+$scope.UserNameLogin)
+	
+		//check if user name has been entered -> requierd
 		if($scope.UserNameLogin == undefined || $scope.UserNameLogin == "")
 		{
 			$scope.message = "User name is required";
@@ -633,7 +802,7 @@ $scope.doUpload = function () {
 			return;
 		}
 			
-		
+		//check if password has been entered -> requierd 
 		if($scope.PasswordLogin == undefined || $scope.PasswordLogin == "")
 	    {
 			$scope.message = "Password is required";
@@ -643,34 +812,51 @@ $scope.doUpload = function () {
 
 		}
 				
+		/*
+			a function for saving the user that is logged in details
+		*/
 		var LoginUser={UserName:$scope.UserNameLogin, Password:$scope.PasswordLogin};
 		$http.post("http://localhost:3000/login", {
 			LoginUser: LoginUser,
 		}).then(
-			function (response) { //success callback            
+			function (response) { //success callback 
+
+				//get data from server response
 				LoginUser = response.data.user_login;
 				logged_in_user = LoginUser;
+				
+				//if there is a match between user name and password at server side
 				if(!response.data.no_match)
 				{
+					//if admin show admin page and update that admin is logged in
 					if(LoginUser.adminUser == true)
 					{
 						$scope.admin_page = true;
 						$scope.isAdmin =true;
 					}
+					
+					//if not admin hide admin page and update that not admin is logged in
 					else
 					{
 						$scope.admin_page = false;
 						$scope.isAdmin =false;
 					}
+					
+					//clear fields in login page
 					$scope.UserNameLogin = undefined;
 					$scope.PasswordLogin = undefined;
+					
+					//show menu and user profile in account and hide the login page
 					$scope.menu = true;
 					$scope.account = true;
 					$scope.login_page = false;
+					
 					$scope.name_of_user = LoginUser.Name;
 					$log.log("role_of_user: "+LoginUser.Role);
 					$scope.role_of_user = LoginUser.Role;
 					$scope.all_system = true;
+					
+					//get lists of : optiont, roles, roles colors, contacts files and users
 					$scope.getOptionsList();
 					$scope.getRolesList();
 					$scope.getRolesColorsList();
@@ -680,6 +866,8 @@ $scope.doUpload = function () {
 					
 
 				}
+				
+				//if there is no match show error modal
 				else
 				{
 					$scope.message = response.data.no_match;
@@ -694,7 +882,9 @@ $scope.doUpload = function () {
 		);
 	}
 	
-    //show the list of contacts
+    /*
+		a function for showing the list of contacts
+	*/
 	$scope.get_contacts_function = function()
 	{
 	   $scope.login_page = false;
@@ -711,39 +901,49 @@ $scope.doUpload = function () {
 	   $scope.getContactsList();
 	   $scope.getOptionsList();
 	   $scope.getRolesList();
-
-	  
 	   
 	}	
     
-	 $scope.check_exsisting_color = function(color)
-	 {
-		 $log.log("$scope.check_exsisting_color : color: "+ color);
+	/*
+		a function for checking if a color already exists in the colors list
+		the function gets a color and runs over the lis of colors a nd checks if the color exists
+		returns true if exists else returns false
+	*/
+	$scope.check_exsisting_color = function(color)
+	{
+		$log.log("$scope.check_exsisting_color : color: "+ color);
 
-		 for(var item=0 ; item < $scope.roles_colors.length ; item++)
-		 {
+		for(var item=0 ; item < $scope.roles_colors.length ; item++)
+		{
 			$log.log("$scope.roles_colors[item].Color: "+ $scope.roles_colors[item].Color);
 
-			 if($scope.roles_colors[item].Color == color )
-			 {
-				 return true;
-			 }
-		 }
-		 return false;
-	 }
+			if($scope.roles_colors[item].Color == color )
+			{
+				return true;
+			}
+		}
+		return false;
+	}
 
 
-	
+	/*
+		a function for saving a role with a list of statuses that have been selected
+		each role has an uniq color
+	*/
 	$scope.save_new_role_status = function()
 	{
 		$log.log(document.getElementById("role_color").value);
+		
+		//get a color from user
 		var role_color = document.getElementById("role_color").value;
 		var color = role_color.toString();
 		$log.log("color: "+ color);
-
+		
+		//check if color exists
 		var existing_color = $scope.check_exsisting_color(color);
 		$log.log("existing_color: "+ existing_color);
-
+		
+		//check if the role field in modal has been filled in if not show error modal
 		if($scope.role_from_modal == undefined || $scope.role_from_modal == "")
 		{
 			$scope.message = "You must fill in the role field";
@@ -751,6 +951,8 @@ $scope.doUpload = function () {
 			angular.element(Message_Modal).modal("show");
 			missing_role_field = true;
 		}
+		
+		//if color exists show error modal
 		else if(existing_color == true)
 		{
             $log.log("entered existing_color: "+ existing_color);
@@ -760,6 +962,8 @@ $scope.doUpload = function () {
 			angular.element(Message_Modal).modal("show");
 			missing_role_field = true;
 		}
+		
+		//if color does not exist send an http request to server with role details : role color and matching statuses list
 		else
 		{
 			selected_items.unshift( status_header );
@@ -781,6 +985,7 @@ $scope.doUpload = function () {
 	
 	}
 	
+	//a function for showing roles list
 	$scope.display_role_list = function()
 	{
 		$scope.getRolesList();
@@ -788,9 +993,13 @@ $scope.doUpload = function () {
 	}
 
 	
-	
+	/*
+		a function for saving a new status in system with a list of matching roles
+		and calling server with http request
+	*/
 	$scope.save_new_status_roles = function()
-	{
+	{	
+		//check if the status field in modal has been filled in if not show an error modal
 		if($scope.status_from_modal == undefined || $scope.status_from_modal == "")
 		{
 			$scope.message = "You must fill in the status field";
@@ -798,9 +1007,11 @@ $scope.doUpload = function () {
 			angular.element(Message_Modal).modal("show");
 			missing_status_field = true;
 		}
+		
+		//if the status field is filled in
 		else
 		{
-			
+			//save details in json object : status and roles list and call server with http request
 			var status_with_roles = {Status:$scope.status_from_modal, Roles:selected_items};
 			$http.post("http://localhost:3000/addStatutsWithRoles", {
 				status_with_roles: status_with_roles,
@@ -820,19 +1031,30 @@ $scope.doUpload = function () {
 	
 	}
 	
+	/*
+		a function for adding a new role with statuses there is an http call to server 
+		for getting the status collection list
+		for selecting matching statuses to this role
+	*/
 	$scope.add_new_role = function()
 	{
 		$log.log("entered add_new_role() = function()");
 		$http.get("http://localhost:3000/getStatusOptions").then(
 			function (response) {//success callback
-				$scope.options = response.data.statusOptions;//return the list of the statusOptions
+			
+				//return the list of the statusOptions
+				$scope.options = response.data.statusOptions;
 				$scope.item = $scope.options[0];
+				//get roles colors list
 				$scope.getRolesColorsList();
 				angular.element(add_new_role_modal).modal("show");
 				$scope.role_from_modal = undefined;
+				
+				//the list of selected items
 				selected_items = [];
 			},
 			function (response) {//failure callback
+				//if failed show error modal
 			    $scope.message = response.data.error;
 				$scope.message_type = "ERROR";
 			    angular.element(Message_Modal).modal("show");
@@ -840,7 +1062,10 @@ $scope.doUpload = function () {
 		);
 	}
 
-    //show calendar
+    /*
+		a function for showing the calendar page
+		and hiding all other pages that are not relevant
+	*/
 	$scope.calendar_function = function()
 	{
 	   $scope.login_page = false;
@@ -850,28 +1075,43 @@ $scope.doUpload = function () {
 	   $scope.show_settings = false;
 	   $scope.account = false;
        $scope.getRolesList();
+	   
+	   //clearing the search field
 	   $scope.search = "";
 	}
-   //show settings
+   
+    /*
+		a function for showing the settings page
+		and hiding other pages that are not relevant
+    */
 	$scope.settings_function = function()
 	{
-		$log.log("entered settings function");
-	   $scope.show_settings = true;
-	   $scope.login_page = false;
-	   $scope.show_contacts = false;
-	   $scope.show_users = false;
-	   $scope.show_calendar = false;
-
-	   $scope.search = "";
-	}
-	//show the 
-	$scope.add_contact_function = function()
-	{
-	    $scope.get_new_contact_details = true;
-		 $scope.click = false;
+		//$log.log("entered settings function");
+		$scope.show_settings = true;
+		$scope.login_page = false;
+		$scope.show_contacts = false;
+		$scope.show_users = false;
+		$scope.show_calendar = false;
+		
+		//clearing the search field
+		$scope.search = "";
 	}
 	
-	//close the option of contact addition
+	/*
+		a function for adding a new contact to system
+		shows the matching 'div' in html page
+	*/
+	$scope.add_contact_function = function()
+	{
+		//update the parameter 'get_new_contact_details' to true for shoing the div
+	    $scope.get_new_contact_details = true;
+		$scope.click = false;
+	}
+	
+	/*
+		a function for closeing the option of contact addition
+		and clearing fields to be undefined
+	*/
 	$scope.cancel_function = function()
 	{
 	    $scope.get_new_contact_details = false;
@@ -883,17 +1123,22 @@ $scope.doUpload = function () {
 		$scope.newAddress=undefined;
 	}
 	
-	//get the list of statuses from the server
+	/*
+		get the list of statuses from the server with an http request 
+	*/
 	$scope.getOptionsList = function()
 	{
 		$log.log("entered getStatusList() = function()");
 		$http.get("http://localhost:3000/getStatusOptions").then(
 			function (response) {//success callback
-				$scope.options = response.data.statusOptions;//return the list of the statusOptions
+			
+				//return the list of the statusOptions
+				$scope.options = response.data.statusOptions;
 				$scope.item = $scope.options[0];
-				$log.log("item: "+ $scope.item );
 			},
 			function (response) {//failure callback
+			
+				//if fails show error modal
 			    $scope.message = response.data.error;
 				$scope.message_type = "ERROR";
 			    angular.element(Message_Modal).modal("show");
@@ -902,15 +1147,24 @@ $scope.doUpload = function () {
 	   
 	
 	}
+	
+	/*
+		get the the list of colors for roles from server 
+		with http request to sever
+	*/
 	$scope.getRolesColorsList = function()
 	{
 		$log.log("entered getStatusList() = function()");
 		$http.get("http://localhost:3000/getRolesColors").then(
 			function (response) {//success callback
-				$scope.roles_colors = response.data.colors;//return the list of the colors
+			
+				//return the list of the colors
+				$scope.roles_colors = response.data.colors;
 				$log.log("roles_colors : " + $scope.roles_colors);
 			},
 			function (response) {//failure callback
+			
+				//if fails show error modal
 			    $scope.message = response.data.error;
 				$scope.message_type = "ERROR";
 			    angular.element(Message_Modal).modal("show");
@@ -920,19 +1174,30 @@ $scope.doUpload = function () {
 	
 	}
 	
+	/*
+		get the the list of roles from server 
+		with http request to sever
+	*/
 	$scope.getRolesList = function()
 	{
 		$log.log("entered getRolesList() = function()");
 		$http.get("http://localhost:3000/getRoles").then(
 			function (response) {//success callback
-				$scope.roles = response.data.roles;//return the list of the statusOptions
+			
+				//return the list of the roles
+				$scope.roles = response.data.roles;
 				$scope.role = $scope.roles[0];
-				if($scope.roles[1]!=undefined)
+				
+				//if there  are statuses for this role
+				if($scope.roles[1] != undefined)
 				{
+					//returns the status list for the current role
 					$scope.status_role = $scope.roles[1].Statuses[0];
 				}
 			},
 			function (response) {//failure callback
+			
+				//if fails show error modal
 			    $scope.message = response.data.error;
 				$scope.message_type = "ERROR";
 			    angular.element(Message_Modal).modal("show");
@@ -942,39 +1207,42 @@ $scope.doUpload = function () {
 	
 	}
 
-    //save the deatailes of contact before update
+    /*
+		a function for saving the deatailes of contact before update
+	*/
 	$scope.update_contact_function = function(contact)
-	{
+	{	
+		//get all details of contact in json format
 		contact_before_update = {Category:contact.Category, Name:contact.Name,Status:contact.Status, PhoneNumber:contact.PhoneNumber, eMail:contact.eMail, Address:contact.Address};
-		$log.log("contact name : "+contact.Name);
 		$scope.update_status = contact_before_update.Status;
-		 $log.log("contactIsEdit : "+$scope.contactIsEdit);
-		// $scope.role_category = contact.Category;
-		// $scope.role_category = contact.Category;
-		 $log.log("contact role : "+contact.Category.Role);
-
-		 //$scope.status_role = contact.Status;
-
-        		
 	}
 	
+	/*
+		a function for saving the deatailes of user before update
+		the function gets the parameter 'user' that contains selected users details
+	*/
 	$scope.update_user_function = function(user)
 	{
-		user_before_update = {Role:user.Role,Name:user.Name,UserName:user.UserName, eMail:user.eMail};
-		$log.log("user name : "+user.Name);
-        		
+		//get all details of user in json format
+		user_before_update = {Role:user.Role,Name:user.Name,UserName:user.UserName, eMail:user.eMail};	
 	}
 
-    //show the modal with a new status addition
+    /*
+		a function for showing the modal with a new status addition
+		the parameter 'option' is the chosen status
+	*/
 	$scope.onChange = function(option){
 		$log.log("option : "+option);
 		status_role = option;
-		if(option==new_status_option)
+		if(option == new_status_option)
 		{
 		    angular.element(add_new_status_modal).modal("show");
 		}
 	}
 
+	/*
+		a function for saving the role that was chosen
+	*/
 	$scope.onChangeCategory = function(option,flag){
 		$log.log("option : "+option.Role);
 		category = option;
@@ -985,7 +1253,10 @@ $scope.doUpload = function () {
 	}
 	
 	
-	
+	/*
+		a function for saving selected items from selected lists
+		save according to flag
+	*/
 	$scope.selected_item = function(option,flag)
 	{
 		
@@ -1011,6 +1282,10 @@ $scope.doUpload = function () {
 		$log.log("selected_items :"+ selected_items);
 	}
 	
+	/*
+		a function for deleting file from the system (from server as well)
+		with http request to server with the selected file
+	*/
 	$scope.delete_file = function(file)
 	{
 		
@@ -1032,24 +1307,33 @@ $scope.doUpload = function () {
 	}
 	
 	
-	
+	/*
+		a function for adding a new status to a role
+		with an http request to server 
+	*/
 	$scope.add_new_status_to_role = function()
 	{
 		
 		$log.log("entered add_new_role() = function()");
 		$http.get("http://localhost:3000/getRoles").then(
 			function (response) {//success callback
-				$scope.roles = response.data.roles;//return the list of the statusOptions
+			
+				//return the list of the roles
+				$scope.roles = response.data.roles;
 	            $scope.role = $scope.roles[0];
+				
+				//if there are statuses for this role return its arry of statuse
 				if($scope.roles[1]!=undefined)
 				{
 					$scope.status_role = $scope.roles[1].Statuses[0];
 				}
-				
+				//show modal for adding a new status
 			    angular.element(add_new_status_modal).modal("show");
 
 			},
 			function (response) {//failure callback
+			
+				//if fails show error modal
 			    $scope.message = response.data.error;
 				$scope.message_type = "ERROR";
 			    angular.element(Message_Modal).modal("show");
@@ -1058,31 +1342,42 @@ $scope.doUpload = function () {
 
 	}
 
+	/*
+		a function for shoing the modal for 
+		adding a new status to the system
+	*/
 	$scope.add_new_status_to_system = function()
 	{
-		
-		$log.log("entered add_new_status_to_system() = function()");
+		//get the status list
 		$scope.getOptionsList();
+		
+		//show add new status modal
 		angular.element(add_new_status_to_system_modal).modal("show");
-
-
 	}
 	
-    //save a new status in server
+    /*
+		a function for saveing the new status from the modal in server
+		with http request
+	*/
 	$scope.save_new_system_status = function()
 	{
+		//if there was chosen a ststus in modal
 		if($scope.system_status_from_modal != undefined && $scope.system_status_from_modal != "")
 		{
+			//save the chosen status in json format
 			var new_status= {Status:$scope.system_status_from_modal};
 			$http.post("http://localhost:3000/addOption", {
 			new_status: new_status,
 			}).then(
 			function (response) { //success callback
-				$scope.newStatus="";
-			 // $scope.update_status=$scope.status_from_modal;				  
-			  $scope.getOptionsList();				
+			
+				//clear the field of new status and get the updated ststuses list 
+				$scope.newStatus="";			  
+			    $scope.getOptionsList();				
 			},
 			function (response) { //failure callback
+			
+				//if fails show error modal
 				$scope.message = response.data.error;
 				$scope.message_type = "ERROR";
 				angular.element(Message_Modal).modal("show");
@@ -1090,32 +1385,47 @@ $scope.doUpload = function () {
 			);
 			
 		}
+		
+		//if there was no status selected in modal
 		else
 		{
+			//show error modal
 			$scope.message = "You must enter a status";
 			$scope.message_type = "ERROR";
 			angular.element(Message_Modal).modal("show");
 			
 		}
 		
+		//clear the field in modal
 		$scope.system_status_from_modal =undefined;
 	}
 	
+	
+	/*
+		 a function for shoing modal of update role
+	*/
 	$scope.update_role = function()
 	{
-		        $log.log($scope.options);
-
 		angular.element(update_role_modal).modal("show");
 	}
+	
+	/*
+		a function for updating a role with new statuses
+		and sending it to server 
+	*/
 	$scope.update_role_with_statuses = function()
 	{
-		if(category == undefined){
+		//if there was no role chosen show an error modal
+		if(category == undefined)
+		{
 		    $scope.message = "You must choose a role";
 		    $scope.message_type = "ERROR";
 			angular.element(Message_Modal).modal("show");
 			return;
 		}
-		if(selected_items==undefined) 
+		
+		//if there were no statuses selected for the role show an error modal
+		if(selected_items == undefined) 
 		{
 			$scope.message = "You must choose a status";
 		    $scope.message_type = "ERROR";
@@ -1123,34 +1433,39 @@ $scope.doUpload = function () {
 			return;
 		}
 		
+		//save in json format the role that was chosen with the statuses that were selected 
 		var role_to_update={Role:category,Statuses:selected_items};
 		$http.post("http://localhost:3000/updateRole", {
 				role_to_update: role_to_update,
 			}).then(
 				function (response) { //success callback  
-                   	
-					
+                  	
 				},
 				function (response) { //failure callback
 					$scope.newName=undefined;
 					$scope.newPhoneNumber=undefined;
 					$scope.newEmail=undefined;
 					$scope.newAddress=undefined;
-					alert(response.data.error);
+					
+					//if fails show error modal
+					$scope.message = response.data.error;
+					$scope.message_type = "ERROR";
+					angular.element(Message_Modal).modal("show");
 				}
 			);
 		
 	}
 	
-	
-	
-	
 		
-	//get the contacts list from server
-	$scope.getContactsList = function(){// get the list of the contacts
+	/*
+		get the contacts list from server with http request
+	*/
+	$scope.getContactsList = function(){
 		 $http.get("http://localhost:3000/getContacts").then(
 			function (response) {//success callback
-				$scope.contactsInfo = response.data.contacts;//return the list of the contacts
+			
+				//return the list of the contacts
+				$scope.contactsInfo = response.data.contacts;
 				
 			},
 			function (response) {//failure callback
@@ -1158,38 +1473,48 @@ $scope.doUpload = function () {
 			}	
 		);
 		
-	}		
-	//get the files list from server
-	$scope.getFilesList = function(){// get the list of the contacts
+	}	
+	
+	/*
+		get the files list from server with http request
+	*/
+	$scope.getFilesList = function(){
 		 $http.get("http://localhost:3000/getFiles").then(
 			function (response) {//success callback
-				$scope.files = response.data.files;//return the list of the contacts
-				
+			
+				//return the list of the files
+				$scope.files = response.data.files;
 			},
 			function (response) {//failure callback
-				
 			}	
 		);
-		
 	}
 	
-	
-	$scope.getUsersList = function(flag){// get the list of the contacts
+	/*
+		a function for getting the list of users from server with http request
+	*/
+	$scope.getUsersList = function(flag){
 		$log.log("flag : " + flag);
 		 $http.post("http://localhost:3000/getUsers", {	
 			status_flag: flag,
 		}).then(
 			function (response) {//success callback
-			$scope.users = response.data.users;//return the list of the users
+			
+			//return the list of the users
+			$scope.users = response.data.users;
+			
+			//if was chosen to delete the user
 			if(response.data.deleteUser == true)
 			{
-				$log.log($scope.users.length);
+				//show modal for deleting the user
 				$scope.message_type = "Choose user to delete";
 		        angular.element(delete_modal).modal("show");
 			}
 							
 			},
 			function (response) {//failure callback
+			
+				//if faild show error modal
 				$scope.message = response.data.error;
 				$scope.message_type = "ERROR";
 			    angular.element(Message_Modal).modal("show");
@@ -1197,11 +1522,19 @@ $scope.doUpload = function () {
 		);
 		
 	}
-	$scope.get_users_function = function(flag){// get the list of the contacts
+	
+	/*
+		a function for shing the users list in page in html 
+		and getting the list of the users and list of roles
+	*/ 
+	$scope.get_users_function = function(flag){
 		$scope.show_users = true;
+		
+		//hide the parts in html that are not relevant to users tab 
 		$scope.show_settings = false;
 		$scope.show_contacts = false;
 		$scope.show_calendar = false;
+		
 		$scope.account = true;
 		$scope.getUsersList(flag);
 		$scope.getRolesList();
@@ -1209,73 +1542,96 @@ $scope.doUpload = function () {
 	}
  
  
-    //check validation of all new contact fildes
+    /*
+		a validation function for checking all new contact fildes
+		if there was an error in 1 field show error modal
+	*/
 	$scope.check_and_save_details = function()
 	{
-	  if(category == undefined)
-	  {
+		//check if a role was chosen
+	    if(category == undefined)
+		{
 		    $scope.message = "You must choose a category";
 		    $scope.message_type = "ERROR";
 			angular.element(Message_Modal).modal("show");
 			return;
-	  }
-	if(status_role==undefined ||status_role=="") 
-	{
-		$scope.message = "You must choose a status";
-		$scope.message_type = "ERROR";
-		angular.element(Message_Modal).modal("show");
-		return;
-	}
-	else if (status_role==new_status_option)
-	{
-	
-		if (status_role==new_status_option)
-		{
-			status_role = "";
 		}
-		status_role = contact_before_update.Status;
-	}
-	
-	if($scope.newName==undefined || $scope.newName== "")
-	{//check the name
-		$scope.message_type = "ERROR";
-		$scope.message = "You must enter a name";
-		angular.element(Message_Modal).modal("show");
-		return;
 		
-	}
-	 else
-	  {
-		var name = $scope.newName;
-		if(name.length > MAX_LETTERS_IN_NAME){//check the length of the name
-			$scope.message_type = "WARNNING";
-			$scope.message = "This name is too long, therefore only "+ MAX_LETTERS_IN_NAME  +" characters including spaces will be saved";
+		//check if status has been chosen
+		if(status_role == undefined || status_role == "") 
+		{
+			$scope.message = "You must choose a status";
+			$scope.message_type = "ERROR";
 			angular.element(Message_Modal).modal("show");
-			$scope.newName=$scope.newName.slice(0, MAX_LETTERS_IN_NAME);
 			return;
 		}
-	  }
-	
-	  
-	  if($scope.newStatus==undefined || $scope.newStatus=="" || $scope.newStatus==new_status_option) 
-	  {
-		 $scope.newStatus="";
-	  }
-	  
 		
+		//if the status that was chosen is equal to "add a new status"
+		else if(status_role == new_status_option)
+		{
+			//then clear the field of the status
+			if (status_role == new_status_option)
+			{
+				status_role = "";
+			}
+			
+			//save the status that was before the update
+			status_role = contact_before_update.Status;
+		}
+	
+		//check the name field if there was entered a new name 
+		if($scope.newName==undefined || $scope.newName== "")
+		{
+			$scope.message_type = "ERROR";
+			$scope.message = "You must enter a name";
+			angular.element(Message_Modal).modal("show");
+			return;
+			
+		}
+		
+		//if there was a new name entered
+		else
+		{
+			//save the new name
+			var name = $scope.newName;
+			
+			//check the length of the name
+			if(name.length > MAX_LETTERS_IN_NAME)
+			{
+				$scope.message_type = "WARNNING";
+				$scope.message = "This name is too long, therefore only "+ MAX_LETTERS_IN_NAME  +" characters including spaces will be saved";
+				angular.element(Message_Modal).modal("show");
+				$scope.newName=$scope.newName.slice(0, MAX_LETTERS_IN_NAME);
+				return;
+			}
+		}
+	
+		//check if no new status was chosen
+		if($scope.newStatus==undefined || $scope.newStatus=="" || $scope.newStatus==new_status_option) 
+		{
+			$scope.newStatus="";
+		}
+	  
+		//check the phone number field if not entered show an error modal -> this field is a munst field
 		if($scope.newPhoneNumber==undefined || $scope.newPhoneNumber== "")
-		{//check the phone number
+		{
 		    $scope.message_type = "ERROR";
 		    $scope.message = "You must enter a phone number";
 		    angular.element(Message_Modal).modal("show");
 		    return;
 			
 		}
+		
+		//if a phone number was entered 
 		else
 		{
+			//a regular expression for a valid phone number
 		    var valid_phone_number =  /^\+?([0-9]{2})?[0-9]{7,10}$/;
+			
+			//check if the phone number is valid according to regular expression
 		    if(!valid_phone_number.test($scope.newPhoneNumber))
-			{//check the phone number
+			{
+				//if not valid show an error modal
 			    $scope.message_type = "ERROR";
 		        $scope.message = "This phone number is invalid";
 		        angular.element(Message_Modal).modal("show");
@@ -1284,27 +1640,38 @@ $scope.doUpload = function () {
 			}
 		}
 			
-		
+		//check if an email address was entered
 		if($scope.newEmail!=undefined)
 		{
+			//save a regular expression for a valid email address
 			var valid_email = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-				if( !valid_email.test($scope.newEmail)){//check the email
-				    $scope.message_type = "ERROR";
-		            $scope.message = "This email is invalid";
-		            angular.element(Message_Modal).modal("show");
-					$scope.newEmail=undefined;
-					return;
-				}
+			
+			//check if the email address is valid according to regular expression
+			if( !valid_email.test($scope.newEmail)){
+				
+				//if not valid show an error modal
+				$scope.message_type = "ERROR";
+				$scope.message = "This email is invalid";
+				angular.element(Message_Modal).modal("show");
+				$scope.newEmail=undefined;
+				return;
+			}
 		}
+		
+		//if no email address was entered
         else
 		{
 		   $scope.newEmail= undefined ;
         }		
 		
+		//check if an address was entered
 		if($scope.newAddress!=undefined)
 		{
+			//save the address
 		    var address = $scope.newAddress;
-			if(address.length > MAX_LETTERS_IN_ADDRESS){//check the length of the address
+			
+			//check the length of the address
+			if(address.length > MAX_LETTERS_IN_ADDRESS){
 		        $scope.message_type = "WARNNING";
 		        $scope.message = "This address is too long, therefore only "+ MAX_LETTERS_IN_ADDRESS +" characters including spaces will be saved";
 			    angular.element(Message_Modal).modal("show");
@@ -1313,15 +1680,22 @@ $scope.doUpload = function () {
 			}
 			
 		}
+		
+		//if no address was entered 
 		else
 		{
 		   $scope.newAddress = "";
 		}
 		
 		$scope.click = true;
+		
+		//call the function to add the new contact
 		$scope.addNewContact();
 	}
 	
+	/*
+		a function that return the current date in format 'mm/dd/yyyy HH:MM'
+	*/
 	$scope.getCurrentDate = function()
 	{
 		var date = new Date();
@@ -1336,10 +1710,15 @@ $scope.doUpload = function () {
 		return date;
 	}
 	
-    //add a new contact to server
+    /*
+		a function for adding a new contact to system 
+		with http request to server 
+	*/
 	$scope.addNewContact = function(){
-		
+		//save the current date
 		var contact_history	= 'Date : ' + $scope.getCurrentDate() +'\n\nContact Addition\n ';
+		
+		//add to history the action
 		history_array.push(contact_history);
 		$log.log("contact_history :" + contact_history);
 		var contact={Name:$scope.newName, Category:category, Status:status_role, PhoneNumber:$scope.newPhoneNumber, eMail:$scope.newEmail, Address:$scope.newAddress, History:history_array};
@@ -1347,10 +1726,10 @@ $scope.doUpload = function () {
 				contact: contact,
 			}).then(
 				function (response) { //success callback  
-                    $log.log("phone exists response : "+response.data.phone_exists);					
+				
+                    //check if the phone number exists in system					
 					if(!response.data.phone_exists)
-					{
-						$log.log("entered !response.data.phone_exists: ");					
+					{				
 						$scope.get_new_contact_details=false;
 						$scope.getContactsList();
 						$scope.newName=undefined;
@@ -1359,7 +1738,8 @@ $scope.doUpload = function () {
 						$scope.newAddress=undefined;
 
 					}
-					//check if the phone exsists
+					
+					//if exists show error modal
 					else
 					{
 					   $scope.message_type = "ERROR";
@@ -1369,16 +1749,22 @@ $scope.doUpload = function () {
 					
 				},
 				function (response) { //failure callback
+				
+					//clear fields of new contact that was edit
 					$scope.newName=undefined;
 					$scope.newPhoneNumber=undefined;
 					$scope.newEmail=undefined;
 					$scope.newAddress=undefined;
-					alert(response.data.error);
+					
+					//if fails show error modal
+					$scope.message_type = "ERROR";
+                    $scope.message = response.data.error;
+				    angular.element(Message_Modal).modal("show");
 				}
 			);
 	}
 	
-	 //delete a contact from server
+	//delete a contact from server
 	$scope.delete_contact_function = function(contact)
 	{
 		$http.post("http://localhost:3000/deleteContact", {
@@ -1393,7 +1779,10 @@ $scope.doUpload = function () {
 			);
 	}
 	
-	
+	/*
+		 a function for catching any chane in contact 
+		 and save changes in history of contact
+	*/
 	$scope.changed_detailes = function(contactInfoToUpdate)
 	{
 		var updated_contact_history="";
@@ -1435,15 +1824,15 @@ $scope.doUpload = function () {
 		   contact_history="Date: "+$scope.getCurrentDate()+"\n\nContact Edit\n\n"+updated_contact_history+"\n";
 			
 		}
-		
-		
-		return contact_history;
-				
+		return contact_history;	
 	}
 	
 	 
 	
-	//check validation of all updated contact fildes and if they corect are corcect send them to the server
+	/*
+		a function for checking validation of all updated contact fildes 
+		and if they are corcect send them to the server
+	*/
 	$scope.save_updated = function(contactInfoToUpdate)
 	{
 	 
@@ -1451,21 +1840,25 @@ $scope.doUpload = function () {
 		$log.log("Category before: "+ contact_before_update.Category.Role);
 		$log.log("Category after : "+ category);
 		
-		
+		//check if role was celected
 		if(category == undefined){
 		    $scope.message = "You must choose a category";
 		    $scope.message_type = "ERROR";
 			angular.element(Message_Modal).modal("show");
 			return;
 		}
+		
+		//check if no name was entered if so show an error modal
 		if(contactInfoToUpdate.Name==undefined || contactInfoToUpdate.Name== "")
-		{//check the name
+		{
 			$scope.message_type = "ERROR";
 			$scope.message = "You must enter a name";
 			angular.element(Message_Modal).modal("show");
 			return;
 			
 		}
+		
+		//if a name was entered
 		else
 		{
 			if(contactInfoToUpdate.Name.length > MAX_LETTERS_IN_NAME){//check the length of the name
@@ -1477,7 +1870,7 @@ $scope.doUpload = function () {
 			}
 		}
 		
-		  
+		 //check if no status was selected if so show an error modal
 		if(status_role==undefined ||status_role=="") 
 		{
 			$scope.message = "You must choose a status";
@@ -1485,6 +1878,8 @@ $scope.doUpload = function () {
 			angular.element(Message_Modal).modal("show");
 			return;
 		}
+		
+		//if there was chosen the default empty status
 		else if (status_role==new_status_option)
 		{
 		
@@ -1494,18 +1889,22 @@ $scope.doUpload = function () {
 			}
 			status_role = contact_before_update.Status;
 		}
-			
+		
+		//check if phone number was entered and if it is valid
 		if(contactInfoToUpdate.PhoneNumber!=undefined && contactInfoToUpdate.PhoneNumber!= "")
-		{//check the phone number
+		{
 			var valid_phone_number =  /^\+?([0-9]{2})?[0-9]{7,10}$/;
+			//if the phone number is invalid shoe an error modal
 		    if(!valid_phone_number.test(contactInfoToUpdate.PhoneNumber))
-			{//check the phone number
-				 $scope.message_type = "ERROR";
-		         $scope.message = "This phone number is invalid";
-		         angular.element(Message_Modal).modal("show");
+			{
+				$scope.message_type = "ERROR";
+		        $scope.message = "This phone number is invalid";
+		        angular.element(Message_Modal).modal("show");
 				return;
 			}
 		}
+		
+		//if no phone number was entered show an error modal
 		else
 		{
 		    $scope.message_type = "ERROR";
@@ -1514,7 +1913,7 @@ $scope.doUpload = function () {
 		   return;
 		}
 			
-		
+		//check if an email address was entered and if it is valid
 		if(contactInfoToUpdate.eMail!=undefined && contactInfoToUpdate.eMail!="" && contactInfoToUpdate.eMail!=null)
 		{
 			var valid_email = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
@@ -1525,11 +1924,14 @@ $scope.doUpload = function () {
 					return;
 				}
 		}
+		
+		//if no email address was entered
         else
 		{
 		   contactInfoToUpdate.eMail="";
         }		
 		
+		//if a address was entered
 		if(contactInfoToUpdate.Address!=undefined)
 		{
 			if(contactInfoToUpdate.Address.length > MAX_LETTERS_IN_ADDRESS){//check the length of the address
@@ -1540,41 +1942,30 @@ $scope.doUpload = function () {
 				contactInfoToUpdate.Address=contactInfoToUpdate.Address.slice(0, MAX_LETTERS_IN_ADDRESS);
 				return;
 			}
-			
 		}
 		else
 		{
 		   contactInfoToUpdate.Address = "";
 		}
 		
+		//save the changes on contact in the history
 		var contact_history = $scope.changed_detailes(contactInfoToUpdate);
+		
+		//save the details of the updated contact in a json format
+		var updated_contact={Name:contactInfoToUpdate.Name, Category:category, Status:status_role, PhoneNumber:contactInfoToUpdate.PhoneNumber, eMail:contactInfoToUpdate.eMail, Address:contactInfoToUpdate.Address,History:contact_history};
 
-		
-		if(contact_history==-1)
-		{
-			$log.log("contact_history: -1");
-
-			//$scope.getContactsList();
-
-			return;		
-		}
-		
-		
-		
-	   var updated_contact={Name:contactInfoToUpdate.Name, Category:category, Status:status_role, PhoneNumber:contactInfoToUpdate.PhoneNumber, eMail:contactInfoToUpdate.eMail, Address:contactInfoToUpdate.Address,History:contact_history};
-
-		
+		//call server with an http request
 		$http.post("http://localhost:3000/updateContact", {
 				contact_before_update: contact_before_update,updated_contact:updated_contact
 			}).then(
 				function (response) { //success callback   
-
-                   $log.log("phone exists response : "+response.data.phone_exists);				
+					//check if the phone number does not exist already
 					if(!response.data.phone_exists)
 					{
                          $scope.getContactsList();
 					}
-					//check if th phone already exsist
+					
+					//if the phone already exsist show an error modal
 					else
 					{
 					   $scope.message_type = "ERROR";
@@ -1587,83 +1978,109 @@ $scope.doUpload = function () {
 				},
 				function (response) { //failure callback
 					
-					
 				}
 			);
 	}
 	
+	/*
+		a function for updating a user in the system
+	*/
 	$scope.save_updated_user = function(userToUpdate)
 	{
-
+		//regular expression for a valid user name
 		var re_username = /^[a-zA-Z]{3,10}$/;
+		
+		//regular expression for a valid name
 		var re_name = /^[a-zA-Z\s\u0590-\u05fe]{2,20}$/;
 		
-		if($scope.role==null){
+		//if no role was selected show an error modal
+		if($scope.role==null)
+		{
 		    $scope.message = "You must choose role for user";
 		    $scope.message_type = "ERROR";
 			angular.element(Message_Modal).modal("show");
 			return;
 		}
 		
-		if(userToUpdate.UserName==undefined ||!re_username.test(userToUpdate.UserName)){
+		//if a user name was not entered or was invalid show an error modal
+		if(userToUpdate.UserName==undefined ||!re_username.test(userToUpdate.UserName))
+		{
 		    $scope.message = "User name must contain only English letters ,minimum 3 leterrs and maximum 10 letters and no whitespace";
 		    $scope.message_type = "ERROR";
 			angular.element(Message_Modal).modal("show");
 			return;
 		}
-		if(userToUpdate.Name==undefined ||!re_name.test(userToUpdate.Name)){
+		
+		//if a name was not entered or was invalid show an error modal
+		if(userToUpdate.Name==undefined ||!re_name.test(userToUpdate.Name))
+		{
 			$scope.message = "The name must contain only English or Hebrew letters ,minimum 2 leterrs and maximum 20 letters ";
 		    $scope.message_type = "ERROR";
 			angular.element(Message_Modal).modal("show");
 			return;
 		}
 		var re_email = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-		if(userToUpdate.eMail==undefined || !re_email.test(userToUpdate.eMail)){//check the email
+		
+		//check if an email address was entered and if it is valid
+		if(userToUpdate.eMail==undefined || !re_email.test(userToUpdate.eMail))
+		{
 			$scope.message = "This email is invalid ";
 		    $scope.message_type = "ERROR";
 			angular.element(Message_Modal).modal("show");
 			return;
 		}
-		$log.log("Role:" + userToUpdate.Role);
+		
+		//save the updated details of the user
 		var updated_user={Role:category.Role,UserName:userToUpdate.UserName, Name:userToUpdate.Name, eMail:userToUpdate.eMail};
+		
+		//call server with http request
 		$http.post("http://localhost:3000/updateUser", {
 				user_before_update: user_before_update,updated_user:updated_user
 			}).then(
 				function (response) { //success callback   
 
-				$scope.users = response.data.users;
-                   				
-					
+					$scope.users = response.data.users;			
 				},
 				function (response) { //failure callback
-					
 					
 				}
 			);
 	}
 	
+	/*
+		a function for repeating a message modal in match to the slected modal
+	*/
 	$scope.repeat_message = function()
 	{
+		//modal for incorect password
 		if(incorect_password == true)
 		{
 			angular.element(change_password_modal).modal("show");
 			incorect_password = false;
 		}
+		
+		//modal for incorect current password
 		if(incorect_current_password==true)
 		{
 		   angular.element(validation_current_password_modal).modal("show");
 		   incorect_current_password =false;
 		}
+		
+		//modal for missing role field
 		if(missing_role_field == true)
 		{
 			angular.element(add_new_role_modal).modal("show");
-		   missing_role_field =false;
+			missing_role_field =false;
 		}
+		
+		//modal for missing status field
 		if(missing_status_field ==true)
 		{
 			angular.element(add_new_status_modal).modal("show");
 			missing_status_field =false;
 		}
+		
+		//modal for missing role field in calendar event
 		if(missing_role_field_calendar == true)
 		{
 			angular.element(add_event).modal("show");
@@ -1671,10 +2088,18 @@ $scope.doUpload = function () {
 		}
 	}
 	
+	/*
+		a function for changing the password
+		the function gets the new password
+	*/
 	$scope.change_password_function = function(new_password)
 	{
 		var re_password = /^((?!.*[\s])(?=.*[A-Z])(?=.*\d))(?=.*?[#?!@$%^&*-]).{8,15}$/;
-		if($scope.new_password==undefined || !re_password.test($scope.new_password)){//check the length of the password
+		
+		//check the new password is valid according to regular expression
+		if($scope.new_password==undefined || !re_password.test($scope.new_password))
+		{
+			//if not valid show error modal
 			$scope.message = "The password must contain at least 8 to 15 characters , at least : one capital letter or one small letter, one number, and one of the following special characters: #?! @ $% ^ & * -";
 		    $scope.message_type = "ERROR";
 			angular.element(Message_Modal).modal("show");
@@ -1682,10 +2107,10 @@ $scope.doUpload = function () {
 			$scope.verify_new_password=undefined;
 			incorect_password = true;
 			return;
-			
-			
 		}
-		if($scope.new_password!=$scope.verify_new_password){//check if the two password equals
+		
+		//check if the two password equals = the new one and the varify one
+		if($scope.new_password != $scope.verify_new_password){
 			$scope.message = "The two passwords do not match";
 		    $scope.message_type = "ERROR";
 			angular.element(Message_Modal).modal("show");
@@ -1693,6 +2118,8 @@ $scope.doUpload = function () {
 		    incorect_password = true;
 			return;
 		}
+		
+		//save the new password in server with an hyyp request
 		var logged_in_new_password ={username:logged_in_user.UserName,new_password:$scope.new_password};
 		$http.post("http://localhost:3000/changeCurrentPassword", {	
 			logged_in_new_password: logged_in_new_password,
@@ -1701,12 +2128,10 @@ $scope.doUpload = function () {
 				$scope.new_password=undefined ;
 			    $scope.verify_new_password=undefined;
 			  
+				//show a success modal if the password has been changed successfully
 				$scope.message_type = "SUCCESS";
 			    $scope.message = response.data.success;
 			    angular.element(Message_Modal).modal("show");
-				
-					
-
 			},
 			function (response) { //failure callback
 				
@@ -1714,6 +2139,10 @@ $scope.doUpload = function () {
 		);
 	}
 	
+	/*
+		a function for verifing the passord that was entered 
+		with the password in server for the current user name
+	*/
     $scope.verify_password = function(current_password)
 	{
 	  var logged_in_current_password ={username:logged_in_user.UserName , current_password:current_password};
@@ -1722,13 +2151,15 @@ $scope.doUpload = function () {
 		}).then(
 			function (response) { //success callback
 				$scope.current_password = undefined;
-			  	if(response.data.verified == true)//the current password was verified for this username
+				
+				//the current password was verified for this username
+			  	if(response.data.verified == true)
 				{
-					$log.log("change_password_div");
 					angular.element(change_password_modal).modal("show");
-					$log.log("change_password_div");
 				}
-				else//the current password was not verified for this username
+				
+				//the current password was not verified for this username
+				else
 				{
 				   $scope.message_type = "ERROR";
 				   $scope.message = response.data.not_verified;
@@ -1747,6 +2178,9 @@ $scope.doUpload = function () {
 		
 	}
 	
+	/*
+		a function for showing a modal for deleting role from system
+	*/
 	$scope.delete_status_system_settings = function()
 	{
 			
@@ -1755,14 +2189,20 @@ $scope.doUpload = function () {
 
 	}
 	
+	/*
+		a function for deleting status from system
+	*/
 	$scope.delete_status_from_system = function()
 	{
+		//if no status was selected for deleting show an error moal
 		if(deleted_status == undefined){
 		    $scope.message = "You must choose a status";
 		    $scope.message_type = "ERROR";
 			angular.element(Message_Modal).modal("show");
 			return;
 		}
+		
+		//call server with http request to delete status from system
 		$http.post("http://localhost:3000/deleteStatusFromSystem", {
 				status_to_delete : deleted_status,
 			}).then(
@@ -1774,21 +2214,29 @@ $scope.doUpload = function () {
 			);
 	}
 	
+	/*
+		a function for showing modal for deleting status from role (from settings tab)
+	*/
+	$scope.delete_status_role_settings = function()
+	{
+		angular.element(delete_status_from_role_modal).modal("show");
+		$scope.getRolesList();
+	}
 	
-	 $scope.delete_status_role_settings = function()
-	 {
-		 angular.element(delete_status_from_role_modal).modal("show");
-		 $scope.getRolesList();
-	 }
-	 
-	 $scope.delete_status_from_role = function()
-	 {
+	/*
+		a function for deleting status from role
+	*/
+	$scope.delete_status_from_role = function()
+	{
+		//if no category was selected show an error modal
 		if(category == undefined){
 		    $scope.message = "You must choose a category";
 		    $scope.message_type = "ERROR";
 			angular.element(Message_Modal).modal("show");
 			return;
 		}
+		
+		//if no status was selected show an error modal
 		if(status_role==undefined ||status_role=="") 
 		{
 			$scope.message = "You must choose a status";
@@ -1797,14 +2245,15 @@ $scope.doUpload = function () {
 			return;
 		}
 		
+		//save the status to delete and from which role to delete
 		var status_to_delete = {Role:category.Role , Status:status_role}
+		
+		//call server with http request for deleting status from role
 		$http.post("http://localhost:3000/deleteStatusFromRole", {
 				status_to_delete : status_to_delete
 			}).then(
 				function (response) { //success callback 
 				   $scope.roles = response.data.roles; 
-				   $scope.options = response.data.statuses;
-				   $scope.item = $scope.options[0];
 				   $scope.role = $scope.roles[0];
 					if($scope.roles[1]!=undefined)
 					{
@@ -1817,8 +2266,9 @@ $scope.doUpload = function () {
 					
 				}
 			);
-	 }
-	 
+	}
+	
+	//a function for showing a modal for insuring the delition of all contacts from syetem
 	$scope.insure_delete_all_contacts = function()
 	{
 		$scope.message = "Are you sure you want to delede all the contacts from system ? if you press OK, all contacts will be deleted and the information will be lost. ";
@@ -1826,6 +2276,8 @@ $scope.doUpload = function () {
 		angular.element(Message_Modal_With_Cancel).modal("show");
 		delete_all_contacts_flag = true;
 	}
+	
+	//a function for showing a modal for insuring the delition of all users from syetem
 	$scope.insure_delete_all_users = function()
 	{
 		$scope.message = "Are you sure you want to delede all the users from system ? if you press OK, all users will be deleted and the information will be lost. ";
@@ -1834,15 +2286,21 @@ $scope.doUpload = function () {
 		delete_all_users_flag = true;
 	}
 	
+	/*
+		a function for deleting all contacts or users depends on 'flag' parameter
+	*/
 	$scope.response_ok = function()
 	{
 		$log.log("entered response_ok " +delete_all_contacts_flag);
 		if(delete_all_contacts_flag == true)
 		{
+			//call function for deleting all contacts from server
 			$scope.delete_all_contacts();
 			delete_all_contacts_flag = false;
 
 		}
+		
+		//call function for deleting all users from server
 		if(delete_all_users_flag == true)
 		{
 			$scope.delete_all_users();
@@ -1851,12 +2309,16 @@ $scope.doUpload = function () {
 		}
 	}
 	
+	/*
+		a function for deleting all contacts from srever
+		with an http request
+	*/
 	$scope.delete_all_contacts = function()
 	{
-		$log.log("entered delete_all_contacts");
-
 		$http.get("http://localhost:3000/deleteAllContacts").then(
 			function (response) {//success callback
+			
+				//show success modal
 				$scope.message = response.data.message;
 				$scope.message_type = "SUCCESS";
 			    angular.element(Message_Modal).modal("show");
@@ -1867,12 +2329,18 @@ $scope.doUpload = function () {
 		);
 	}
 	
+	/*
+		a function for deleting all users from srever
+		with an http request
+	*/
 	$scope.delete_all_users = function()
 	{
 		$log.log("entered delete_all_users");
 
 		$http.get("http://localhost:3000/deleteAllUsers").then(
 			function (response) {//success callback
+				
+				//show success modal
 				$scope.message = response.data.message;
 				$scope.message_type = "SUCCESS";
 			    angular.element(Message_Modal).modal("show");
@@ -1883,6 +2351,9 @@ $scope.doUpload = function () {
 		);
 	}
 	
+	/*
+		a function for saving the user name of user to delete that was selected at modal
+	*/
 	$scope.user_selected = function(username)
 	{
 		var res = username.split(",");
@@ -1894,6 +2365,9 @@ $scope.doUpload = function () {
 
 	}
 	
+	/*
+		a function for deleting user from server
+	*/
 	$scope.delete_user = function(flag)
 	{
 		$log.log(flag);
@@ -1918,6 +2392,9 @@ $scope.doUpload = function () {
 		$log.log(username_to_delete);
 	}
 	
+	/*
+		a function for deleting role from server
+	*/
 	$scope.delete_role = function(role)
 	{
 		$log.log(role);
@@ -1937,36 +2414,36 @@ $scope.doUpload = function () {
 		
 	}
 	
-	
+	//a function for showing the modal for chaging password
     $scope.change_password = function()
 	{
-		
 	    angular.element(validation_current_password_modal).modal("show");
 	}
+	
+	/*
+		a function for sign out from syetem show only login page and hide all other pages
+	*/
 	$scope.sign_out = function()
 	{
 		$scope.all_system = false;
 		$scope.login_page = true;
 		$scope.temp_password = "";
-	   $scope.show_contacts = false;
-	   $scope.show_users = false;
-	   $scope.show_settings = false;
-	   $scope.show_calendar = false;
-	   $scope.account = true;
+		$scope.show_contacts = false;
+		$scope.show_users = false;
+		$scope.show_settings = false;
+		$scope.show_calendar = false;
+		$scope.account = true;
 	}
 	
 
 	
 
-	}]).directive('popOver', function ($compile, $templateCache,$log) {
+	}]).directive('popOver', function ($compile, $templateCache,$log) {//pop over option for history
 			$log.log(" body")
 
 			$('body').on('click', function (e) {
 			$('pop-over').each(function () {
-								$log.log("popOver in body")
-
-				//the 'is' for buttons that trigger popups
-				//the 'has' for icons within a button that triggers a popup
+	
 				if (!$(this).is(e.target) && $(this).has(e.target).length === 0 && $('.pop-over').has(e.target).length === 0) {
 					$(this).popover('hide');
 				}

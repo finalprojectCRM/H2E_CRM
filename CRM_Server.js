@@ -726,6 +726,8 @@ app.post("/addRoleWithStatuses", (request, response) =>{
 	  
 			} 
 	     }
+		 response.writeHead(200, { 'Content-Type': 'application/json' });
+		 response.end();
 });
 app.post("/updateRole", (request, response) =>{
 	

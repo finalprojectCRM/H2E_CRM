@@ -391,9 +391,6 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 		
 	}	
 	
-	
-	
-	
 	//first load of system when conect to it
 	$http({method : "GET",
 			url : "firstSystemLoad"

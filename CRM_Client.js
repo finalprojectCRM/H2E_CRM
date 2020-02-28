@@ -391,23 +391,7 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 		
 	}	
 	
-	/*
-		send email function and http post call to server 
-		with contact and email details
-	*/
-	$scope.sendMail = function(contact_email)
-	{
-		$http.post("http://localhost:3000/sendEmail", {
-			
-		}).then(
-			function (response) { 
-			
-			},
-			function (response) { //failure callback
-				
-			}
-		);
-	}	
+	
 	
 	
 	//first load of system when conect to it

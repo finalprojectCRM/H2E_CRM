@@ -1,7 +1,8 @@
-//the libraries
+//the libraries that not exsising fundamentally in node js
 var http = require('http');
 var url = require('url');
 const fs = require('fs');
+var node_mailer = require('nodemailer');
 const Express = require("express");
 const BodyParser = require("body-parser");
 const MongoClient = require("mongodb").MongoClient;
@@ -9,17 +10,31 @@ const ReadPreference = require('mongodb').ReadPreference;
 const ObjectId = require("mongodb").ObjectID;
 const config = require('./mongo-config.json');
 
+//the name of app
 const APP_NAME = require('os').hostname();
+//the port that the app running on it
 const APP_PORT = 3000;
 
+//the database and the collectios in mongodb
 var database, contacts_collection, statuses_collection, users_collection ,files_collection, roles_with_statuses_collection , statuses_with_roles_collection , colors_collection;
 var app = Express();
+//The temp password that the adminstrator get with the system 
 var firstTempPassword = "12345678";
+//the email of the system
+const SERVER_EMAIL = "h2e.crm@gmail.com"
 
 app.use(BodyParser.json());
 app.use(BodyParser.urlencoded({ extended: true }));
 
 
+//create an approach to send emailes from the system by using node mailer library
+var transporter = node_mailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: SERVER_EMAIL,
+        pass: 'H2E_CRM!@'
+    }
+});
 //get to mongo db Permissions
 function get_mongo_connection_string()
 {
@@ -80,6 +95,8 @@ app.get("/", (request, response) => {
             if(error) {
                 console.log("ERROR TO CONECT TO MONGODB")
             }
+			
+			/*create all collections in mongo db*/
             database = client.db(db_name);
             contacts_collection = database.collection("contacts");
             statuses_collection = database.collection("statuses");
@@ -93,7 +110,8 @@ app.get("/", (request, response) => {
             result = {
                 "db_conn_string": conn_string
             };
-
+  
+            //only after a good connection to mongo db we can read the main page and send it to client
             fs.readFile('./CRM_Client.html', function (error, data) {
                 if (error) {
                     console.log('error has happand in CRM_Client.html', error)
@@ -120,6 +138,7 @@ app.get("/bootstrap.min.css", (request, response) =>{
             response.end(data);
         });
 });
+//get angular js
 app.get("/bower_components/angular/angular.min.js", (request, response) =>{//bring the angular file
         console.log('--Rendering angular-js file--');
         fs.readFile('./bower_components/angular/angular.min.js', function (error, data) {
@@ -130,6 +149,7 @@ app.get("/bower_components/angular/angular.min.js", (request, response) =>{//bri
             response.end(data);
         });
 });
+//get angular.min.js.map
 app.get("/bower_components/angular/angular.min.js.map", (request, response) =>{//bring the angular file
         console.log('--Rendering angular-js file--');
         fs.readFile('./bower_components/angular/angular.min.js.map', function (error, data) {
@@ -140,6 +160,7 @@ app.get("/bower_components/angular/angular.min.js.map", (request, response) =>{/
             response.end(data);
         });
 });
+//get select.js
 app.get("/select.js", (request, response) =>{
         console.log('--Rendering select.js file--');
         fs.readFile('./lib/select.js', function (error, data) {
@@ -150,6 +171,7 @@ app.get("/select.js", (request, response) =>{
             response.end(data);
         });
 });
+//get select.css
 app.get("/select.css", (request, response) =>{
         console.log('--Rendering select.css file--');
         fs.readFile('./lib/select.css', function (error, data) {
@@ -163,7 +185,7 @@ app.get("/select.css", (request, response) =>{
 //get angular
 
 
-//get CSS
+//get CSS of the system page
 app.get("/CRM_Client.css", (request, response) =>{   //bring the CRM_Client.css file
         console.log('--Rendering CRM_Client.css file--');
         fs.readFile('./CRM_Client.css', function (error, data) {
@@ -175,18 +197,8 @@ app.get("/CRM_Client.css", (request, response) =>{   //bring the CRM_Client.css 
         });
 });
 
-//get CRM_Client.js
-app.get("/CRM_Client.js", (request, response) =>{
-        console.log('--Rendering CRM_Client.css file--');
-        fs.readFile('./CRM_Client.js', function (error, data) {
-            if (error) {
-                console.log('error has happand in /CRM_Client.js', error)
-            }
-            response.writeHead(200, { 'Content-Type':"text/javascript" });
-            response.end(data);
-        });
-});
 
+//get fullcalendar.css componnent 
 app.get("/bower_components/fullcalendar/dist/fullcalendar.css", (request, response) =>{
         console.log('--Rendering fullcalendar.css file--');
         fs.readFile('./bower_components/fullcalendar/dist/fullcalendar.css', function (error, data) {
@@ -197,6 +209,7 @@ app.get("/bower_components/fullcalendar/dist/fullcalendar.css", (request, respon
             response.end(data);
         });
 });
+//get datetimepicker.css componnent 
 app.get("/datetimepicker.css", (request, response) =>{
         console.log('--Rendering datetimepicker.css file--');
         fs.readFile('./calendar/datetimepicker.css', function (error, data) {
@@ -208,7 +221,7 @@ app.get("/datetimepicker.css", (request, response) =>{
         });
 });
 
-
+//get moment.min.js componnent 
 app.get("/bower_components/moment/min/moment.min.js", (request, response) =>{
         console.log('--Rendering moment.min.js file--');
         fs.readFile('./bower_components/moment/min/moment.min.js', function (error, data) {
@@ -219,6 +232,7 @@ app.get("/bower_components/moment/min/moment.min.js", (request, response) =>{
             response.end(data);
         });
 });
+//get calendar.js componnent 
 app.get("/bower_components/angular-ui-calendar/src/calendar.js", (request, response) =>{
         console.log('--Rendering ui-calendar.js file--');
         fs.readFile('./bower_components/angular-ui-calendar/src/calendar.js', function (error, data) {
@@ -229,6 +243,7 @@ app.get("/bower_components/angular-ui-calendar/src/calendar.js", (request, respo
             response.end(data);
         });
 });
+//get datetimepicker.js componnent 
 app.get("/datetimepicker.js", (request, response) =>{
         console.log('--Rendering datetimepicker.js file--');
         fs.readFile('./calendar/datetimepicker.js', function (error, data) {
@@ -472,7 +487,7 @@ app.post("/addUser", (request, response) =>{
 });
 
 
-app.post("/login", (request, response) =>{
+app.post("/login", (request, response) => {
 
         console.log("entered login function");
 		 var user = request.body.LoginUser;
@@ -769,12 +784,6 @@ function check_exsisting_statuses_and_roles_and_files()
     }
 });
 	
-	files_collection.countDocuments(function (err, count) {
-    if (!err && count === 0) {
-		 console.log("no files");
-         files_collection.insertOne({"FileName":"-- Choose file --"});
-    }
-});
 
     roles_with_statuses_collection.countDocuments(function (err, count) {
     if (!err && count === 0) 
@@ -1118,7 +1127,36 @@ app.post("/uploadImage", (request, response) =>{
       }
    }
 	files_collection.insertOne({"FileName":new_file_name});
-
-   
 });
+
+
+
+app.post("/sendEmail", (request, response) => {
+    console.log("sendEmail");
+    let email_data = request.body.email_data;
+
+    let mailOptions = {
+        from: SERVER_EMAIL,
+        to: email_data.mail_recipient,
+        subject: email_data.mail_subject,
+        text: email_data.mail_text
+    };
+
+    if (email_data.attachment_file_name){
+        mailOptions.attachments = [{path: './uploaded_files/' + email_data.attachment_file_name}]
+    }
+
+    transporter.sendMail(mailOptions, function(error, info){
+        if (error) {
+            console.log(error);
+            response.writeHead(500, { 'Content-Type': 'application/json' });
+            response.end(JSON.stringify({ error: 'mail failed to be sent to ' +  email_data.mail_recipient}));
+        } else {
+            console.log('Email sent: ' + info.response);
+            response.writeHead(200, { 'Content-Type': 'application/json' });
+            response.end(JSON.stringify({ ok: 'mail has been sent successfully to ' +  email_data.mail_recipient}));
+        }
+    });
+});
+
 

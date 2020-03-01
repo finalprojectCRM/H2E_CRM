@@ -384,12 +384,50 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 		   return;
 		}
 		
+		$scope.getFilesList();
 		//save the chosen contacts email
 		$scope.contact_email = contact_email;
 		angular.element(Email_modal).modal("show");
 
 		
 	}	
+	
+
+	/*
+		send email function and http post call to server 
+		with contact and email details
+	*/
+	$scope.sendEmail = function(contact_email,email_subject,email_body,attachment_file_name='myfile.txt')
+	{
+
+		var email_data={mail_recipient:contact_email, mail_subject:email_subject,
+			mail_text:email_body,attachment_file_name:attachment_file_name};
+		$http.post("http://localhost:3000/sendEmail", {
+			email_data:email_data
+		}).then(
+			function (response) {
+				console.log(response.data.error)
+				console.log(response.data.ok)
+
+				if(response.data.ok!=undefined)
+				{
+					toaster.pop('success', response.data.ok, "");
+					return;
+				}
+				
+				toaster.pop('error', response.data.error, "");
+
+				
+
+
+			},
+			function (response) { //failure callback
+
+
+			}
+		);
+	}	
+	
 	
 	//first load of system when conect to it
 	$http({method : "GET",

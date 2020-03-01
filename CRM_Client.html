@@ -762,14 +762,13 @@
 									</div>
 					
 							   </br>
-							  <div class="form-group col-sm-4">
-								<ui-select ng-model="selections[$index]" ng-change="selectionChanged($index)" theme="bootstrap">
-								  <ui-select-match placeholder="Select contact...">{{$select.selected.Name}}</ui-select-match>
-								  <ui-select-choices repeat="contactInfo in contactsInfo | filter: $select.search track by $index">
-											<div ng-bind-html="contactInfo.Name | highlight: $select.search"></div>
-											<small ng-bind-html="contactInfo.PhoneNumber | highlight: $select.search"></small>
+							  <div class="form-group col-sm-6">
+								  <ui-select ng-model="selections[$index]" ng-change="selectionChanged($index)" theme="bootstrap">
+								  <ui-select-match placeholder="Select file...">{{$select.selected.FileName}}</ui-select-match>
+								  <ui-select-choices repeat="file in files | filter: $select.search track by $index">
+									  <div ng-bind-html="file.FileName | highlight: $select.search"></div>
 								  </ui-select-choices>
-								</ui-select>
+								  </ui-select>
 							  </div>
 							</div>
 							</div>		
@@ -784,7 +783,7 @@
 									data-dismiss="modal">
 										cancel
 							</button>
-							<button type="button" class="btn btn-primary" ng-click="send_Email_function(contact_email,email_subject,email_body)" data-dismiss="modal">
+							<button type="button" class="btn btn-primary" ng-click="sendEmail(contact_email,email_subject,email_body)" data-dismiss="modal">
 								send
 							</button>
 						</div>

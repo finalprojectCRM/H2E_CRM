@@ -298,15 +298,20 @@ app.get("/CRM_Client.js", (request, response) =>{
         });
 });
 
+/* a request that initialize the system when it empty*/
+
 app.get("/firstSystemLoad", (request, response) =>{
 
         console.log("entered firstSystemLoad function");
+		    
+			//check if data exsist in statuses & roles & files collection
 		   	check_exsisting_statuses_and_roles_and_files();
 
 			
 			users_collection.findOne({"UserName": "Admin"}).then(function(mongo_user) {
 			if(!mongo_user)//Admin not yet in system = mongo db users_collection is empty
 			{
+				//insert to users collection the first user - Admin
 				users_collection.insertOne(
                 {"UserName": "Admin" ,"Role":"Administrator","Name":"",
 				  "eMail":"","Password":"", "TempPassword": firstTempPassword } , function(err, res){
@@ -344,6 +349,10 @@ app.get("/firstSystemLoad", (request, response) =>{
 
 });
 
+/*
+	this request verify if user that try to register to the system has a password that exsists only in adminstrator hands
+*/
+
 app.post("/verifyTemporaryPassword", (request, response) =>{
 
         console.log("entered verifyTemporaryPassword function");
@@ -373,6 +382,7 @@ app.post("/verifyTemporaryPassword", (request, response) =>{
 				}
 				else
 				{
+					//the user has a good password that changed by admin
 					console.log("good password");
 					response.writeHead(200, { 'Content-Type': 'application/json' });
 					response.end(JSON.stringify({verified :true}));
@@ -384,27 +394,37 @@ app.post("/verifyTemporaryPassword", (request, response) =>{
 			})	
 });
 
+/*
+	This request is to change the temporary password that the admin handle
+*/
+
 app.post("/changeTemporaryPassword", (request, response) =>{
 
         console.log("entered changeTemporaryPassword function");
 		
 			 var NewTempPassword = request.body.new_temp_password;
 			 console.log("NewTempPassword: "+NewTempPassword);
+			 //update in users_collection the filed TempPassword that exsist in admin with a new password
 			 users_collection.update({"UserName": "Admin"}, { $set:{TempPassword: NewTempPassword.TempPassword}}, function(err, obj) {
                     if (err) throw err;
                     console.log("succssed changing temp password");
 
                 });
+			//response with ok 
             response.writeHead(200, { 'Content-Type': 'application/json' });
             response.end(JSON.stringify({"succsses" :"The temp password has been changed succssesfully"}));
 			  
 });
 
+/*
+  	This request is to verify the match between the current password of user to the given password
+*/
 app.post("/verificationCurrentPassword", (request, response) =>{
 
         console.log("entered verificationCurrentPassword function");
 		
 			 var logged_in_current_password = request.body.logged_in_current_password;
+			 //try to find in user collection a user with a given username and password
 			 users_collection.findOne({"UserName": logged_in_current_password.username,"Password":logged_in_current_password.current_password}).then(function(mongo_user) {
 				 
 				if(mongo_user==null)//no such username with this current password
@@ -413,7 +433,7 @@ app.post("/verificationCurrentPassword", (request, response) =>{
 					response.writeHead(200, { 'Content-Type': 'application/json' });
                     response.end(JSON.stringify({"not_verified" :"The current password is incorrect, please try again."})); 
 				 }
-				 else//fount the user that the username and the current password match
+				 else//found the user that the username and the current password match
 				 {
 					console.log("entered else");
 					response.writeHead(200, { 'Content-Type': 'application/json' });
@@ -425,14 +445,21 @@ app.post("/verificationCurrentPassword", (request, response) =>{
 			  
 });
 
+/*
+	This request is to change the current password that of user
+*/
+
 app.post("/changeCurrentPassword", (request, response) =>{
 
         console.log("entered changeCurrentPassword function");
 		
 			 var logged_in_new_password = request.body.logged_in_new_password;
+			 
+			 //update in users_collection the the password of user with a new password 
 			 users_collection.update({"UserName": logged_in_new_password.username},
 			 {$set:{"Password":logged_in_new_password.new_password }}, function(err, obj) {
                      if (err) throw err;
+					 //return ok
 					 response.writeHead(200, { 'Content-Type': 'application/json' });
                      response.end(JSON.stringify({"success" :"The Password has been changed successesfully"}));
 				
@@ -440,17 +467,24 @@ app.post("/changeCurrentPassword", (request, response) =>{
 			 });
 });
 
+/*
+	This request is to add a new user to system
+*/
+
 app.post("/addUser", (request, response) =>{
 
         console.log("entered addUser function");
 		var user = request.body.user;
+		//user with his detailes : Role , UserName ,Name ,eMail,Password
 		    user = {"Role":"new in the system","UserName":user.UserName,"Name":user.Name,"eMail":user.eMail,"Password":user.Password }
+			//check if this username does not exsist in the system
 			  users_collection.findOne({"UserName": user.UserName}).then(function(mongo_user) {
 			  if(!mongo_user) 
-			  {
+			  { 
+		       //if this username does not exsist in the system - add a new user with his detailes
 				users_collection.insertOne(user, function(err, res) {
 				if (err) throw err;
-				
+				 //return the user detailes with is_admin:false
 				 response.writeHead(200, { 'Content-Type': 'application/json' });
                  response.end(JSON.stringify({"user" :{"Role": user.Role,"UserName":user.UserName,"Name":user.Name,
 				  "eMail":user.eMail,"Password":user.Password ,is_admin:false}}));
@@ -459,9 +493,10 @@ app.post("/addUser", (request, response) =>{
   
 			  else
 			  {
-				  
+				 //when the username already exsist with admin and his fileds did not fill
 				 if(mongo_user.UserName=="Admin" && mongo_user.Name=="" && mongo_user.eMail=="" && mongo_user.Password=="")
 				 {
+					 //update the Admin empty detailes with a new detailes
 					 users_collection.update({"UserName": "Admin"}, { $set:{"Role":"Administrator", "Name":user.Name,
 				     "eMail":user.eMail,"Password":user.Password}}, function(err, obj) {
                      if (err) throw err;
@@ -476,6 +511,7 @@ app.post("/addUser", (request, response) =>{
 				 }
 				 else
 				 {
+					 //if the username already exsists and he is not the Admin
 					 response.writeHead(200, { 'Content-Type': 'application/json' });
 					 response.end(JSON.stringify({user_exists :"This user name already exists."}));
 				 }
@@ -487,29 +523,37 @@ app.post("/addUser", (request, response) =>{
 });
 
 
+/*
+	This request is to login to the system
+*/
 app.post("/login", (request, response) => {
 
         console.log("entered login function");
 		 var user = request.body.LoginUser;
 		  console.log(user.UserName);
-			
+			  //check if the username and the password exsist
 			  users_collection.findOne({"UserName": user.UserName,"Password":user.Password}).then(function(result) {
+			  //if no match
 			  if(!result) 
 			  {  
 		        console.log("no match!");
 				response.writeHead(200, { 'Content-Type': 'application/json' });
+				//post a response with The user name or password is incorrect. Try again.
                 response.end(JSON.stringify({no_match :"The user name or password is incorrect. Try again."}));
 			  }
   
 			  else
 			  {
+				 //if there is matching
 				 console.log(result.Name);
                  response.writeHead(200, { 'Content-Type': 'application/json' });
+				 //check if the user is admin and return a user detailes with "adminUser":true
 				 if(result.UserName == "Admin")
 				 {
 					 response.end(JSON.stringify({user_login :{"adminUser":true,"Role":result.Role,"UserName":result.UserName, "Name":result.Name,
-				  "eMail":result.eMail,"Password":result.Password}}));
+				   "eMail":result.eMail,"Password":result.Password}}));
 				 }
+				 //if the user is not admin rturn user datailes
 				 else
                  {
 					 response.end(JSON.stringify({user_login :result}));
@@ -521,17 +565,20 @@ app.post("/login", (request, response) => {
 			});
 });
 
-
-// contact addition only if the contact does not exsist
+/*
+	This request is to contact only if the contact does not exsist
+*/
 app.post("/addContact", (request, response) =>{
     console.log("addContact FUNCTION");
-        //add new contact
+        //add new contact 
             var contact = request.body.contact;
             console.log("contact: " + contact.History);
 			
+			//check if the contact is already exsist by the key - the PhoneNumber
 			contacts_collection.findOne({"PhoneNumber": contact.PhoneNumber}).then(function(result) {
+				
 			  if(!result) {
-				  
+			   //if this contact does not exsist in the system - add a new contact with his detailes
 				contacts_collection.insertOne(
 				{"Name": contact.Name ,  "Category":contact.Category, "Status":contact.Status,"PhoneNumber": contact.PhoneNumber, "eMail" : contact.eMail ,"Address" : contact.Address , History:contact.History} , function(err, res){
 				 if (err) throw err;});
@@ -544,6 +591,7 @@ app.post("/addContact", (request, response) =>{
 			  else
 			  {
                  response.writeHead(200, { 'Content-Type': 'application/json' });
+				 //response with eror massage
                  response.end(JSON.stringify({"phone_exists" :"ERROR : this phone number already exists, change it or search for this user."}));
 			  }
 			  
@@ -556,57 +604,77 @@ app.post("/addContact", (request, response) =>{
 
 
 });
-//get the list of contacts
+
+/*
+	This request is to get the list of contacts
+*/
 app.get("/getContacts", (request, response) =>{
 
         console.log("entered getContacts function");
+		//enter all members of contacts_collection to array
         contacts_collection.find({}).toArray((error, result) => {
             if(error) {
                 return response.status(500).send(error);
             }
+			//response with ok, and with the contacts list
             response.writeHead(200, { 'Content-Type': 'application/json' });
             response.end(JSON.stringify({"contacts" :result}));
     });
 
 });
+
+/*
+	This request is to get the list of files
+*/
 app.get("/getFiles", (request, response) =>{
 
         console.log("entered getFiles function");
+		//enter all members of contacts_collection to array
         files_collection.find({}).toArray((error, result) => {
             if(error) {
                 return response.status(500).send(error);
             }
+			//response with ok, and with the contacts list
+
             response.writeHead(200, { 'Content-Type': 'application/json' });
             response.end(JSON.stringify({"files" :result}));
     });
 
 });
 
-//get the list of users
+/*
+	This request is to get the list of users
+*/
 app.post("/getUsers", (request, response) =>{
 	
 		console.log("entered getUsers function");
 		var status_flag = request.body.status_flag;
 				console.log("status_flag : " + status_flag);
-
+				
+        //if reguest is to get the users for the delete user
 		if(status_flag == "deleteUser")
 		{
 			console.log("entered if with : " + status_flag);
-
+			//get the user list without the administrator
 			users_collection.find({UserName: { $ne: "Admin" }}).toArray((error, result) => {
             if(error) {
                 return response.status(500).send(error);
             }
+			//response with ok, and with the users list
             response.writeHead(200, { 'Content-Type': 'application/json' });
             response.end(JSON.stringify({"deleteUser":true,"users" :result}));
 			});
 		}
+		 //if reguest is to get the users for show user
+
 		else if(status_flag == "showUsers")
 		{
+			//enter all members of users_collection to array
 			users_collection.find({}).toArray((error, result) => {
             if(error) {
                 return response.status(500).send(error);
             }
+			//response with ok, and with the users list
             response.writeHead(200, { 'Content-Type': 'application/json' });
             response.end(JSON.stringify({"showUsers":true,"users" :result}));
 			});
@@ -617,24 +685,29 @@ app.post("/getUsers", (request, response) =>{
         
 
 });
-
-//delete contact
+/*
+	This request is to delete contact
+*/
 app.post("/deleteContact", (request, response) =>{
-//add new contact
     console.log("entered deleteContact function");
+	        //the contact to delete with his detailes
             var contact_to_delete = request.body.contact;
             console.log("contact_to_delete :"+ contact_to_delete);
+			//delete the contact from contacts collection by his all detailes
                 contacts_collection.deleteOne({"Name":contact_to_delete.Name ,"Status" : contact_to_delete.Status , "PhoneNumber":contact_to_delete.PhoneNumber ,"eMail" : contact_to_delete.eMail ,"Address" : contact_to_delete.Address }, function(err, obj) {
                     if (err) throw err;
                     console.log("1 document deleted");
 
                 });
             response.writeHead(200, { 'Content-Type': 'application/json' });
+			//response with ok
             response.end();
 });
 
+/*
+	This request is to delete file
+*/
 app.post("/deleteFile", (request, response) =>{
-//add new contact
     console.log("entered deleteContact function");
             var file_to_delete = request.body.file;
                 files_collection.deleteOne({"FileName":file_to_delete.FileName}, function(err, obj) {
@@ -646,46 +719,61 @@ app.post("/deleteFile", (request, response) =>{
             response.end();
 });
 
-// get the statuses list
+/*
+	This request is to get the statuses list
+*/
 app.get("/getStatusOptions", (request, response) =>{
     console.log("entered getStatusOptions function");
-//roles_with_statuses_collection.find().pretty();
+	//enter all members of statuses_collection to array
     statuses_collection.find({}).toArray((error, result) => {
         if(error) {
             return response.status(500).send(error);
         }
+		//response with ok, and with the statuses list
         response.writeHead(200, { 'Content-Type': 'application/json' });
         response.end(JSON.stringify({"statusOptions" :result}));
     });
 });
 
-
+/*
+	This request is to get the roles (every role with his statuses) list
+*/
 app.get("/getRoles",(request, response) =>{
-	
+    //enter all members of roles_with_statuses_collection to array
 	roles_with_statuses_collection.find({}).toArray((error, result) => {
         if(error) {
             return response.status(500).send(error);
         }
+		//response with ok, and with the roles list
         response.writeHead(200, { 'Content-Type': 'application/json' });
         response.end(JSON.stringify({"roles" :result}));
     });
 	
 });
+
+/*
+	This request is to get the colors of roles list
+*/
 app.get("/getRolesColors",(request, response) =>{
-	
+	//enter all members of colors_collection to array
 	colors_collection.find({}).toArray((error, result) => {
         if(error) {
             return response.status(500).send(error);
         }
+		//response with ok, and with the colors list
         response.writeHead(200, { 'Content-Type': 'application/json' });
         response.end(JSON.stringify({"colors" :result}));
     });
 	
 });
+/*
+	This request is add a new status with an appropriate roles
+*/
 app.post("/addStatutsWithRoles", (request, response) =>{
 	
      var status_with_roles = request.body.status_with_roles;
 	 console.log("before updateOne");
+	 //add a new add a new status with an appropriate roles only if the status does not exsist
 	 statuses_with_roles_collection.updateOne( { Status:status_with_roles.Status },
 	  { $setOnInsert:{ Status:status_with_roles.Status , Roles:status_with_roles.Roles } },
         { upsert: true }
@@ -695,9 +783,10 @@ app.post("/addStatutsWithRoles", (request, response) =>{
 	 
 	     console.log("status_with_roles.Roles: "+ status_with_roles.Roles);
 
-	 
+	 //go through of all roles
 	 for (let role of status_with_roles.Roles) {
 		 console.log("role: "+ role);
+		 //add to role a new status
 		  roles_with_statuses_collection.updateOne( { Role : role }
 		 ,{$addToSet: {Statuses: status_with_roles.Status} },
 			function(err, res) {
@@ -705,22 +794,27 @@ app.post("/addStatutsWithRoles", (request, response) =>{
 		 });
   
      }   
-	 
+	//add to the statuses list a new status
     statuses_collection.updateOne(
         {"Status": status_with_roles.Status},
         { $setOnInsert:{"Status": status_with_roles.Status} },
         { upsert: true }
     )
+	//response with ok
     response.writeHead(200, { 'Content-Type': 'application/json' });
     response.end();
 });
 
+/*
+	This request is add a new role with an appropriate statuses
+*/
 app.post("/addRoleWithStatuses", (request, response) =>{
 	
      var role_with_statuses = request.body.role_with_statuses;
 	 console.log("before updateOne");
-	 
+	 //insert to the colors list the role color 
 	 colors_collection.insertOne({Color:role_with_statuses.Color});
+	 //add a new add a new role with an appropriate statuses only if the role does not exsist
 	 roles_with_statuses_collection.updateOne( { Role:role_with_statuses.Role }
 	 ,{ $setOnInsert:{ Role:role_with_statuses.Role ,Color:role_with_statuses.Color, Statuses:role_with_statuses.Statuses } },
         { upsert: true },
@@ -728,11 +822,14 @@ app.post("/addRoleWithStatuses", (request, response) =>{
      console.log("after updateOne");
 	 });
 	  
+	  	 //go through of all statuses
 		  for (let status of role_with_statuses.Statuses) 
 		  {
+			 //check if the status does not "add a new status" or "-- Choose status --"
 			if(status!="add a new status" && status!="-- Choose status --")
 			{
 			 console.log("status: "+ status);
+			 //add the to status a new role
 			  statuses_with_roles_collection.updateOne( { Status : status }
 			 ,{$addToSet: {Roles: role_with_statuses.Role} },{ upsert: true },
 				function(err, res) {
@@ -741,27 +838,33 @@ app.post("/addRoleWithStatuses", (request, response) =>{
 	  
 			} 
 	     }
+		 //response with ok
 		 response.writeHead(200, { 'Content-Type': 'application/json' });
 		 response.end();
 });
+/*
+	This request is to update role with new statuses
+*/
 app.post("/updateRole", (request, response) =>{
-	
+	//the role to update
      var role_to_update = request.body.role_to_update;
+	 //the appropriate statuses to role
 	 statuses = role_to_update.Statuses;
 	 console.log("before updateOne");
+	 //update the role with new statuses
 	 roles_with_statuses_collection.updateOne( { Role:role_to_update.Role }
 	 ,{$addToSet: {Statuses:{$each :statuses}} },
 	  function(err, res) {
      console.log("after updateOne");
 	 });
-	 var a = "add a new status";
-	 console.log("type of a: "+ typeof a);
+	 //go through statuses
 	  for (let status of role_to_update.Statuses) {
+		  //check if the status does not "add a new status" or "-- Choose status --"
 		 if(status!="add a new status" && status!="-- Choose status --")
 		 {
 			 console.log("status: "+ status);
 			 console.log("type of status: "+ typeof status);
-			 
+			 //update the status with new role
 			  statuses_with_roles_collection.updateOne({ Status:status}
 			 ,{$addToSet: {Roles: role_to_update.Role} },
 				function(err, res) {
@@ -772,40 +875,54 @@ app.post("/updateRole", (request, response) =>{
      } 
 });
 
+
+/*
+ This function is to check if the collections : statuses , roles and files are empty
+*/
 function check_exsisting_statuses_and_roles_and_files()
 {
 	console.log("check_exsisting_statuses_and_roles FUNCTION");
 	
+	//count the documents in statuses collection
 	statuses_collection.countDocuments(function (err, count) {
+	//if the collection does not have documents
     if (!err && count === 0) {
 		 console.log("no statuses");
+		 
+		//insert the statuses : "-- Choose status for role --","בעיה טכנית"
          statuses_collection.insertOne({"Status":"-- Choose status for role --"});
          statuses_collection.insertOne({"Status":"בעיה טכנית"});
     }
 });
 	
-
+    //count the documents in roles_with_statuses_collection
     roles_with_statuses_collection.countDocuments(function (err, count) {
     if (!err && count === 0) 
 	{
 		console.log("no roles");
+		//insert the role : "-- Choose category for role --"
 		 roles_with_statuses_collection.insertOne({Role:"-- Choose category for role --"});
+		 //insert the roles: "תמיכה טכנית" with statuses: : "-- Choose status for role --","בעיה טכנית" ,,"add a new status" and color:#66ffff"
          roles_with_statuses_collection.insertOne({Role:"תמיכה טכנית",Color:"#66ffff",Statuses:["-- Choose status --","בעיה טכנית","add a new status"]});
+		 //insert the color:#66ffff" to colors_collection
 		 colors_collection.insertOne({Color:"#66ffff"});
 
     }
 	});
+   //count the documents in statuses_with_roles_collection
 	statuses_with_roles_collection.countDocuments(function (err, count) {
     if (!err && count === 0) {
 		console.log("no statuses");
+		//insert the statuses : "-- Choose status for role --","בעיה טכנית"
 		 statuses_with_roles_collection.insertOne({Status:"-- Choose status for role --"});
          statuses_with_roles_collection.insertOne({Status:"בעיה טכנית",Roles:["-- Choose status for role --","תמיכה טכנית"]});
     }
 });
 		
 }
-
-//update contact detailes only with phone number that does not exsist in the system
+/*
+	update contact detailes only with phone number that does not exsist in the system
+*/
 app.post("/updateContact", (request, response) =>{
 //update contact
     console.log("updateContact FUNCTION");
@@ -872,9 +989,7 @@ app.post("/updateUser", (request, response) =>{
     console.log("update users FUNCTION");
     var user_before_update_body = request.body.user_before_update;
     var user_after_update_body = request.body.updated_user;
-    user_before_update = {Role:user_before_update_body.Role,UserName:user_before_update_body.UserName, Name:user_before_update_body.Name, eMail:user_before_update_body.eMail};
-   
-	
+	user_before_update = {Role:user_before_update_body.Role,UserName:user_before_update_body.UserName, Name:user_before_update_body.Name, eMail:user_before_update_body.eMail};
 	user_after_update = { $set: {Role:user_after_update_body.Role,UserName:user_after_update_body.UserName, Name:user_after_update_body.Name, eMail:user_after_update_body.eMail}};
 	users_collection.updateOne(user_before_update, user_after_update, function(err, res) {
 	if (err) throw err;

@@ -216,7 +216,7 @@
 				</div>
 			</div>
 			
-			<div ng-show = "menu==true" id="div-vertical" class="navbar">
+			<div ng-show="menu==true" id="div-vertical" class="navbar">
 				<ul>
 					<li a class="active" ng-click="get_users_function('showUsers')"><a><i class="fa fa-fw fa-user" ></i></p>Users</a></li>
 					<li ng-click="get_contacts_function()"><a><i class="fa fa-fw fa-user"></i></p>Customers</a></li>
@@ -287,13 +287,35 @@
 					</div>
 				</form>
 				<form id="contacts_div" ng-show="show_contacts"><!-- -->
-					<div class="input-group input-group">
-						<span class="input-group-addon">
-							<span class="glyphicon glyphicon-search" style="color:#003366" aria-hidden="true">
-							</span>
-						</span>	
-						<input class="form-control-md-6" ng-model="search" placeholder="search...">
-					</div>
+					<table>
+						<tr>
+							<td>
+								<div class="input-group input-group">
+									<span  class="input-group-addon">
+										<span class="glyphicon glyphicon-search" style="color:#003366" aria-hidden="true">
+										</span>
+									</span>	
+									<input class="form-control-md-6" ng-model="search" placeholder="search...">
+								</div>
+							</td>
+							
+							<td>
+							<div class="dropdown">
+							<a href="#" class="dropdown-toggle" ng-click="choose_user_to_email=true;show_send_or_cancel_multiple_button=true" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+								<i class="glyphicon glyphicon-th-list"></i>
+								<span class="caret"></span>
+								</a>
+								</br>
+								<ul class="dropdown-menu" >
+									<li class="hover_color" ng-click="checked_user_to_email=false"><a href="#"><i style =" color: rgb(50, 118, 177);" class="fa fa-user fa-fw"></i> select</a></li>
+									<li class="hover_color" ng-click="checked_user_to_email=true"><a href="#"><i style =" color: rgb(50, 118, 177);" class="fa fa-user fa-fw"></i> select all</a></li>
+								</ul>
+							</div>
+							</td>
+						</tr>
+					</table>
+					
+					
 					<div class="col-lg-20">
 						<table align="right" class="table table-hover-responsive"  class="text-center" >
 							<thead>
@@ -310,6 +332,9 @@
 									<th> </th>
 									<th> </th>
 									<th> </th>
+									<th> </th>
+									<th> </th>
+									<th> </th>
 								</tr>
 							<thead>
 							<tbody>
@@ -320,6 +345,7 @@
 										<td ng-show="contactIsEdit==false">{{contactInfo.PhoneNumber}}</td> 
 										<td ng-show="contactIsEdit==false">{{contactInfo.eMail}}</td>
 										<td ng-show="contactIsEdit==false">{{contactInfo.Address}}</td>
+										<td ng-show="contactIsEdit==false">{{choose_user_to_email}}</td>
 										
 									
 									<td ng-show="contactIsEdit==false"><i  class="fa fa-calendar" style="font-size:24px;color:#cc99ff" aria-hidden="true" ng-click = "calendarContact(contactInfo)" ></i></td>
@@ -359,8 +385,9 @@
 </pre>
       </div>
     </script><td>
+										<td ng-show="contactIsEdit==false" ><div ng-if="choose_user_to_email"> <input  type="checkbox" ng-show="choose_user_to_email==true" ng-model="checked_user_to_email" /></div></td>
+
 									<td ng-show="contactIsEdit==true"><i class="fa fa-check-square-o" style="font-size:24px;color:#00e600" aria-hidden="true" ng-click = "save_updated(contactInfo)"></i></td>
-									 
 									 		
 								</tr>
 								
@@ -404,12 +431,18 @@
 									<td></td>
 									<td></td>
 									<td></td>
+									<td></td>
+									<td></td>
 									
 									<td ng-show="click==true"><i class="fa fa-user-plus" style="font-size:24px;color:#00cc99" ng-click="add_contact_function() "></i></td> 
 								</tr>
 															
 							</tbody></p>
 						</table>
+						<div class="col-xs-offset-4" ng-show="show_send_or_cancel_multiple_button == true">
+							  <button type="button" class="btn btn-md center-block " style="display:inline-block;background-color: #008fb3;color: white; margin-top:10px" ng-click="show_send_or_cancel_multiple_button=false;choose_user_to_email=false">send mail to multiple customers</button>
+							  <button type="button" class="btn btn-md center-block " style="display:inline-block;background-color: #ff0066;color: white; margin-top:10px" ng-click="show_send_or_cancel_multiple_button=false;choose_user_to_email=false">cancel</button>
+						</div>
 					</div>
 				</form>
 				

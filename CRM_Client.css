@@ -18,10 +18,10 @@ body
 #contacts_div
 {
 	font-size: 17px;
-	margin-left:15%;
+	margin-left:5%;
 	margin-top:5%;
 	float: left;
-	width:50%;
+	width:65%;
 	
 	
 }
@@ -115,6 +115,21 @@ form
 .active {
   background-color: #ff0066;
 }
+
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+  width: 100%;
+}
+
+td:nth-child(1) {
+  text-align: left; 
+}
+
+td:nth-child(2) {
+  text-align: right;
+}
+
 
 .table_head
 {

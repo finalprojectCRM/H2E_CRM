@@ -298,7 +298,48 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 		selected_contact = $scope.selections[idx];
 	
 	};
-  
+	
+	$scope.selected = {};
+	$scope.selectAll = function(flag){
+	  for (var i = 0; i < $scope.contactsInfo.length; i++) {
+		var contactInfo = $scope.contactsInfo[i];
+		
+		$log.log("id : " +contactInfo.PhoneNumber);
+
+		$scope.selected[contactInfo.PhoneNumber] = flag;
+		
+	  }
+	};
+	
+	$scope.send_email_to_selected_contacts = function(){
+		var emails_list_str="";
+	  for (var i = 0; i < $scope.contactsInfo.length; i++)
+	  {
+		var contactInfo = $scope.contactsInfo[i];
+
+		if($scope.selected[contactInfo.PhoneNumber] == true)
+		{
+			if(i%3===0)
+			{
+				$log.log("i = "+i );
+				emails_list_str = emails_list_str+"\n"+ contactInfo.eMail+','
+			}
+			else
+			{
+				emails_list_str = emails_list_str+ contactInfo.eMail+','
+
+			}
+		}
+		
+	  }
+	  
+			$scope.contact_email = emails_list_str;
+		    angular.element(Email_modal).modal("show");
+
+	};
+	
+	
+	  
 
 	/*
 		a function for adding a task from calendar when press on a day in calendar,

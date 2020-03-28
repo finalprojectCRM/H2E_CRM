@@ -925,7 +925,7 @@
 							<button type="button" class="btn btn-primary" data-dismiss="modal">
 										cancel
 							</button>
-							<button type="button" class="btn btn-primary" data-dismiss="modal" ng-click="addEvent();">
+							<button type="button" class="btn btn-primary" data-dismiss="modal" ng-click="addEvent(contact_task,true);">
 										ok
 							</button>
 
@@ -971,7 +971,7 @@
 								  <ui-select-match placeholder="Select contact...">{{$select.selected.Name}}</ui-select-match>
 								  <ui-select-choices repeat="contactInfo in contactsInfo | filter: $select.search track by $index">
 											<div ng-bind-html="contactInfo.Name | highlight: $select.search"></div>
-											<small ng-bind-html="contactInfo.PhoneNumber | highlight: $select.search"></small>
+													<!--<small ng-bind-html="contactInfo.PhoneNumber | highlight: $select.search"></small>-->
 								  </ui-select-choices>
 								</ui-select>
 							  </div>
@@ -1007,7 +1007,7 @@
 							<button type="button" class="btn btn-primary" data-dismiss="modal">
 										cancel
 							</button>
-							<button type="button" class="btn btn-primary" data-dismiss="modal" ng-click="addEvent(contact_task);">
+							<button type="button" class="btn btn-primary" data-dismiss="modal" ng-click="addEvent(contact_task,false);">
 										ok
 							</button>
 
@@ -1065,10 +1065,12 @@
 												<ui-select-match placeholder="Select contact...">{{$select.selected.Name}}</ui-select-match>
 												<ui-select-choices repeat="contactInfo in contactsInfo | filter: $select.search track by $index">
 													<div ng-bind-html="contactInfo.Name | highlight: $select.search"></div>
-													<small ng-bind-html="contactInfo.PhoneNumber | highlight: $select.search"></small>
+													<!--<small ng-bind-html="contactInfo.PhoneNumber | highlight: $select.search"></small>-->
 												</ui-select-choices>
 											</ui-select>
 										</div>
+										
+										
 									</div>
 							    </div>
 							 

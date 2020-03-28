@@ -46,6 +46,7 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 	var delete_all_contacts_flag = false;
 	var delete_all_users_flag = false;
 	var missing_role_field_calendar = false;
+	var missing_date_field_calendar = false;
 	var username_to_delete;
 	var deleted_status;
     var selected_items= [];
@@ -225,6 +226,8 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 		
 		//update the event details in the calendar
 		uiCalendarConfig.calendars.myCalendar.fullCalendar('updateEvent', edit_event_detailes);	
+		$scope.selections = [];
+
 	};
    
 	/*
@@ -296,6 +299,8 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 		
 		//save details of selected contact
 		selected_contact = $scope.selections[idx];
+		//$scope.$apply();
+
 	
 	};
 	
@@ -338,27 +343,58 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 
 	};
 	
-	
+	function convert_date_format(str) {
+	  var date = new Date(str),
+	  mnth = ("0" + (date.getMonth() + 1)).slice(-2),
+	  day = ("0" + date.getDate()).slice(-2);
+	  var MM = String(date.getMinutes()).padStart(2, '0');
+	  var HH = String(date.getHours()).padStart(2, '0');
+	  date =[day,mnth,date.getFullYear()].join("/");
+	  var time = [HH,MM].join(":");
+	  var full_date = [date,time].join(" ");
+	  $log.log(full_date) ;
+	  return full_date;
+	 // $log.log([day,mnth,date.getFullYear()].join("/")) ;
+    }
 	  
 
 	/*
 		a function for adding a task from calendar when press on a day in calendar,
 		there is an option to add a the task for a spesific contact 
 	*/
-	$scope.addEvent = function(task_with_contact) {
+	$scope.addEvent = function(task_with_contact,outside_modal) {
 		/*
 			save the dates in a range of dates in the task in format 'start_date - end_date'
 			by splitting with "-"
 		*/
-		var date = $scope.date.split("-");
-		$log.log("start date : " + date[0]);
-		$log.log("task_with_contact : " + task_with_contact);
-		//$log.log("type "+typeof date[0]);
-		$log.log("end date : " + date[1]);
-		var start_date= moment(date[0], 'DD/MM/YYYY HH:mm').format("MM/DD/YYYY HH:mm");
-		var end_date= moment(date[1], 'DD/MM/YYYY HH:mm').format("MM/DD/YYYY HH:mm");
-		$log.log("start date : " + start_date);
-		$log.log("start date : " + end_date);
+		if(outside_modal==false)
+		{
+			var date = $scope.date.split("-");
+			$log.log("start date : " + date[0]);
+			$log.log("task_with_contact : " + task_with_contact);
+			//$log.log("type "+typeof date[0]);
+			$log.log("end date : " + date[1]);
+			var start_date= moment(date[0], 'DD/MM/YYYY HH:mm').format("MM/DD/YYYY HH:mm");
+			var end_date= moment(date[1], 'DD/MM/YYYY HH:mm').format("MM/DD/YYYY HH:mm");
+			$log.log("start date : " + start_date);
+			$log.log("start date : " + end_date);
+		}
+		else
+		{
+			if($scope.event_start == undefined || $scope.event_start == ""||$scope.event_end == undefined || $scope.event_end == "")
+			{
+				$scope.message = "start and end date are must fields, please fill them in";
+				$scope.message_type = "ERROR";
+				angular.element(Message_Modal).modal("show");
+				missing_date_field_calendar= true;
+				return;
+			}
+		    $log.log("start date outside $scope.event_start: " + $scope.event_start);
+            var start_date = convert_date_format($scope.event_start);
+            var end_date = convert_date_format($scope.event_end);
+
+		}
+		
 		//$log.log("end date : " + formatDate(date[1]));
 		$log.log("$scope.role : "+$scope.role.Role);
 		
@@ -368,7 +404,14 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 			$scope.message = "Category is a must field, please select one";
 			$scope.message_type = "ERROR";
 			angular.element(Message_Modal).modal("show");
-			missing_role_field_calendar= true;
+			if(outside_modal==false)
+			{
+				missing_role_field_calendar= true;
+			}
+			else
+			{
+				missing_date_field_calendar= true;
+			}
 			return;
 		}
 		
@@ -378,7 +421,14 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 			$scope.message = "Title is a must field, please fill it in";
 			$scope.message_type = "ERROR";
 			angular.element(Message_Modal).modal("show");
-			missing_role_field_calendar= true;
+			if(outside_modal==false)
+			{
+				missing_role_field_calendar= true;
+			}
+			else
+			{
+				missing_date_field_calendar= true;
+			}
 			return;
 		}
 		
@@ -410,6 +460,8 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 			id : contact,
 			editable: true
 		});
+		$scope.selections = [];
+
 
 	//  console.log($scope.pendingRequests);
     };
@@ -433,6 +485,8 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 		
 	}	
 	
+	
+	
 
 	/*
 		send email function and http post call to server 
@@ -449,6 +503,12 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 			function (response) {
 				console.log(response.data.error)
 				console.log(response.data.ok)
+				$scope.contact_email = "";
+				$scope.email_subject = "";
+				$scope.email_body = "";
+				$scope.email_file = false;
+				$scope.selections = [];
+				
 
 				if(response.data.ok!=undefined)
 				{
@@ -844,7 +904,7 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 			}
 		);
 	}
-	
+
 	/*
 		a function for login to system after the user is registed already
 		login with user name and password 
@@ -2146,6 +2206,11 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 			angular.element(add_event).modal("show");
 		   missing_role_field_calendar =false;
 		}
+		if(missing_date_field_calendar == true)
+		{
+			angular.element(add_event_outside).modal("show");
+		    missing_date_field_calendar =false;
+		}
 	}
 	
 	/*
@@ -2499,15 +2564,15 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 	
 
 	}]).directive('popOver', function ($compile, $templateCache,$log) {//pop over option for history
-			$log.log(" body")
 
 			$('body').on('click', function (e) {
-			$('pop-over').each(function () {
-	
-				if (!$(this).is(e.target) && $(this).has(e.target).length === 0 && $('.pop-over').has(e.target).length === 0) {
-					$(this).popover('hide');
-				}
-			});
+			//only buttons
+			if ($(e.target).data('toggle') !== 'templateId.html'
+				&& $(e.target).parents('.templateId.html.in').length === 0) { 
+							$log.log(" body")
+
+				$('[data-toggle="popover"]').popover('hide');
+			}
 		});
         var getTemplate = function () {
             $templateCache.put('templateId.html', 'This is the content of the template');

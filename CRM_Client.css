@@ -49,6 +49,11 @@ body
 }
 
 
+table td:nth-child(2) 
+{
+   text-align: left;
+}
+
 #users_div
 {
 	font-size: 17px;

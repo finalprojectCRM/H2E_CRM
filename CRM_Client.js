@@ -44,16 +44,20 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 	var missing_role_field = false;
 	var missing_status_field = false;
 	var delete_all_contacts_flag = false;
+	var delete_contact_flag = false;
+	var delete_user_flag = false;
 	var delete_all_users_flag = false;
 	var missing_role_field_calendar = false;
 	var missing_date_field_calendar = false;
 	var username_to_delete;
 	var deleted_status;
+	var contact_to_delete ='';
     var selected_items= [];
 	var history_array =[];
 	var start_date,end_date;
 	var selected_contact;
 	var edit_event_detailes;
+	var user_to_delete;
 	
 	$scope.PhoneNumber_before_update = undefined;
 	$scope.account = false;
@@ -118,7 +122,7 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
   */
   $scope.calendarConfig = {
 	header:{
-		 left: 'prev,next today',
+		 left: 'prev,next',
          center: 'title',
          right: 'month,agendaWeek,agendaDay'
 	},
@@ -1887,11 +1891,13 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 	//delete a contact from server
 	$scope.delete_contact_function = function(contact)
 	{
+		
 		$http.post("http://localhost:3000/deleteContact", {
 				contact: contact,
 			}).then(
 				function (response) { //success callback            
 					$scope.getContactsList();
+					contact_to_delete = '';
 				},
 				function (response) { //failure callback
 					
@@ -2401,6 +2407,24 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 		angular.element(Message_Modal_With_Cancel).modal("show");
 		delete_all_contacts_flag = true;
 	}
+	//a function for showing a modal for insuring the delition of contact from syetem
+	$scope.insure_delete_contact = function(contact)
+	{
+		contact_to_delete = contact;
+		$scope.message = "Are you sure you want to delede this contact from system ? if you press OK, the information of this contact will be lost. ";
+		$scope.message_type = "WARNNING";
+		angular.element(Message_Modal_With_Cancel).modal("show");
+		delete_contact_flag = true;
+	}
+	//a function for showing a modal for insuring the delition of user from syetem
+	$scope.insure_delete_user = function(user)
+	{
+		user_to_delete = user;
+		$scope.message = "Are you sure you want to delede this user from system ? if you press OK, the information of this user will be lost. ";
+		$scope.message_type = "WARNNING";
+		angular.element(Message_Modal_With_Cancel).modal("show");
+		delete_user_flag = true;
+	}
 	
 	//a function for showing a modal for insuring the delition of all users from syetem
 	$scope.insure_delete_all_users = function()
@@ -2422,6 +2446,20 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 			//call function for deleting all contacts from server
 			$scope.delete_all_contacts();
 			delete_all_contacts_flag = false;
+
+		}
+		if(delete_contact_flag == true)
+		{
+			//call function for deleting contact from server
+			$scope.delete_contact_function(contact_to_delete);
+			delete_contact_flag = false;
+
+		}
+		if(delete_user_flag == true)
+		{
+			//call function for deleting user from server
+			$scope.delete_user(user_to_delete);
+			delete_user_flag = false;
 
 		}
 		
@@ -2495,7 +2533,6 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 	*/
 	$scope.delete_user = function(flag)
 	{
-		$log.log(flag);
 		if(flag == undefined)
 		{
 			username_to_delete = username_to_delete;
@@ -2530,6 +2567,7 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 				$scope.roles = response.data.roles;
 				$scope.role = undefined;
 				selected_items = undefined;
+				user_to_delete = "";
 				
 				},
 				function (response) { //failure callback

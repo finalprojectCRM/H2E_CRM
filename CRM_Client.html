@@ -221,7 +221,7 @@
 					<li a class="active" ng-click="get_users_function('showUsers')"><a><i class="fa fa-fw fa-user" ></i></p>Users</a></li>
 					<li ng-click="get_contacts_function()"><a><i class="fa fa-fw fa-user"></i></p>Customers</a></li>
 					<li ng-click="get_specific_contacts_function()"><a><i class="fa fa-fw fa-user" ></i></p>Handle customers</a></li>
-					<li ng-click="calendar_function()"><a><i class="fa fa-calendar" ></i></p>Calendar</a></li> 
+					<li ng-click="calendar_function()"><a><i class="fa fa-calendar"></i></p>Calendar</a></li> 
 					<li ng-click="settings_function()" ng-show="admin_page==true"><a><i class="fa fa-gear"></i></p>Settings </a></li> 
 				</ul>
 			</div>
@@ -229,15 +229,39 @@
 			<div id="info_navbar">
 			<!--contacts table-->
 			    <form id="users_div" ng-show="show_users == true;"><!-- -->
-					<div class="input-group input-group">
-						<span class="input-group-addon">
-							<span class="glyphicon glyphicon-search" style="color:#003366" aria-hidden="true">
-							</span>
-						</span>	
-						<input  class="form-control-md-6" ng-model="search" placeholder="search...">
-					</div>
+					<table>
+						<tr>
+							<td>
+								<div class="input-group input-group">
+									<span  class="input-group-addon">
+										<span class="glyphicon glyphicon-search" style="color:#003366" aria-hidden="true">
+										</span>
+									</span>	
+									<input class="form-control-md-6" ng-model="search_users" placeholder="search...">
+								</div>
+							</td>
+							<td> </td>
+							<td> </td>
+							<td> </td>
+							<td> </td>
+							<td style="text-align:right;">
+							<div class="dropdown">
+							<a href="#" class="dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+								<i class="glyphicon glyphicon-th-list"></i>
+								<span class="caret"></span>
+								</a>
+								</br>
+								<ul class="dropdown-menu" >
+									<li class="hover_color" ng-click="selectAll(false);choose_user_to_email=true;show_send_or_cancel_multiple_button=true"><a href="#"><i style =" color: rgb(50, 118, 177);" class="fa fa-user fa-fw"></i> select</a></li>
+									<li class="hover_color" ng-click="selectAll(true);choose_user_to_email=true;show_send_or_cancel_multiple_button=true"><a href="#"><i style =" color: rgb(50, 118, 177);" class="fa fa-user fa-fw"></i> select all</a></li>
+								</ul>
+							</div>
+							</td>
+						</tr>
+					</table>
+		
 					<div class="col-lg-20">
-						<table align="right" class="table table-hover-responsive"  class="text-center" >
+						<table  class="table table-hover-responsive" style="text-align:left;" >
 							<thead>
 
 								<tr class="table_head">
@@ -251,11 +275,12 @@
 								</tr>
 							<thead>
 							<tbody>
-								<tr ng-repeat="userInfo in users | filter:search" ng-init="userIsEdit = false;username='Admin'">
+								<tr ng-repeat="userInfo in users | filter:search_users" ng-init="userIsEdit = false;username='Admin'">
 									<td ng-show="userIsEdit==false">{{userInfo.Role}}</td>
-									<td ng-show="userIsEdit==false">{{userInfo.Name}}</td>
+									<td ng-show="userIsEdit==false" >{{userInfo.Name}}</td>
 									<td ng-show="userIsEdit==false && isAdmin==true">{{userInfo.UserName}}</td> 
 									<td ng-show="userIsEdit==false">{{userInfo.eMail}}</td>
+									<td ng-show="userIsEdit==false"><i class="fa fa-envelope" style="font-size:24px;color:#00b3b3" aria-hidden="true" ng-click = "sendMailModal(userInfo.eMail)" ></i></td>
 
 									
 									<td ng-show="userIsEdit==false && isAdmin==true && username!=userInfo.UserName "><i class="fa fa-edit" style="font-size:24px;color:#008fb3"  aria-hidden="true" ng-click = "userIsEdit =!userIsEdit;update_user_function(userInfo)"></i></td>
@@ -276,7 +301,7 @@
 										
 									</div>
 									
-									<td ng-show="isAdmin==true && username!=userInfo.UserName "><i class="fa fa-trash" style="font-size:24px;color:#003366" ng-show="userIsEdit==false" aria-hidden="true" ng-click = "delete_user(userInfo.UserName)"></i></td>
+									<td ng-show="isAdmin==true && username!=userInfo.UserName "><i class="fa fa-trash" style="font-size:24px;color:#003366" ng-show="userIsEdit==false" aria-hidden="true" ng-click = "insure_delete_user(userInfo.UserName)"></i></td>
 									<td ng-show="userIsEdit==true"><i class="fa fa-check-square-o" style="font-size:24px;color:#00e600" aria-hidden="true" ng-click = "save_updated_user(userInfo)"></i></td>
 									 
 									 		
@@ -295,11 +320,14 @@
 										<span class="glyphicon glyphicon-search" style="color:#003366" aria-hidden="true">
 										</span>
 									</span>	
-									<input class="form-control-md-6" ng-model="search" placeholder="search...">
+									<input class="form-control-md-6" ng-model="search_contats" placeholder="search...">
 								</div>
 							</td>
-							
-							<td>
+							<td> </td>
+							<td> </td>
+							<td> </td>
+							<td> </td>
+							<td style="text-align:right;">
 							<div class="dropdown">
 							<a href="#" class="dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 								<i class="glyphicon glyphicon-th-list"></i>
@@ -338,7 +366,7 @@
 								</tr>
 							<thead>
 							<tbody>
-								<tr ng-repeat="contactInfo in contactsInfo | filter:search" ng-init="contactIsEdit = false;contactInfo.selected_to_email=false">
+								<tr ng-repeat="contactInfo in contactsInfo | filter:search_contats" ng-init="contactIsEdit = false;contactInfo.selected_to_email=false">
 										<td ng-show="contactIsEdit==false">{{contactInfo.Category.Role}}</td>
 										<td ng-show="contactIsEdit==false">{{contactInfo.Status}}</td>
 										<td ng-show="contactIsEdit==false">{{contactInfo.Name}}</td>
@@ -375,7 +403,7 @@
 										<td ng-show="contactIsEdit==true"><input ng-model="contactInfo.Address" type="text" class="form-control" /></td>	
 									</div>
                              
-									<td ng-show="contactIsEdit==false"><i class="fa fa-trash" style="font-size:24px;color:#003366"  aria-hidden="true" ng-click = "delete_contact_function(contactInfo)"></i></td>
+									<td ng-show="contactIsEdit==false"><i class="fa fa-trash" style="font-size:24px;color:#003366"  aria-hidden="true" ng-click = "insure_delete_contact(contactInfo)"></i></td>
 									<td ng-show="contactIsEdit==false"> <i class="fa fa-history" style="font-size:24px;color:#003366"  pop-over history="contactInfo.History", title="History"></i>
       
     <script type="text/ng-template" id="popover_template.html">

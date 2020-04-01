@@ -27,7 +27,6 @@ body
 }
 #calendar_div
 {
-
 	margin-left:15%;
 	margin-top:5%;
 	float: left;
@@ -113,15 +112,17 @@ form
 
 
 /* Navbar links on mouse-over */
-.navbar a:hover {
+.navbar a:hover{
   background-color: #ff0066;
   
 }
+/*.navbar a:focus {
+  color: #ff0066;
+  
+}*/
 
-/* Current/active navbar link */
-.active {
-  background-color: #ff0066;
-}
+
+
 
 table {
   border-collapse: collapse;

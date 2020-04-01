@@ -105,9 +105,17 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 	/*
 		a function to render the calendar
 	*/
-	$scope.renderCalender = function(calendar) {
+	$scope.renderCalender = function() {
+		$log.log('renderCalender');
     //console.log($scope.events)
-		uiCalendarConfig.calendars.myCalendar.fullCalendar('removeEventSource', $scope.events)
+		//uiCalendarConfig.calendars.myCalendar.fullCalendar('removeEventSource', sourceFullView, $scope.events);
+		$timeout(function() {
+        if(uiCalendarConfig.calendars.myCalendar){
+					$log.log('myCalendar');
+
+          $('#calendar').fullCalendar('render');
+        }
+      });
   };
   
   /*
@@ -122,7 +130,7 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
   */
   $scope.calendarConfig = {
 	header:{
-		 left: 'prev,next',
+		 left: 'prev,next, today',
          center: 'title',
          right: 'month,agendaWeek,agendaDay'
 	},
@@ -136,13 +144,13 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 		week: 'ddd D/M', 
 		day: 'dddd' 
 	},
-	
+
 	aspectRatio: 1.5,
     selectable: true,
     selectHelper: true,
     editable: true,
 	eventLimit:true,
-	renderCalender: $scope.renderCalender,
+	renderCalender: $scope.renderCalender(),
 
 	/*
 		select date whith clicking trigger 
@@ -247,7 +255,7 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 		$scope.get_contacts_function();
 
 		//put contacts phone number in search bar 
-		$scope.search = contact_phone_number[1];
+		$scope.search_contats = contact_phone_number[1];
 		
 		//hide the 'edit_or_delete_event' modal 
 	    angular.element(edit_or_delete_event).modal("hide");
@@ -309,43 +317,105 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 	};
 	
 	$scope.selected = {};
-	$scope.selectAll = function(flag){
-	  for (var i = 0; i < $scope.contactsInfo.length; i++) {
-		var contactInfo = $scope.contactsInfo[i];
+	$scope.selectAll = function(flag,users_or_contacts){
+		var arr;
+		var id;
 		
-		$log.log("id : " +contactInfo.PhoneNumber);
-
-		$scope.selected[contactInfo.PhoneNumber] = flag;
-		
-	  }
-	};
-	
-	$scope.send_email_to_selected_contacts = function(){
-		var emails_list_str="";
-	  for (var i = 0; i < $scope.contactsInfo.length; i++)
-	  {
-		var contactInfo = $scope.contactsInfo[i];
-
-		if($scope.selected[contactInfo.PhoneNumber] == true)
+		if(users_or_contacts=='users')
 		{
-			if(i%3===0)
+			 arr = $scope.users;
+			 id = 'UserName';
+		}
+		else
+		{
+			 arr = $scope.contactsInfo;
+			 id = 'PhoneNumber';
+
+
+		}
+		for (var i = 0; i < arr.length; i++) {
+		var arrInfo = arr[i];
+		
+		
+			if(id == 'UserName')
 			{
-				$log.log("i = "+i );
-				emails_list_str = emails_list_str+"\n"+ contactInfo.eMail+','
+				$scope.selected[arrInfo.UserName] = flag;
 			}
 			else
 			{
-				emails_list_str = emails_list_str+ contactInfo.eMail+','
+				$scope.selected[arrInfo.PhoneNumber] = flag;
 
 			}
+			//$log.log("id : " +arrInfo.UserName);
+			
+	  } 
+	
+	  
+	};
+	
+	$scope.send_email_to_selected_contacts = function(users_or_contacts){
+		var emails_list_str="";
+		var arr;
+		var id;
+		if(users_or_contacts=='users')
+		{
+			 arr = $scope.users;
+			 id = 'UserName';
+		}
+		else
+		{
+			 arr = $scope.contactsInfo;
+			 id = 'PhoneNumber';
+
+
 		}
 		
-	  }
-	  
-			$scope.contact_email = emails_list_str;
-		    angular.element(Email_modal).modal("show");
+		
+		for (var i = 0; i < arr.length; i++)
+		{
+			var arrInfo = arr[i];
+			if(id == 'UserName')
+			{
+				if($scope.selected[arrInfo.UserName] == true)
+				{
+					emails_list_str = get_string_of_all_emails(emails_list_str,arrInfo,i);
+				}
+
+			}
+
+			else
+			{
+				if($scope.selected[arrInfo.PhoneNumber] == true)
+				{
+					emails_list_str = get_string_of_all_emails(emails_list_str,arrInfo,i);
+
+				}
+			}
+
+			
+		}
+
+		$scope.contact_email = emails_list_str;
+		angular.element(Email_modal).modal("show");
 
 	};
+	
+	function get_string_of_all_emails(emails_list_str,selected_email,i)
+	{
+		if(i%3===0)
+		{
+			$log.log("i = "+i );
+			emails_list_str = emails_list_str+"\n"+ selected_email.eMail+','
+		}
+		else
+		{
+			emails_list_str = emails_list_str+ selected_email.eMail+','
+
+		}
+		
+		return emails_list_str;
+		
+	}
 	
 	function convert_date_format(str) {
 	  var date = new Date(str),
@@ -465,6 +535,8 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 			editable: true
 		});
 		$scope.selections = [];
+		uiCalendarConfig.calendars.myCalendar.fullCalendar('refetchEvents');
+
 
 
 	//  console.log($scope.pendingRequests);
@@ -1202,6 +1274,14 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 	   
 	   //clearing the search field
 	   $scope.search = "";
+		//uiCalendarConfig.calendars['myCalendar'].fullCalendar('refetchEvents');
+		setTimeout(function () {
+		uiCalendarConfig.calendars['myCalendar'].fullCalendar('render');
+        }, 5); // Set enough time to wait until animation finishes;
+		
+
+
+	   
 	}
    
     /*

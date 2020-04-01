@@ -218,11 +218,11 @@
 			
 			<div ng-show="menu==true" id="div-vertical" class="navbar">
 				<ul>
-					<li a class="active" ng-click="get_users_function('showUsers')"><a><i class="fa fa-fw fa-user" ></i></p>Users</a></li>
-					<li ng-click="get_contacts_function()"><a><i class="fa fa-fw fa-user"></i></p>Customers</a></li>
-					<li ng-click="get_specific_contacts_function()"><a><i class="fa fa-fw fa-user" ></i></p>Handle customers</a></li>
-					<li ng-click="calendar_function()"><a><i class="fa fa-calendar"></i></p>Calendar</a></li> 
-					<li ng-click="settings_function()" ng-show="admin_page==true"><a><i class="fa fa-gear"></i></p>Settings </a></li> 
+					<li ng-click="get_users_function('showUsers');usersNavColor='#ff0066';contactsNavColor='#004d99';spesificContactsNavColor='#004d99';calendarNavColor='#004d99';settingsNavColor='#004d99'"  ng-style="{'background-color': usersNavColor}"><a><i class="fa fa-fw fa-user" ></i></p>Workers</a></li>
+					<li ng-click="get_contacts_function();contactsNavColor='#ff0066';usersNavColor='#004d99';spesificContactsNavColor='#004d99';calendarNavColor='#004d99';settingsNavColor='#004d99'" ng-style="{'background-color': contactsNavColor}"><a><i class="fa fa-fw fa-user"></i></p>Customers</a></li>
+					<li ng-click="get_specific_contacts_function();spesificContactsNavColor='#ff0066';contactsNavColor='#004d99';usersNavColor='#004d99';calendarNavColor='#004d99';settingsNavColor='#004d99'" ng-style="{'background-color': spesificContactsNavColor}"><a><i class="fa fa-fw fa-user" ></i></p>Handle customers</a></li>
+					<li ng-click="calendar_function() ;calendarNavColor='#ff0066';contactsNavColor='#004d99';spesificContactsNavColor='#004d99';usersNavColor='#004d99';settingsNavColor='#004d99'" ng-style="{'background-color': calendarNavColor}" id = "display_calendar"><a><i class="fa fa-calendar"></i></p>Calendar</a></li> 
+					<li ng-click="settings_function();settingsNavColor='#ff0066';contactsNavColor='#004d99';spesificContactsNavColor='#004d99';calendarNavColor='#004d99';usersNavColor='#004d99'" ng-style="{'background-color': settingsNavColor}" ng-show="admin_page==true"><a><i class="fa fa-gear"></i></p>Settings </a></li> 
 				</ul>
 			</div>
 			
@@ -252,8 +252,8 @@
 								</a>
 								</br>
 								<ul class="dropdown-menu" >
-									<li class="hover_color" ng-click="selectAll(false);choose_user_to_email=true;show_send_or_cancel_multiple_button=true"><a href="#"><i style =" color: rgb(50, 118, 177);" class="fa fa-user fa-fw"></i> select</a></li>
-									<li class="hover_color" ng-click="selectAll(true);choose_user_to_email=true;show_send_or_cancel_multiple_button=true"><a href="#"><i style =" color: rgb(50, 118, 177);" class="fa fa-user fa-fw"></i> select all</a></li>
+									<li class="hover_color" ng-click="selectAll(false,'users');choose_user_to_email=true;show_send_or_cancel_multiple_button=true"><a href="#"><i style =" color: rgb(50, 118, 177);" class="fa fa-user fa-fw"></i> select</a></li>
+									<li class="hover_color" ng-click="selectAll(true,'users');choose_user_to_email=true;show_send_or_cancel_multiple_button=true"><a href="#"><i style =" color: rgb(50, 118, 177);" class="fa fa-user fa-fw"></i> select all</a></li>
 								</ul>
 							</div>
 							</td>
@@ -271,6 +271,7 @@
 									<th>Email</th>
 									<th ng-show="isAdmin==true"> </th>
 									<th ng-show="isAdmin==true"> </th>
+									<th ng-show="isAdmin==true"> </th>	
 									<th ng-show="isAdmin==true"> </th>	
 								</tr>
 							<thead>
@@ -302,6 +303,9 @@
 									</div>
 									
 									<td ng-show="isAdmin==true && username!=userInfo.UserName "><i class="fa fa-trash" style="font-size:24px;color:#003366" ng-show="userIsEdit==false" aria-hidden="true" ng-click = "insure_delete_user(userInfo.UserName)"></i></td>
+									<td ng-show="isAdmin==true &&username==userInfo.UserName "></td>
+									<td ng-show="isAdmin==true && username==userInfo.UserName "></td>
+									<td ng-show="userIsEdit==false" ><div ng-if="choose_user_to_email"> <input  type="checkbox" ng-show="choose_user_to_email==true" ng-model="selected[userInfo.UserName]" /></div></td>
 									<td ng-show="userIsEdit==true"><i class="fa fa-check-square-o" style="font-size:24px;color:#00e600" aria-hidden="true" ng-click = "save_updated_user(userInfo)"></i></td>
 									 
 									 		
@@ -309,6 +313,10 @@
 															
 							</tbody></p>
 						</table>
+						<div class="col-xs-offset-4" ng-show="show_send_or_cancel_multiple_button == true">
+							  <button type="button" class="btn btn-md center-block " style="display:inline-block;background-color: #008fb3;color: white;margin-top:10px" ng-click="send_email_to_selected_contacts('users');show_send_or_cancel_multiple_button=false;choose_user_to_email=false;contactInfo.selected_to_email=false">send mail to selected workers</button>
+							  <button type="button" class="btn btn-md center-block " style="display:inline-block;background-color: #ff0066;color: white; margin-top:10px" ng-click="show_send_or_cancel_multiple_button=false;choose_user_to_email=false;contactInfo.selected_to_email=false">cancel</button>
+						</div>
 					</div>
 				</form>
 				<form id="contacts_div" ng-show="show_contacts"><!-- -->
@@ -467,7 +475,7 @@
 							</tbody></p>
 						</table>
 						<div class="col-xs-offset-4" ng-show="show_send_or_cancel_multiple_button == true">
-							  <button type="button" class="btn btn-md center-block " style="display:inline-block;background-color: #008fb3;color: white;margin-top:10px" ng-click="send_email_to_selected_contacts();show_send_or_cancel_multiple_button=false;choose_user_to_email=false;contactInfo.selected_to_email=false">send mail to selected customers</button>
+							  <button type="button" class="btn btn-md center-block " style="display:inline-block;background-color: #008fb3;color: white;margin-top:10px" ng-click="send_email_to_selected_contacts('contacts');show_send_or_cancel_multiple_button=false;choose_user_to_email=false;contactInfo.selected_to_email=false">send mail to selected customers</button>
 							  <button type="button" class="btn btn-md center-block " style="display:inline-block;background-color: #ff0066;color: white; margin-top:10px" ng-click="show_send_or_cancel_multiple_button=false;choose_user_to_email=false;contactInfo.selected_to_email=false">cancel</button>
 						</div>
 					</div>

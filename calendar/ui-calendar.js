@@ -242,9 +242,7 @@ angular.module('ui.calendar', [])
         };
 
         scope.init = function(){
-					setTimeout(function () {
 		    calendar.fullCalendar(options);
-});
 			    
 		};
 

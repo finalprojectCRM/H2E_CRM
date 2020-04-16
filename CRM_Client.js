@@ -109,13 +109,7 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 		$log.log('renderCalender');
     //console.log($scope.events)
 		//uiCalendarConfig.calendars.myCalendar.fullCalendar('removeEventSource', sourceFullView, $scope.events);
-		$timeout(function() {
-        if(uiCalendarConfig.calendars.myCalendar){
-					$log.log('myCalendar');
-
-          $('#calendar').fullCalendar('render');
-        }
-      });
+		
   };
   
   /*
@@ -417,19 +411,24 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 		
 	}
 	
-	function convert_date_format(str) {
-	  var date = new Date(str),
-	  mnth = ("0" + (date.getMonth() + 1)).slice(-2),
-	  day = ("0" + date.getDate()).slice(-2);
-	  var MM = String(date.getMinutes()).padStart(2, '0');
-	  var HH = String(date.getHours()).padStart(2, '0');
-	  date =[day,mnth,date.getFullYear()].join("/");
-	  var time = [HH,MM].join(":");
-	  var full_date = [date,time].join(" ");
-	  $log.log(full_date) ;
-	  return full_date;
-	 // $log.log([day,mnth,date.getFullYear()].join("/")) ;
-    }
+	function check_date_range_validation(start_date,end_date,call_placement)
+	{
+		var regExp = /(\d{1,2})\/(\d{1,2})\/(\d{2,4})/;
+		if(parseInt(end_date.replace(regExp, "$3$2$1")) < parseInt(start_date.replace(regExp, "$3$2$1"))){
+			$scope.message = "Start date must be earlier than end date";
+			$scope.message_type = "ERROR";
+			angular.element(Message_Modal).modal("show");
+			if(call_placement=='in_calendar')
+			{
+				missing_role_field_calendar= true;
+			}
+			else if(call_placement=='out_of_calendar')
+			{
+				missing_date_field_calendar= true;
+
+			}
+		}
+	}
 	  
 
 	/*
@@ -448,10 +447,16 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 			$log.log("task_with_contact : " + task_with_contact);
 			//$log.log("type "+typeof date[0]);
 			$log.log("end date : " + date[1]);
-			var start_date= moment(date[0], 'DD/MM/YYYY HH:mm').format("MM/DD/YYYY HH:mm");
-			var end_date= moment(date[1], 'DD/MM/YYYY HH:mm').format("MM/DD/YYYY HH:mm");
-			$log.log("start date : " + start_date);
-			$log.log("start date : " + end_date);
+			var start_date= moment(date[0]).format("DD/MM/YYYY HH:mm");
+			var end_date= moment(date[1]).format("DD/MM/YYYY HH:mm");;
+			
+			check_date_range_validation(date[0],date[1],'in_calendar');
+
+			
+			$log.log("start date inside: " + start_date);
+			$log.log("start date inside: " + end_date); 
+			return;
+
 		}
 		else
 		{
@@ -464,10 +469,17 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 				return;
 			}
 		    $log.log("start date outside $scope.event_start: " + $scope.event_start);
-            var start_date = convert_date_format($scope.event_start);
-            var end_date = convert_date_format($scope.event_end);
+            var start_date =  moment($scope.event_start).format("DD/MM/YYYY HH:mm");
+            var end_date = moment($scope.event_end).format("DD/MM/YYYY HH:mm");
+			$log.log("start date outside: " + start_date);
+			$log.log("start date outside: " + end_date);
+			
+			check_date_range_validation(start_date,end_date,'out_of_calendar');
+			return;
 
+            
 		}
+		
 		
 		//$log.log("end date : " + formatDate(date[1]));
 		$log.log("$scope.role : "+$scope.role.Role);
@@ -526,16 +538,24 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 		$log.log("description: "+description);
 
 		//add (push) event with details to events list
-		$scope.events.push({
+		/*$scope.events.push({
 			title: description,
 			start: start_date,
 			end:  end_date,
 			color: $scope.role.Color,
 			id : contact,
-			editable: true
-		});
+			editable: true,
+			allDay:false
+		});*/
 		$scope.selections = [];
-		uiCalendarConfig.calendars.myCalendar.fullCalendar('refetchEvents');
+		uiCalendarConfig.calendars['myCalendar'].fullCalendar('renderEvent', { title: description,
+			start: start_date,
+			end:  end_date,
+			color: $scope.role.Color,
+			id : contact,
+			editable: true,allDay:false}, true );
+
+		//uiCalendarConfig.calendars['myCalendar'].fullCalendar('refetchEvents');
 
 
 
@@ -1276,8 +1296,9 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 	   $scope.search = "";
 		//uiCalendarConfig.calendars['myCalendar'].fullCalendar('refetchEvents');
 		setTimeout(function () {
-		uiCalendarConfig.calendars['myCalendar'].fullCalendar('render');
-        }, 5); // Set enough time to wait until animation finishes;
+			uiCalendarConfig.calendars['myCalendar'].fullCalendar('render');
+
+		}, 5); // Set enough time to wait until animation finishes;*/
 		
 
 

@@ -921,7 +921,7 @@
 									</br><div class="dropdown">
 								  <a href="#" class="dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 									<div class="input-group">
-									  <input type="text" class="form-control" data-ng-model="event_start" />
+									  <input type="text" required data-date-time-input="DD/MM/YYYY HH:mm" class="form-control"  data-ng-model="event_start"/>
 									  <span class="input-group-addon">
 										<i class="glyphicon glyphicon-calendar"></i>
 									  </span>
@@ -930,6 +930,7 @@
 								  <ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
 									<datetimepicker data-ng-model="event_start" data-datetimepicker-config="{ dropdownSelector: '#dropdown2' }"></datetimepicker>
 								  </ul>
+								  
 								</div>
 							 
 
@@ -1007,7 +1008,7 @@
 								  <ui-select-match placeholder="Select contact...">{{$select.selected.Name}}</ui-select-match>
 								  <ui-select-choices repeat="contactInfo in contactsInfo | filter: $select.search track by $index">
 											<div ng-bind-html="contactInfo.Name | highlight: $select.search"></div>
-													<!--<small ng-bind-html="contactInfo.PhoneNumber | highlight: $select.search"></small>-->
+											<small ng-bind-html="contactInfo.PhoneNumber | highlight: $select.search"></small>
 								  </ui-select-choices>
 								</ui-select>
 							  </div>

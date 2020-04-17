@@ -1320,7 +1320,7 @@
 								</br>
 
                              <div class="row-fluid">
-							  <select class="form-control"   ng-model="role" ng-options="objRole as objRole.Role disable when objRole.Role  === '-- Choose category for role --' for objRole in roles " ng-change="selected_item(role,'new role')"  >
+							  <select class="form-control" ng-model="role" ng-options="objRole as objRole.Role disable when objRole.Role  === '-- Choose category for role --' for objRole in roles " ng-change="selected_item(role,'new role')"  >
 							  </select>
 
 							</div>
@@ -1531,7 +1531,7 @@
 								  <div class="form-group">
 									<div class="col-sm-10">
 										</br>
-										<select class="form-control" data-show-subtext="true" data-live-search="true" ng-model="role" ng-options="objRole as objRole.Role disable when objRole.Role  === '-- Choose category for role --' for objRole in roles " ng-change="onChangeCategory(role,'update role')" ></select>	
+										<select class="form-control" data-show-subtext="true" data-live-search="true" ng-model="role" ng-options="objRole as objRole.Role disable when objRole.Role  === '-- Choose category for role --'  for objRole in roles " ng-change="onChangeCategory(role,'update role')" ></select>	
 										</br>
 										<div class="row-fluid">
 											<select class="form-control" ng-model="item" ng-options="objStatus as objStatus.Status disable when objStatus.Status  === '-- Choose status for role --' for objStatus in options " ng-change="selected_item(item,'update role')"  >

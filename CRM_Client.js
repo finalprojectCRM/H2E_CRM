@@ -1360,6 +1360,7 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 				//return the list of the statusOptions
 				$scope.options = response.data.statusOptions;
 				$scope.item = $scope.options[0];
+
 			},
 			function (response) {//failure callback
 			
@@ -1372,6 +1373,7 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 	   
 	
 	}
+	
 	
 	/*
 		get the the list of colors for roles from server 
@@ -1431,7 +1433,16 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 	   
 	
 	}
-
+	function get_index_of_select_item(item)
+    {
+		for (var i = 0; i < $scope.roles.length; i++)
+		{
+			if(item == $scope.roles[i].Role)
+			{
+				return i;
+			}
+        }
+	}
     /*
 		a function for saving the deatailes of contact before update
 	*/
@@ -1439,7 +1450,10 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 	{	
 		//get all details of contact in json format
 		contact_before_update = {Category:contact.Category, Name:contact.Name,Status:contact.Status, PhoneNumber:contact.PhoneNumber, eMail:contact.eMail, Address:contact.Address};
+		$scope.role_category = $scope.roles[get_index_of_select_item(contact_before_update.Category.Role)];
+		$scope.status_role = contact_before_update.Status;
 		$scope.update_status = contact_before_update.Status;
+		
 	}
 	
 	/*

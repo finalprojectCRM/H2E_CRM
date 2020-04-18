@@ -427,7 +427,10 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 				missing_date_field_calendar= true;
 
 			}
+			return true;
 		}
+		return false;
+		
 	}
 	  
 
@@ -447,15 +450,20 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 			$log.log("task_with_contact : " + task_with_contact);
 			//$log.log("type "+typeof date[0]);
 			$log.log("end date : " + date[1]);
-			var start_date= moment(date[0]).format("DD/MM/YYYY HH:mm");
-			var end_date= moment(date[1]).format("DD/MM/YYYY HH:mm");;
-			
-			check_date_range_validation(date[0],date[1],'in_calendar');
+			var start_date= moment(String(date[0]),"DD/MM/YYYY HH:mm:ss").format("MM/DD/YYYY HH:mm:ss");
+			var end_date= moment(String(date[1]),"DD/MM/YYYY HH:mm:ss").format("MM/DD/YYYY HH:mm:ss");
+			 
+			//var start_date = moment(date[0]);
+			//var end_date = moment(date[1]);
+			$log.log("start date inside: " + start_date);
+			$log.log("end date inside: " + end_date);
+			if(check_date_range_validation(date[0],date[1],'in_calendar')==true)
+			{
+				return;
+			}
 
 			
-			$log.log("start date inside: " + start_date);
-			$log.log("start date inside: " + end_date); 
-			return;
+			
 
 		}
 		else
@@ -469,13 +477,16 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 				return;
 			}
 		    $log.log("start date outside $scope.event_start: " + $scope.event_start);
-            var start_date =  moment($scope.event_start).format("DD/MM/YYYY HH:mm");
-            var end_date = moment($scope.event_end).format("DD/MM/YYYY HH:mm");
+            var start_date =  moment(String($scope.event_start)).format("MM/DD/YYYY HH:mm");
+            var end_date = moment(String($scope.event_end)).format("MM/DD/YYYY HH:mm");
 			$log.log("start date outside: " + start_date);
 			$log.log("start date outside: " + end_date);
 			
-			check_date_range_validation(start_date,end_date,'out_of_calendar');
-			return;
+			
+			if(check_date_range_validation(start_date,end_date,'out_of_calendar')==true)
+			{
+				return;
+			}
 
             
 		}

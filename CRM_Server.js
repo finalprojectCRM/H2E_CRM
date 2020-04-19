@@ -890,7 +890,7 @@ function check_exsisting_statuses_and_roles_and_files()
 		 console.log("no statuses");
 		 
 		//insert the statuses : "-- Choose status for role --","בעיה טכנית"
-         statuses_collection.insertOne({"Status":"-- Choose status for role --"});
+         //statuses_collection.insertOne({"Status":"-- Choose status for role --"});
          statuses_collection.insertOne({"Status":"בעיה טכנית"});
     }
 });
@@ -901,9 +901,9 @@ function check_exsisting_statuses_and_roles_and_files()
 	{
 		console.log("no roles");
 		//insert the role : "-- Choose category for role --"
-		 roles_with_statuses_collection.insertOne({Role:"-- Choose category for role --"});
+		 //roles_with_statuses_collection.insertOne({Role:"-- Choose category for role --"});
 		 //insert the roles: "תמיכה טכנית" with statuses: : "-- Choose status for role --","בעיה טכנית" ,,"add a new status" and color:#66ffff"
-         roles_with_statuses_collection.insertOne({Role:"תמיכה טכנית",Color:"#66ffff",Statuses:["-- Choose status --","בעיה טכנית","add a new status"]});
+         roles_with_statuses_collection.insertOne({Role:"תמיכה טכנית",Color:"#66ffff",Statuses:["בעיה טכנית","add a new status"]});
 		 //insert the color:#66ffff" to colors_collection
 		 colors_collection.insertOne({Color:"#66ffff"});
 
@@ -914,8 +914,8 @@ function check_exsisting_statuses_and_roles_and_files()
     if (!err && count === 0) {
 		console.log("no statuses");
 		//insert the statuses : "-- Choose status for role --","בעיה טכנית"
-		 statuses_with_roles_collection.insertOne({Status:"-- Choose status for role --"});
-         statuses_with_roles_collection.insertOne({Status:"בעיה טכנית",Roles:["-- Choose status for role --","תמיכה טכנית"]});
+		 //statuses_with_roles_collection.insertOne({Status:"-- Choose status for role --"});
+         statuses_with_roles_collection.insertOne({Status:"בעיה טכנית",Roles:["תמיכה טכנית"]});
     }
 });
 		

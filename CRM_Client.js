@@ -164,7 +164,6 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
         $scope.date = moment(start).format("DD/MM/YYYY HH:mm")+ ' - ' + moment(end).format("DD/MM/YYYY HH:mm");
 		//get roles list
         $scope.getRolesList();
-		$scope.role = $scope.roles[0].Role;
 		$scope.contact_task = undefined;
 		$scope.title = undefined;
 	
@@ -1318,7 +1317,6 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 			
 				//return the list of the statusOptions
 				$scope.options = response.data.statusOptions;
-				$scope.item = $scope.options[0];
 				//get roles colors list
 				$scope.getRolesColorsList();
 				angular.element(add_new_role_modal).modal("show");
@@ -1417,7 +1415,6 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 			
 				//return the list of the statusOptions
 				$scope.options = response.data.statusOptions;
-				$scope.item = $scope.options[0];
 
 			},
 			function (response) {//failure callback
@@ -1471,14 +1468,7 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 			
 				//return the list of the roles
 				$scope.roles = response.data.roles;
-				$scope.role = $scope.roles[0];
 				
-				//if there  are statuses for this role
-				if($scope.roles[1] != undefined)
-				{
-					//returns the status list for the current role
-					$scope.status_role = $scope.roles[1].Statuses[0];
-				}
 			},
 			function (response) {//failure callback
 			
@@ -1539,6 +1529,8 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 	{
 		//get all details of user in json format
 		user_before_update = {Role:user.Role,Name:user.Name,UserName:user.UserName, eMail:user.eMail};	
+		$scope.role = $scope.roles[get_index_of_select_item(user_before_update.Role,'role_list')];
+
 	}
 
     /*
@@ -1634,13 +1626,7 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 			
 				//return the list of the roles
 				$scope.roles = response.data.roles;
-	            $scope.role = $scope.roles[0];
-				
-				//if there are statuses for this role return its arry of statuse
-				if($scope.roles[1]!=undefined)
-				{
-					$scope.status_role = $scope.roles[1].Statuses[0];
-				}
+	            
 				//show modal for adding a new status
 			    angular.element(add_new_status_modal).modal("show");
 
@@ -2580,11 +2566,6 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 			}).then(
 				function (response) { //success callback 
 				   $scope.roles = response.data.roles; 
-				   $scope.role = $scope.roles[0];
-					if($scope.roles[1]!=undefined)
-					{
-						$scope.status_role = $scope.roles[1].Statuses[0];
-					}
 					
 				},
 				function (response) { //failure callback

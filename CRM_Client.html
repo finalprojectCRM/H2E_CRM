@@ -290,10 +290,13 @@
 										
 										<td ng-show="userIsEdit==true"><div class="form-group" >
 											<select class="form-control"   ng-model="role" ng-options="objRole as objRole.Role disable when objRole.Role  === '-- Choose category for role --' for objRole in roles " ng-change="onChangeCategory(role)"  >
-								               
+								               	<option value='' disabled="disabled">-- Choose category for role --</option>
+
 											
 												 <!--<optionng-repeat=" role in roles" > {{role.Role}}</style></option>-->
 										    </select>
+											
+											
 
 										</div></td>
 									    <td ng-show="userIsEdit==true">{{userInfo.Name}}</td>
@@ -391,7 +394,8 @@
 										
 										<td ng-show="contactIsEdit==true"><div class="form-group" >	
 											<select class="form-control" ng-model="role_category" ng-options="objRole as objRole.Role disable when objRole.Role  === '-- Choose category for role --' for objRole in roles " ng-change="onChangeCategory(role_category)" ><!---->
-											
+								               	<option value='' disabled="disabled">-- Choose category for role --</option>
+
 												 <!--<optio
 												 nng-repeat=" role in roles" > {{role.Role}}</style></option>-->
 											 </select>
@@ -399,7 +403,7 @@
 										<td ng-show="contactIsEdit==true"><div class="form-group" ng-if="role_category">
 											
 											<select class="form-control" ng-model="status_role" ng-options="status_role disable when status_role === '-- Choose status --'  for status_role in role_category.Statuses"  ng-change="onChange(status_role)"><!--  -->
-											<!--<option  ng-repeat="status in role.Statuses">{{status}}</option>-->
+								               	<option value='' disabled="disabled">-- Choose status --</option>
 										    </select>
 
 										</div></td>
@@ -427,23 +431,17 @@
 								</tr>
 								
 								<tr ng-show="get_new_contact_details==true">
-									<!--<td ><div class="form-group">
-										<select class="form-control" id="status_select" ng-model="newStatus" ng-change="onChange(newStatus)">
-								            <option value=''>-- Choose status --</option>
-											<option ng-repeat="option in options">{{option.Status}}</option>
-											<option >add a new status</option>
-										</select>
-										
-									</div></td>-->
+						
 									<td><div class="form-group" ng-init="role">	
 											<select class="form-control" data-show-subtext="true" data-live-search="true" ng-model="role" ng-options="objRole as objRole.Role disable when objRole.Role  === '-- Choose category for role --' for objRole in roles " ng-change="onChangeCategory(role)" >
-											
+											    <option value='' disabled="disabled">-- Choose category for role --</option>
+
 												 <!--<optionng-repeat=" role in roles" > {{role.Role}}</style></option>-->
 											 </select>
 									</div></td>	
 									<td><div class="form-group" ng-if="role" ng-init="status_role">
 										<select class="form-control" ng-model="status_role" ng-options="status_role disable when status_role === '-- Choose status for role --'  for status_role in role.Statuses"  ng-change="onChange(status_role)"><!--  -->
-											<!--<option  ng-repeat="status in role.Statuses">{{status}}</option>-->
+											    <option value='' disabled="disabled">-- Choose status for role --</option>
 										</select>
 
 									</div></td>
@@ -823,25 +821,23 @@
 							  
 							  <div class="form-group col-sm-10"><input type="checkbox" ng-model="email_file" /><em style =" color:#ff0066"> add file </em></div>
 							  <div ng-if="email_file">
-							  <div class="col-sm-10 text-primary">
-									<div>
-										</br><b>Select file:</b>
-									</div>
-					
-							   </br>
-							  <div class="form-group col-sm-6">
-								  <ui-select ng-model="selections[$index]" ng-change="selectionChanged($index)" theme="bootstrap">
-								  <ui-select-match placeholder="Select file...">{{$select.selected.FileName}}</ui-select-match>
-								  <ui-select-choices repeat="file in files | filter: $select.search track by $index">
-									  <div ng-bind-html="file.FileName | highlight: $select.search"></div>
-								  </ui-select-choices>
-								  </ui-select>
-							  </div>
-							</div>
-							</div>		
+								  <div class="col-sm-10 text-primary">
+										<div>
+											</br><b>Select file:</b>
+										</div>
+						
+								   </br>
+								   <div class="col-sm-6" >
+									   <select class="form-control col-sm-6"  ng-model="file" ng-options="file.FileName for file in files"  >
+										   <option value='' disabled="disabled">-- Choose file --</option>
+										</select>
+									</div></br>
+								  
+								  </div>
 
 							  
-							</div>				
+							 </div>				
+						  </div>
 						</div>
 						
 						<!-- Modal Footer -->
@@ -881,6 +877,7 @@
 							   </br>
 							   <div>
 								   <select class="form-control"  ng-model="role" ng-options="objRole as objRole.Role disable when objRole.Role  === '-- Choose category for role --' for objRole in roles " ng-change="selected_item(role)"  >
+								   	   <option value='' disabled="disabled">-- Choose role --</option>
 								  </select></br>
 								  </div>
 							</div>
@@ -988,6 +985,7 @@
 							   </br>
 							   <div>
 								   <select class="form-control"  ng-model="role" ng-options="objRole as objRole.Role disable when objRole.Role  === '-- Choose category for role --' for objRole in roles " ng-change="selected_item(role)"  >
+									 <option value='' disabled="disabled">-- Choose role --</option>
 								  </select></br>
 								  </div>
 							</div>
@@ -1071,6 +1069,7 @@
 										</br>
 										<div>
 											<select class="form-control"  ng-model="role" ng-options="objRole as objRole.Role disable when objRole.Role  === '-- Choose category for role --' for objRole in roles " ng-change="selected_item(role)"  >
+											   <option value='' disabled="disabled">-- Choose role --</option>
 											</select></br>
 										</div>
 									</div>
@@ -1319,6 +1318,7 @@
 
                              <div class="row-fluid">
 							  <select class="form-control" ng-model="role" ng-options="objRole as objRole.Role disable when objRole.Role  === '-- Choose category for role --' for objRole in roles " ng-change="selected_item(role,'new role')"  >
+							  		 <option value='' disabled="disabled">-- Choose role --</option>
 							  </select>
 
 							</div>
@@ -1362,8 +1362,10 @@
 							<div class="modal-body">	
 							</br>
                              <div class="row-fluid">
-							    <select class="form-control" ng-model="item" ng-options="objStatus as objStatus.Status disable when objStatus.Status  === '-- Choose status --' for objStatus in options " ng-change="selected_item(item,'delete status')"  >
-							    </select>
+							    
+								<select class="form-control" ng-model="item" ng-options="objStatus as objStatus.Status disable when objStatus.Status  === '-- Choose status --' for objStatus in options " ng-change="selected_item(item,'delete status')"  >
+							   	    <option value='' disabled="disabled">-- Choose status --</option>
+								</select>
 							</div>
 						  </div>								
 						
@@ -1407,11 +1409,15 @@
 								  <div class="form-group">
 									<div class="col-sm-10">
 										</br>
-										<select class="form-control" data-show-subtext="true" data-live-search="true" ng-model="role" ng-options="objRole as objRole.Role disable when objRole.Role  === '-- Choose category for role --' for objRole in roles " ng-change="onChangeCategory(role)" ></select>	
+										<select class="form-control" data-show-subtext="true" data-live-search="true" ng-model="role" ng-options="objRole as objRole.Role disable when objRole.Role  === '-- Choose category for role --' for objRole in roles " ng-change="onChangeCategory(role)" >
+										   	    <option value='' disabled="disabled">-- Choose role --</option>
+										</select>	
 										</br>
 										<div ng-if="role">
-											<select class="form-control" ng-model="status_role" ng-options="status_role disable when status_role === '-- Choose status --'  for status_role in role.Statuses"  ng-change="onChange(status_role)"><!--  -->
-										    </select>
+											
+										    <select class="form-control" ng-model="status_role" ng-options="status_role disable when status_role === '-- Choose status --'  for status_role in role.Statuses"  ng-change="onChange(status_role)"><!--  -->
+										   	    <option value='' disabled="disabled">-- Choose status of selected role --</option>
+										   </select>
 										</div>
 										</br>
 									</div>
@@ -1482,8 +1488,9 @@
 
 
                              <div class="row-fluid">
-							    <select class="form-control"   ng-model="item" ng-options="objStatus as objStatus.Status disable when objStatus.Status  === '-- Choose status --' for objStatus in options " ng-change="selected_item(item,'new status')"  >
-							    </select>
+							    <select class="form-control" ng-model="item" ng-options="objStatus as objStatus.Status disable when objStatus.Status  === '-- Choose status --' for objStatus in options " ng-change="selected_item(item,'new status')"  >
+							       <option value='' disabled="disabled">-- Choose status --</option>
+								</select>
 							</div>
 						  </div>								
 						
@@ -1529,10 +1536,13 @@
 								  <div class="form-group">
 									<div class="col-sm-10">
 										</br>
-										<select class="form-control" data-show-subtext="true" data-live-search="true" ng-model="role" ng-options="objRole as objRole.Role disable when objRole.Role  === '-- Choose category for role --'  for objRole in roles " ng-change="onChangeCategory(role,'update role')" ></select>	
+										<select class="form-control" data-show-subtext="true" data-live-search="true" ng-model="role" ng-options="objRole as objRole.Role disable when objRole.Role  === '-- Choose category for role --'  for objRole in roles " ng-change="onChangeCategory(role,'update role')" >
+											<option value='' disabled="disabled">-- Choose role --</option>
+										</select>	
 										</br>
 										<div class="row-fluid">
 											<select class="form-control" ng-model="item" ng-options="objStatus as objStatus.Status disable when objStatus.Status  === '-- Choose status for role --' for objStatus in options " ng-change="selected_item(item,'update role')"  >
+											    <option value='' disabled="disabled">-- Choose status for role --</option>
 											</select>
 										</div>
 										</br>
@@ -1569,6 +1579,7 @@
 							
 							<div class="row-fluid">
 							   <select class="form-control"  ng-model="role" ng-options="objRole as objRole.Role disable when objRole.Role  === '-- Choose category for role --' for objRole in roles " ng-change="selected_item(role)"  >
+							  	  <option value='' disabled="disabled">-- Choose category for role --</option>
 							  </select>
 							</div>
 						  </div>
@@ -1656,6 +1667,8 @@
 							
 							<div class="row-fluid">
 							   <select class="form-control"  ng-model="file" ng-options="objFile as objFile.FileName disable when objFile.FileName  === '-- Choose file --' for objFile in files " ng-change="selected_item(file)"  >
+							  	   <option value='' disabled="disabled">-- Choose file --</option>
+
 							  </select>
 							</div>
 						  </div>

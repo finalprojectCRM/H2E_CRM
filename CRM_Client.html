@@ -893,14 +893,11 @@
 									</div>
 					
 							   </br>
-							  <div class="col-sm-4">
-								<ui-select ng-model="selections[$index]" ng-change="selectionChanged($index)" theme="bootstrap">
-								  <ui-select-match placeholder="Select contact...">{{$select.selected.Name}}</ui-select-match>
-								  <ui-select-choices repeat="contactInfo in contactsInfo | filter: $select.search track by $index">
-											<div ng-bind-html="contactInfo.Name | highlight: $select.search"></div>
-											<small ng-bind-html="contactInfo.PhoneNumber | highlight: $select.search"></small>
-								  </ui-select-choices>
-								</ui-select>
+							  <div class="row-fluid">
+								  <select class="form-control" data-show-subtext="true" data-live-search="true" ng-model="contact" ng-change="item_selected(contact,'contact_list')">
+									<option value='' disabled="disabled">-- Choose Customer --</option>
+									<option ng-repeat="contactInfo in contactsInfo" >Name: {{contactInfo.Name}} , Phone Number: {{contactInfo.PhoneNumber}}</style></option>
+								  </select>
 							  </div>
 							</div>
 							</div>
@@ -1003,15 +1000,12 @@
 									</div>
 					
 							   </br>
-							  <div class="col-sm-4">
-								<ui-select ng-model="selections[$index]" ng-change="selectionChanged($index)" theme="bootstrap">
-								  <ui-select-match placeholder="Select contact...">{{$select.selected.Name}}</ui-select-match>
-								  <ui-select-choices repeat="contactInfo in contactsInfo | filter: $select.search track by $index">
-											<div ng-bind-html="contactInfo.Name | highlight: $select.search"></div>
-											<small ng-bind-html="contactInfo.PhoneNumber | highlight: $select.search"></small>
-								  </ui-select-choices>
-								</ui-select>
-							  </div>
+							  <div class="row-fluid">
+								  <select class="form-control" data-show-subtext="true" data-live-search="true" ng-model="contact" ng-change="item_selected(contact,'contact_list')">
+									<option value='' disabled="disabled">-- Choose Customer --</option>
+									<option ng-repeat="contactInfo in contactsInfo" >Name: {{contactInfo.Name}} , Phone Number: {{contactInfo.PhoneNumber}}</style></option>
+								  </select>
+							 </div>
 							</div>
 							</div>
 							 
@@ -1089,23 +1083,27 @@
 								    </div>
 								 </div>
 							
-							    <div  ng-show="taskIsEdit==true" class="col-sm-10"><input type="checkbox" ng-model="contact_task" /><em style =" color:#ff0066"> Task for contact</em></div>
+							    <div ng-show="taskIsEdit==true" class="col-sm-10"><input type="checkbox" ng-model="contact_task" /><em style =" color:#ff0066"> Task for contact</em></br></div>
 							    <div ng-show="taskIsEdit==true" ng-if="contact_task">
+								     
+								     <div class="col-sm-10 ">
+											</br><b class="text-primary">Selected contact: </b> {{selected_contact}}
+									</div>
+									</br>
 									<div class="col-sm-10 text-primary">
 										<div>
 											</br><b>Select contant for task:</b>
 										</div>
 						
 										</br>
-										<div class="col-sm-4">
-											<ui-select ng-model="selections[$index]" ng-change="selectionChanged($index)" theme="bootstrap">
-												<ui-select-match placeholder="Select contact...">{{$select.selected.Name}}</ui-select-match>
-												<ui-select-choices repeat="contactInfo in contactsInfo | filter: $select.search track by $index">
-													<div ng-bind-html="contactInfo.Name | highlight: $select.search"></div>
-													<!--<small ng-bind-html="contactInfo.PhoneNumber | highlight: $select.search"></small>-->
-												</ui-select-choices>
-											</ui-select>
+										<div class="row-fluid">
+										  <select class="form-control" data-show-subtext="true" data-live-search="true" ng-model="contact" ng-change="item_selected(contact,'contact_list')">
+											<option value='' disabled="disabled">-- Choose Customer --</option>
+											<option ng-repeat="contactInfo in contactsInfo" >Name: {{contactInfo.Name}} , Phone Number: {{contactInfo.PhoneNumber}}</style></option>
+										  </select>
+										 
 										</div>
+										
 										
 										
 									</div>
@@ -1179,8 +1177,8 @@
 						
 						<div class="modal-footer">
 							<div ng-show="taskIsEdit==false">
-								<button type="button" class="btn btn-default" >
-									<b><i style =" color:#ff0066" class="fa fa-edit fa-2x" ng-click="taskIsEdit=true"></i></b>
+								<button type="button" class="btn btn-default" ng-click="taskIsEdit=true" >
+									<b><i style =" color:#ff0066" class="fa fa-edit fa-2x" ></i></b>
 								</button>
 								<button type="button" class="btn btn-default" data-dismiss="modal" ng-click="deleteEvent()">
 										<b><i style =" color: rgb(50, 118, 177);" class="fa fa-trash fa-2x"></i></b>
@@ -1190,7 +1188,7 @@
 								<button type="button" class="btn btn-primary" data-dismiss="modal">
 											cancel
 								</button>
-								<button type="button" class="btn btn-primary" data-dismiss="modal" ng-click="save_edit_event()">
+								<button type="button" class="btn btn-primary" data-dismiss="modal" ng-click="save_edit_event(contact_task)">
 											save
 								</button>
 							</div>
@@ -1214,7 +1212,7 @@
 						<div class="modal-body">
 							
 							<div class="row-fluid">
-							  <select class="form-control" data-show-subtext="true" data-live-search="true" ng-model="username" ng-change="user_selected(username)">
+							  <select class="form-control" data-show-subtext="true" data-live-search="true" ng-model="username" ng-change="item_selected(username,'user_listsss')">
 							    <option value='' disabled="disabled">-- Choose user --</option>
 								<option ng-repeat="user in users" >Name: {{user.Name}} , User name: {{user.UserName}}</style></option>
 							  </select>

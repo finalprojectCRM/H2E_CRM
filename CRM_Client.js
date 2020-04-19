@@ -47,15 +47,17 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 	var delete_contact_flag = false;
 	var delete_user_flag = false;
 	var delete_all_users_flag = false;
-	var missing_role_field_calendar = false;
-	var missing_date_field_calendar = false;
-	var username_to_delete;
+	var missing_details_inside_add_event = false;
+	var missing_details_outside_add_event = false;
+	var missing_details_edit_event = false;
+	
+	var selected_item_part_1;
+	var selected_item_part_2;
 	var deleted_status;
 	var contact_to_delete ='';
     var selected_items= [];
 	var history_array =[];
 	var start_date,end_date;
-	var selected_contact;
 	var edit_event_detailes;
 	var user_to_delete;
 	
@@ -186,12 +188,20 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 			
 			//save the event id
 			$scope.contact_event = event.id;
-			
+			$log.log("contact id: "+event.id)
+			var split_contact_phone = event.id.split(" ");
+			var contact_phone = split_contact_phone[split_contact_phone.length-1];
+			$log.log("contact_phone: "+contact_phone)
+			var contact=$scope.contactsInfo[get_index_of_select_item(contact_phone,'contact_list')];
+			$scope.selected_contact = event.id;
+            $log.log("$scope.contact :"+$scope.contact);
 			//save the event title
 			$scope.event_title = title[1];
 			
 			//when contactSelected = true then there is a contact selected 
 		    $scope.contactSelected = true;
+		    $scope.taskIsEdit = true;
+		    $scope.contact_task = true;
 
 		}
 		
@@ -221,14 +231,53 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 		ID, title, start and end date, color of event
 		
 	*/
-	$scope.save_edit_event = function() { 
-		//$log.log("edit");
+	$scope.save_edit_event = function(task_with_contact) { 
+	
+	
+	if($scope.role.Role == undefined || $scope.role.Role == "" || $scope.role.Role == "-- Choose category for role --")
+		{   
+			$scope.message = "Category is a must field, please select one";
+			$scope.message_type = "ERROR";
+			angular.element(Message_Modal).modal("show");
+			missing_details_edit_event = true;
+			return;
+		}
 		
-		edit_event_detailes.title = "Task for contact "+ selected_contact.Name +" "+ selected_contact.PhoneNumber+" : "+$scope.event_title;
+		//check if the title field was filled in the task modal - this is a must field
+		if($scope.event_title == undefined || $scope.event_title == "")
+		{   
+			$scope.message = "Title is a must field, please fill it in";
+			$scope.message_type = "ERROR";
+			angular.element(Message_Modal).modal("show");
+			missing_details_edit_event = true;
+
+			return;
+		}
+		
+		  var start_date =  moment(String($scope.event_start)).format("MM/DD/YYYY HH:mm");
+          var end_date = moment(String($scope.event_end)).format("MM/DD/YYYY HH:mm");
+		if(check_date_range_validation(start_date,end_date,'edit_task')==true)
+		{
+			return;
+		}
+		//$log.log("edit");
+		if(task_with_contact==true)
+		{
+			var description = "Task for contact "+ selected_item_part_1 +" "+ selected_item_part_2+" : "+$scope.event_title;
+			var contact = selected_item_part_1 +" "+ selected_item_part_2;
+		}
+		
+		//if the task is not for a spesific contact -> id of contact = '-1'
+		else
+		{
+			var description = $scope.event_title;
+			var contact = -1;	
+		}
+		edit_event_detailes.title = description;
 		edit_event_detailes.start = $scope.event_start;
 		edit_event_detailes.end = $scope.event_end;
 		edit_event_detailes.color = $scope.role.Color;
-		edit_event_detailes.id = selected_contact.Name +" "+ selected_contact.PhoneNumber;
+		edit_event_detailes.id = contact;
 		
 		//update the event details in the calendar
 		uiCalendarConfig.calendars.myCalendar.fullCalendar('updateEvent', edit_event_detailes);	
@@ -249,7 +298,7 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 		$scope.get_contacts_function();
 
 		//put contacts phone number in search bar 
-		$scope.search_contats = contact_phone_number[1];
+		$scope.search_contats = contact_phone_number[contact_phone_number.length-1];
 		
 		//hide the 'edit_or_delete_event' modal 
 	    angular.element(edit_or_delete_event).modal("hide");
@@ -300,15 +349,7 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 	/*
 		select contact from contacts list in the edit or delete modal
 	*/
-	$scope.selectionChanged = function(idx) {
-		$log.log(idx, $scope.selections[idx]);
-		
-		//save details of selected contact
-		selected_contact = $scope.selections[idx];
-		//$scope.$apply();
-
 	
-	};
 	
 	$scope.selected = {};
 	$scope.selectAll = function(flag,users_or_contacts){
@@ -420,11 +461,17 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 			angular.element(Message_Modal).modal("show");
 			if(call_placement=='in_calendar')
 			{
-				missing_role_field_calendar= true;
+				missing_details_inside_add_event= true;
 			}
 			else if(call_placement=='out_of_calendar')
 			{
-				missing_date_field_calendar= true;
+				missing_details_outside_add_event= true;
+
+			}
+			else if(call_placement=='edit_task')
+			{
+				missing_details_edit_event = true;
+
 
 			}
 			return true;
@@ -473,7 +520,7 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 				$scope.message = "start and end date are must fields, please fill them in";
 				$scope.message_type = "ERROR";
 				angular.element(Message_Modal).modal("show");
-				missing_date_field_calendar= true;
+				missing_details_outside_add_event= true;
 				return;
 			}
 		    $log.log("start date outside $scope.event_start: " + $scope.event_start);
@@ -503,11 +550,11 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 			angular.element(Message_Modal).modal("show");
 			if(outside_modal==false)
 			{
-				missing_role_field_calendar= true;
+				missing_details_inside_add_event= true;
 			}
 			else
 			{
-				missing_date_field_calendar= true;
+				missing_details_outside_add_event= true;
 			}
 			return;
 		}
@@ -520,11 +567,11 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 			angular.element(Message_Modal).modal("show");
 			if(outside_modal==false)
 			{
-				missing_role_field_calendar= true;
+				missing_details_inside_add_event= true;
 			}
 			else
 			{
-				missing_date_field_calendar= true;
+				missing_details_outside_add_event= true;
 			}
 			return;
 		}
@@ -535,8 +582,8 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 		*/
 		if(task_with_contact==true)
 		{
-			var description = "Task for contact "+ selected_contact.Name +" "+ selected_contact.PhoneNumber+" : "+$scope.title;
-			var contact = selected_contact.Name +" "+ selected_contact.PhoneNumber;
+			var description = "Task for contact "+ selected_item_part_1 +" "+ selected_item_part_2+" : "+$scope.title;
+			var contact = selected_item_part_1 +" "+ selected_item_part_2;
 		}
 		
 		//if the task is not for a spesific contact -> id of contact = '-1'
@@ -1444,15 +1491,32 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 	   
 	
 	}
-	function get_index_of_select_item(item)
+	function get_index_of_select_item(item,flag)
     {
-		for (var i = 0; i < $scope.roles.length; i++)
+		if(flag == 'role_list')
 		{
-			if(item == $scope.roles[i].Role)
+			for (var i = 0; i < $scope.roles.length; i++)
 			{
-				return i;
+				if(item == $scope.roles[i].Role)
+				{
+					return i;
+				}
 			}
-        }
+		}
+		else if(flag == 'contact_list')
+		{
+			$log.log("item of contact list : "+item);
+			for (var i = 0; i < $scope.contactsInfo.length; i++)
+			{
+				
+				if(item == $scope.contactsInfo[i].PhoneNumber)
+				{
+					$log.log("index "+i);
+					return i;
+				}
+			}
+		}
+		
 	}
     /*
 		a function for saving the deatailes of contact before update
@@ -1461,7 +1525,7 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 	{	
 		//get all details of contact in json format
 		contact_before_update = {Category:contact.Category, Name:contact.Name,Status:contact.Status, PhoneNumber:contact.PhoneNumber, eMail:contact.eMail, Address:contact.Address};
-		$scope.role_category = $scope.roles[get_index_of_select_item(contact_before_update.Category.Role)];
+		$scope.role_category = $scope.roles[get_index_of_select_item(contact_before_update.Category.Role,'role_list')];
 		$scope.status_role = contact_before_update.Status;
 		$scope.update_status = contact_before_update.Status;
 		
@@ -2333,15 +2397,20 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 		}
 		
 		//modal for missing role field in calendar event
-		if(missing_role_field_calendar == true)
+		if(missing_details_inside_add_event == true)
 		{
 			angular.element(add_event).modal("show");
-		   missing_role_field_calendar =false;
+		   missing_details_inside_add_event =false;
 		}
-		if(missing_date_field_calendar == true)
+		if(missing_details_outside_add_event == true)
 		{
 			angular.element(add_event_outside).modal("show");
-		    missing_date_field_calendar =false;
+		    missing_details_outside_add_event =false;
+		}
+		if(missing_details_edit_event == true)
+		{
+			angular.element(edit_or_delete_event).modal("show");
+		    missing_details_edit_event =false;
 		}
 	}
 	
@@ -2643,14 +2712,32 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 	/*
 		a function for saving the user name of user to delete that was selected at modal
 	*/
-	$scope.user_selected = function(username)
+	$scope.item_selected = function(item,flag)
 	{
-		var res = username.split(",");
-		var res1=res[1].split(":");
+		var res;
+		var res1;
+		var res2;
+		$scope.selected_contact = item;
+
+		res = item.split(",");
+
+		if(flag == 'contact_list')
+		{
+			res2 = res[0].split(":");//contact name
+			selected_item_part_1 = String(res2[1]);
+		}
 		
-		username_to_delete = res1[1].split(" ");
-		username_to_delete = String(username_to_delete[1]);
-		$log.log(username_to_delete);
+		res1 = res[1].split(":");
+		
+		selected_item_part_2 = res1[1].split(" ");
+		selected_item_part_2 = String(selected_item_part_2[1]);
+		
+		$scope.selected_contact =selected_item_part_1+" "+selected_item_part_2 ;
+
+
+		
+		
+		$log.log(selected_item_part_2);
 
 	}
 	
@@ -2661,14 +2748,14 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 	{
 		if(flag == undefined)
 		{
-			username_to_delete = username_to_delete;
+			selected_item_part_2 = selected_item_part_2;
 		}
 		else
 		{
-			username_to_delete = flag;
+			selected_item_part_2 = flag;
 		}
 		$http.post("http://localhost:3000/deleteUser", {
-				username : username_to_delete,
+				username : selected_item_part_2,
 			}).then(
 				function (response) { //success callback   
 				$scope.users = response.data.users;
@@ -2677,7 +2764,7 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 					
 				}
 			);
-		$log.log(username_to_delete);
+		$log.log(selected_item_part_2);
 	}
 	
 	/*

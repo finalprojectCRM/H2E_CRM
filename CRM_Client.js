@@ -1239,7 +1239,6 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 		//if color does not exist send an http request to server with role details : role color and matching statuses list
 		else
 		{
-			selected_items.unshift( status_header );
 			selected_items.push(new_status_option);
 			$log.log("new_status_option :"+new_status_option);
 			var role_with_statuses = {Role:$scope.role_from_modal,Color:role_color, Statuses:selected_items};
@@ -1442,7 +1441,6 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 			
 				//return the list of the colors
 				$scope.roles_colors = response.data.colors;
-				$log.log("roles_colors : " + $scope.roles_colors);
 			},
 			function (response) {//failure callback
 			
@@ -1481,9 +1479,29 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 	   
 	
 	}
-	function get_index_of_select_item(item,flag)
+		function get_index_of_select_item(item,flag,status)
     {
-		if(flag == 'role_list')
+		if(flag == 'status_list')
+		{
+			for (var i = 0; i < $scope.roles.length; i++)
+			{
+				if(item == $scope.roles[i].Role)
+				{
+					$log.log('entered if ##: ');
+					for (var j = 0; j < $scope.roles[i].Statuses.length; j++)
+					{
+						if(status == $scope.roles[i].Statuses[j])
+						{
+							$log.log('j: '+j);
+							return j;
+						}
+
+					}
+
+				}
+			}
+		}
+		else if(flag == 'role_list')
 		{
 			for (var i = 0; i < $scope.roles.length; i++)
 			{
@@ -1515,8 +1533,10 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 	{	
 		//get all details of contact in json format
 		contact_before_update = {Category:contact.Category, Name:contact.Name,Status:contact.Status, PhoneNumber:contact.PhoneNumber, eMail:contact.eMail, Address:contact.Address};
-		$scope.role_category = $scope.roles[get_index_of_select_item(contact_before_update.Category.Role,'role_list')];
-		$scope.status_role = contact_before_update.Status;
+		var index_role = get_index_of_select_item(contact_before_update.Category.Role,'role_list');
+		$scope.role_category = $scope.roles[index_role];
+		$scope.status_role = $scope.roles[index_role].Statuses[get_index_of_select_item(contact_before_update.Category.Role,'status_list',contact_before_update.Status)];
+
 		$scope.update_status = contact_before_update.Status;
 		
 	}
@@ -1530,7 +1550,6 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 		//get all details of user in json format
 		user_before_update = {Role:user.Role,Name:user.Name,UserName:user.UserName, eMail:user.eMail};	
 		$scope.role = $scope.roles[get_index_of_select_item(user_before_update.Role,'role_list')];
-
 	}
 
     /*
@@ -1550,7 +1569,7 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 		a function for saving the role that was chosen
 	*/
 	$scope.onChangeCategory = function(option,flag){
-		$log.log("option : "+option.Role);
+		
 		category = option;
 		if(flag == 'update role')
 		{
@@ -2144,11 +2163,13 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 		
 		//check if role was celected
 		if(category == undefined){
-		    $scope.message = "You must choose a category";
-		    $scope.message_type = "ERROR";
-			angular.element(Message_Modal).modal("show");
-			return;
+		    category = contact_before_update.Category;
+			if(status_role == undefined)
+			{
+			   status_role = contact_before_update.Status;
+			}
 		}
+		
 		
 		//check if no name was entered if so show an error modal
 		if(contactInfoToUpdate.Name==undefined || contactInfoToUpdate.Name== "")
@@ -2265,6 +2286,8 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 					if(!response.data.phone_exists)
 					{
                          $scope.getContactsList();
+						 category = undefined;
+						 status_role = undefined;
 					}
 					
 					//if the phone already exsist show an error modal
@@ -2295,13 +2318,17 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 		//regular expression for a valid name
 		var re_name = /^[a-zA-Z\s\u0590-\u05fe]{2,20}$/;
 		
+		$log.log("category : " + category);
 		//if no role was selected show an error modal
-		if($scope.role==null)
+		if(category == undefined)
 		{
-		    $scope.message = "You must choose role for user";
-		    $scope.message_type = "ERROR";
-			angular.element(Message_Modal).modal("show");
-			return;
+		    $log.log("entered if : " + user_before_update.Role);
+		    category = user_before_update.Role;
+		}
+		else
+		{
+			$log.log("entered else : " + category.Role);
+			category = category.Role;
 		}
 		
 		//if a user name was not entered or was invalid show an error modal
@@ -2332,8 +2359,9 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 			return;
 		}
 		
+		
 		//save the updated details of the user
-		var updated_user={Role:category.Role,UserName:userToUpdate.UserName, Name:userToUpdate.Name, eMail:userToUpdate.eMail};
+		var updated_user={Role:category,UserName:userToUpdate.UserName, Name:userToUpdate.Name, eMail:userToUpdate.eMail};
 		
 		//call server with http request
 		$http.post("http://localhost:3000/updateUser", {
@@ -2341,7 +2369,8 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 			}).then(
 				function (response) { //success callback   
 
-					$scope.users = response.data.users;			
+					$scope.users = response.data.users;	
+					category = undefined;
 				},
 				function (response) { //failure callback
 					
@@ -2782,6 +2811,8 @@ var app = angular.module("CRM",  [ "ngResource",'ui.calendar','ui.bootstrap','ui
 	*/
 	$scope.sign_out = function()
 	{
+		$scope.Admin=false;
+		$scope.admin_page = false;
 		$scope.all_system = false;
 		$scope.login_page = true;
 		$scope.temp_password = "";

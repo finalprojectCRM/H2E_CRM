@@ -885,6 +885,7 @@ function check_exsisting_statuses_and_roles_and_files()
 	
 	//count the documents in statuses collection
 	statuses_collection.countDocuments(function (err, count) {
+		console.log("there are statuses");
 	//if the collection does not have documents
     if (!err && count === 0) {
 		 console.log("no statuses");
@@ -901,7 +902,7 @@ function check_exsisting_statuses_and_roles_and_files()
 	{
 		console.log("no roles");
 		//insert the role : "-- Choose category for role --"
-		 //roles_with_statuses_collection.insertOne({Role:"-- Choose category for role --"});
+		 roles_with_statuses_collection.insertOne({Role:"new in the system"});
 		 //insert the roles: "תמיכה טכנית" with statuses: : "-- Choose status for role --","בעיה טכנית" ,,"add a new status" and color:#66ffff"
          roles_with_statuses_collection.insertOne({Role:"תמיכה טכנית",Color:"#66ffff",Statuses:["בעיה טכנית","add a new status"]});
 		 //insert the color:#66ffff" to colors_collection

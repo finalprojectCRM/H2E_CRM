@@ -245,7 +245,7 @@
 							<td> </td>
 							<td> </td>
 							<td style="text-align:right;">
-							<div class="dropdown">
+							<div class="dropdown" ng-show="isAdmin==true">
 							<a href="#" class="dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 								<i class="glyphicon glyphicon-th-list"></i>
 								<span class="caret"></span>
@@ -272,7 +272,8 @@
 									<th ng-show="isAdmin==true"> </th>
 									<th ng-show="isAdmin==true"> </th>
 									<th ng-show="isAdmin==true"> </th>	
-									<th ng-show="isAdmin==true"> </th>	
+									<th ng-show="isAdmin==true"> </th>
+									<th ng-show="isAdmin==false"> </th>
 								</tr>
 							<thead>
 							<tbody>
@@ -281,15 +282,15 @@
 									<td ng-show="userIsEdit==false" >{{userInfo.Name}}</td>
 									<td ng-show="userIsEdit==false && isAdmin==true">{{userInfo.UserName}}</td> 
 									<td ng-show="userIsEdit==false">{{userInfo.eMail}}</td>
-									<td ng-show="userIsEdit==false"><i class="fa fa-envelope" style="font-size:24px;color:#00b3b3" aria-hidden="true" ng-click = "sendMailModal(userInfo.eMail)" ></i></td>
+									<td ng-show="userIsEdit==false && isAdmin==true"><i class="fa fa-envelope" style="font-size:24px;color:#00b3b3" aria-hidden="true" ng-click = "sendMailModal(userInfo.eMail)" ></i></td>
 
 									
 									<td ng-show="userIsEdit==false && isAdmin==true && username!=userInfo.UserName "><i class="fa fa-edit" style="font-size:24px;color:#008fb3"  aria-hidden="true" ng-click = "userIsEdit =!userIsEdit;update_user_function(userInfo)"></i></td>
 									<div ng-if="userIsEdit" class="form-group row" >
 										
 										
-										<td ng-show="userIsEdit==true"><div class="form-group" >
-											<select class="form-control"   ng-model="role" ng-options="objRole as objRole.Role disable when objRole.Role  === '-- Choose category for role --' for objRole in roles " ng-change="onChangeCategory(role)"  >
+										<td ng-show="userIsEdit==true"><div class="form-group" ><!-- ng-if="roles.indexOf(role)>0"-->
+											<select class="form-control" ng-model="role" ng-options="objRole as objRole.Role disable when objRole.Role  === '-- Choose category for role --' for objRole in roles | filter: ({Role : '!new in the system'})" ng-change="onChangeCategory(role)"  >
 								               	<option value='' disabled="disabled">-- Choose category for role --</option>
 
 											
@@ -393,7 +394,7 @@
 									<div ng-if="contactIsEdit" class="form-group row" >										
 										
 										<td ng-show="contactIsEdit==true"><div class="form-group" >	
-											<select class="form-control" ng-model="role_category" ng-options="objRole as objRole.Role disable when objRole.Role  === '-- Choose category for role --' for objRole in roles " ng-change="onChangeCategory(role_category)" ><!---->
+											<select class="form-control" ng-model="role_category" ng-options="objRole as objRole.Role disable when objRole.Role  === '-- Choose category for role --' for objRole in roles | filter: ({Role : '!new in the system'})" ng-change="onChangeCategory(role_category)" ><!---->
 								               	<option value='' disabled="disabled">-- Choose category for role --</option>
 
 												 <!--<optio
@@ -418,12 +419,13 @@
 									<td ng-show="contactIsEdit==false"><i class="fa fa-trash" style="font-size:24px;color:#003366"  aria-hidden="true" ng-click = "insure_delete_contact(contactInfo)"></i></td>
 									<td ng-show="contactIsEdit==false"> <i class="fa fa-history" style="font-size:24px;color:#003366"  pop-over history="contactInfo.History", title="History"></i>
       
-    <script type="text/ng-template" id="popover_template.html">
-      <div>
-         <pre><span ng-repeat='contact_history in history track by $index'>{{contact_history}}<b><hr></b></span>
-</pre>
-      </div>
-    </script><td>
+									<script type="text/ng-template" id="popover_template.html">
+									  <div>
+										 <pre>
+											<span ng-repeat='contact_history in history track by $index'>{{contact_history}}<b><hr></b></span>
+										</pre>
+									  </div>
+									</script><td>
 										<td ng-show="contactIsEdit==false" ><div ng-if="choose_user_to_email"> <input  type="checkbox" ng-show="choose_user_to_email==true" ng-model="selected[contactInfo.PhoneNumber]" /></div></td>
 
 									<td ng-show="contactIsEdit==true"><i class="fa fa-check-square-o" style="font-size:24px;color:#00e600" aria-hidden="true" ng-click = "save_updated(contactInfo)"></i></td>
@@ -433,7 +435,7 @@
 								<tr ng-show="get_new_contact_details==true">
 						
 									<td><div class="form-group" ng-init="role">	
-											<select class="form-control" data-show-subtext="true" data-live-search="true" ng-model="role" ng-options="objRole as objRole.Role disable when objRole.Role  === '-- Choose category for role --' for objRole in roles " ng-change="onChangeCategory(role)" >
+											<select class="form-control" data-show-subtext="true" data-live-search="true" ng-model="role" ng-options="objRole as objRole.Role disable when objRole.Role  === '-- Choose category for role --' for objRole in roles | filter: ({Role : '!new in the system'})" ng-change="onChangeCategory(role)" >
 											    <option value='' disabled="disabled">-- Choose category for role --</option>
 
 												 <!--<optionng-repeat=" role in roles" > {{role.Role}}</style></option>-->
@@ -506,9 +508,9 @@
 							</tr>
 						<thead>
 						<tbody>
-							<tr ng-repeat="role in roles" ng-if="$index > 0">
-							<td style="padding-right:5px"> <svg style="display: block" width="40" height="7"> <rect width="40" height="7" ng-style="{fill:role.Color}" /></svg></td>
-							<td>{{role.Role}}</td>
+							<tr ng-repeat="role in roles | filter: ({Role : '!new in the system'})">
+								<td style="padding-right:5px"> <svg style="display: block" width="40" height="7"> <rect width="40" height="7" ng-style="{fill:role.Color}" /></svg></td>
+								<td>{{role.Role}}</td>
 							</tr>
 						</tbody>
 					</table>
@@ -626,7 +628,6 @@
 							  
 							</div>				
 						</div>
-						
 						<!-- Modal Footer -->
 						<div class="modal-footer">
 							<button type="button" class="btn btn-primary" data-dismiss="modal" ng-click="repeat_message()">
@@ -876,7 +877,7 @@
 					
 							   </br>
 							   <div>
-								   <select class="form-control"  ng-model="role" ng-options="objRole as objRole.Role disable when objRole.Role  === '-- Choose category for role --' for objRole in roles " ng-change="selected_item(role)"  >
+								   <select class="form-control"  ng-model="role" ng-options="objRole as objRole.Role disable when objRole.Role  === '-- Choose category for role --' for objRole in roles | filter: ({Role : '!new in the system'})" ng-change="selected_item(role)"  >
 								   	   <option value='' disabled="disabled">-- Choose role --</option>
 								  </select></br>
 								  </div>
@@ -984,7 +985,7 @@
 					
 							   </br>
 							   <div>
-								   <select class="form-control"  ng-model="role" ng-options="objRole as objRole.Role disable when objRole.Role  === '-- Choose category for role --' for objRole in roles " ng-change="selected_item(role)"  >
+								   <select class="form-control"  ng-model="role" ng-options="objRole as objRole.Role disable when objRole.Role  === '-- Choose category for role --' for objRole in roles | filter: ({Role : '!new in the system'})" ng-change="selected_item(role)"  >
 									 <option value='' disabled="disabled">-- Choose role --</option>
 								  </select></br>
 								  </div>
@@ -1068,7 +1069,7 @@
 						
 										</br>
 										<div>
-											<select class="form-control"  ng-model="role" ng-options="objRole as objRole.Role disable when objRole.Role  === '-- Choose category for role --' for objRole in roles " ng-change="selected_item(role)"  >
+											<select class="form-control"  ng-model="role" ng-options="objRole as objRole.Role disable when objRole.Role  === '-- Choose category for role --' for objRole in roles | filter: ({Role : '!new in the system'})" ng-change="selected_item(role)"  >
 											   <option value='' disabled="disabled">-- Choose role --</option>
 											</select></br>
 										</div>
@@ -1317,7 +1318,7 @@
 								</br>
 
                              <div class="row-fluid">
-							  <select class="form-control" ng-model="role" ng-options="objRole as objRole.Role disable when objRole.Role  === '-- Choose category for role --' for objRole in roles " ng-change="selected_item(role,'new role')"  >
+							  <select class="form-control" ng-model="role" ng-options="objRole as objRole.Role disable when objRole.Role  === '-- Choose category for role --' for objRole in roles | filter: ({Role : '!new in the system'})" ng-change="selected_item(role,'new role')"  >
 							  		 <option value='' disabled="disabled">-- Choose role --</option>
 							  </select>
 
@@ -1409,7 +1410,7 @@
 								  <div class="form-group">
 									<div class="col-sm-10">
 										</br>
-										<select class="form-control" data-show-subtext="true" data-live-search="true" ng-model="role" ng-options="objRole as objRole.Role disable when objRole.Role  === '-- Choose category for role --' for objRole in roles " ng-change="onChangeCategory(role)" >
+										<select class="form-control" data-show-subtext="true" data-live-search="true" ng-model="role" ng-options="objRole as objRole.Role disable when objRole.Role  === '-- Choose category for role --' for objRole in roles | filter: ({Role : '!new in the system'})" ng-change="onChangeCategory(role)" >
 										   	    <option value='' disabled="disabled">-- Choose role --</option>
 										</select>	
 										</br>
@@ -1536,7 +1537,7 @@
 								  <div class="form-group">
 									<div class="col-sm-10">
 										</br>
-										<select class="form-control" data-show-subtext="true" data-live-search="true" ng-model="role" ng-options="objRole as objRole.Role disable when objRole.Role  === '-- Choose category for role --'  for objRole in roles " ng-change="onChangeCategory(role,'update role')" >
+										<select class="form-control" data-show-subtext="true" data-live-search="true" ng-model="role" ng-options="objRole as objRole.Role disable when objRole.Role  === '-- Choose category for role --'  for objRole in roles | filter: ({Role : '!new in the system'})" ng-change="onChangeCategory(role,'update role')" >
 											<option value='' disabled="disabled">-- Choose role --</option>
 										</select>	
 										</br>
@@ -1578,7 +1579,7 @@
 						<div class="modal-body">
 							
 							<div class="row-fluid">
-							   <select class="form-control"  ng-model="role" ng-options="objRole as objRole.Role disable when objRole.Role  === '-- Choose category for role --' for objRole in roles " ng-change="selected_item(role)"  >
+							   <select class="form-control"  ng-model="role" ng-options="objRole as objRole.Role disable when objRole.Role  === '-- Choose category for role --' for objRole in roles | filter: ({Role : '!new in the system'})" ng-change="selected_item(role)"  >
 							  	  <option value='' disabled="disabled">-- Choose category for role --</option>
 							  </select>
 							</div>

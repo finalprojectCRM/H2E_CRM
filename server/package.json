@@ -1,0 +1,17 @@
+{
+  "name": "CRM-Server",
+  "version": "1.0.0",
+  "main": "CRM-Server.js",
+  "scripts": {
+    "start": "node CRM-Server.js"
+  },
+  "dependencies": {
+    "body-parser": "latest",
+    "express": "^4.17.1",
+    "mongodb": "^3.2.7",
+    "multer": "^1.4.2"
+  },
+  "devDependencies": {
+    "nodemailer": "^6.4.3"
+  }
+}

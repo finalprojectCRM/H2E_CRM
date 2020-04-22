@@ -682,10 +682,19 @@
 
       //a function for clicking on select file to system
       $scope.submitUpload = function () {
+        if($scope.upload_form.file.$error.maxSize==true)
+        {
+          $scope.message = "The file size is greater than 10 MB ";
+          $scope.message_type = "ERROR";
+          angular.element(Message_Modal).modal("show");
+          $scope.upload_form.file.$error.maxSize = false;
+          $scope.file = "";
+        }
         if ($scope.upload_form.file.$valid && $scope.file) { //check if from is valid
           //if (vm.file) { //check if from is valid
           $scope.upload($scope.file); //call upload function
         }
+
 
       };
 
@@ -694,10 +703,15 @@
           url: 'http://localhost:3000/uploadImage', //webAPI exposed to upload the file
           data:{file:file} //pass file as data, should be user ng-model
         }).then(function (resp) { //upload function returns a promise
+          $scope.file = "";
           if(resp.data.error_code === 0){ //validate success
-            $window.alert('Success ' + resp.config.data.file.name + 'uploaded. Response: ');
+            var sucsses_uploded = ' Success to upload the file : ' + resp.config.data.file.name;
+            toaster.pop('success',sucsses_uploded, "");
+
           } else {
-            $window.alert('an error occured');
+            var error_uploded = 'an error occured';
+            toaster.pop('error', error_uploded, "");
+
           }
         }, function (resp) { //catch error
           console.log('Error status: ' + resp.status);
@@ -1520,6 +1534,12 @@
           file: file,
         }).then(
           function (response) { //success callback
+            console.log(response.data.fileDeleted);
+            $scope.file = "";
+            if(response.data.fileDeleted!=undefined)
+            {
+              toaster.pop('success',response.data.fileDeleted, "");
+            }
 
           },
           function (response) { //failure callback
@@ -2331,7 +2351,7 @@
           with the password in server for the current user name
       */
       $scope.verify_password = function (current_password) {
-        var logged_in_current_password = {username: logged_in_user.UserName, current_password: current_password};
+        var logged_in_current_password = {username: logged_in_user.UserName, currentPassword: current_password};
         $http.post("http://localhost:3000/verificationCurrentPassword", {
           logged_in_current_password: logged_in_current_password,
         }).then(

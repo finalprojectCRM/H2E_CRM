@@ -1618,32 +1618,30 @@
 						<div class="modal-body">
 
 							<div class="form-horizontal" >
-								<div class="form control">
-									<div class="row" ng-if="uploadSuccessful">
-										<div class="col-sm-10">
-											<div class="alert alert-success text-center">Upload successful!</div>
-										</div>
-									 </div>
-									<form class="input-group col-sm-10" name="upload_form">
-									   <input type="file" ngf-select ng-model="file" name="file" ngf-pattern="'*/*'" accept="*/*" ngf-max-size="100MB"/>
+                                    <b style =" color:#ff0066" class="form control col-sm-10">Please add file with max size up to 10MB:</b></br></br>
+									<form class="input-group text-primary col-sm-10" name="upload_form">
+
+									   <input type="file" ngf-select ng-model="file" name="file" ngf-pattern="'*/*'" accept="*/*" ngf-max-size="10MB" ngf-model-invalid="errorFiles"></input>
 										<i ng-show="upload_form.file.$error.required">*required</i><br>
-										<i ng-show="upload_form.file.$error.maxSize">File too large
-											{{file.size / 1000000|number:1}}MB: max 100M</i>
+										<i ng-show="upload_form.file.$error.maxSize">File too large :
+											{{errorFiles[0].size / 1000000|number:1}} MB , The max size: 10M</br></i>
 										<!--input type="text" id="fileNameDisplayField" class="form-control" ng-model="uploadFileName" placeholder="File to Upload" readonly="readonly"-->
 									   <!--div class="input-group-addon btn btn-default" ng-click="submitUpload()"><i class="glyphicon glyphicon-file"></i></div-->
-										<p>{{progress}}</p>
+										<!--<p>{{progress}}</p>-->
 									</form>
 
-									</br>
-								</div>
+
+
 							</div>
 						</div>
+
+                        </br>
 
 
 
 						<!-- Modal Footer -->
 						<div class="modal-footer">
-							<button class="btn btn-default" ng-click="clearFileUpload()" data-dismiss="modal" >Cancel</button>
+							<button class="btn btn-default" ng-click="file=''" data-dismiss="modal" >Cancel</button>
 							<button class="btn btn-primary" ng-click="submitUpload()" data-dismiss="modal" >
 										Upload
 							</button>

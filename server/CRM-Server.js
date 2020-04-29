@@ -14,7 +14,7 @@ const APP_NAME = require('os').hostname();
 const APP_PORT = 3000;
 
 //the database and the collections in mongodb
-let database, contactsCollection, statusesCollection, usersCollection, filesCollection,
+let database, customersCollection, statusesCollection, workersCollection, filesCollection,
     rolesWithStatusesCollection, statusesWithRolesCollection, colorsCollection;
 const app = new Express();
 //The temp password that the administrator get with the system
@@ -92,9 +92,9 @@ app.get('/', (request, response) => {
 
             /*create all collections in mongo db*/
             database = client.db(dbName);
-            contactsCollection = database.collection('contacts');
+            customersCollection = database.collection('customers');
             statusesCollection = database.collection('statuses');
-            usersCollection = database.collection('users');
+            workersCollection = database.collection('workers');
             filesCollection = database.collection('files');
             rolesWithStatusesCollection = database.collection('roles with statuses');
             statusesWithRolesCollection = database.collection('statuses with roles');
@@ -313,11 +313,11 @@ app.get('/firstSystemLoad', (request, response) => {
     console.log('entered firstSystemLoad function');
     //check if data exists in statuses & roles & files collection
     checkExistingStatusesAndRolesAndFiles();
-    usersCollection.findOne({'UserName': 'Admin'}).then(function (mongoUser) {
-        if (!mongoUser)//Admin not yet in system = mongo db usersCollection is empty
+    workersCollection.findOne({'UserName': 'Admin'}).then(function (mongoUser) {
+        if (!mongoUser)//Admin not yet in system = mongo db workersCollection is empty
         {
             //insert to users collection the first user - Admin
-            usersCollection.insertOne(
+            workersCollection.insertOne(
                 {
                     'UserName': 'Admin', 'Role': 'Administrator', 'Name': '',
                     'eMail': '', 'Password': '', 'TempPassword': firstTempPassword
@@ -326,7 +326,7 @@ app.get('/firstSystemLoad', (request, response) => {
                 });
             response.writeHead(200, {'Content-Type': 'application/json'});
             response.end(JSON.stringify({'admin_first_load': true}));//Admin has been loaded first time to mongodb
-        } else//there is a user in system and Admin exists = mongo db usersCollection is not empty
+        } else//there is a user in system and Admin exists = mongo db workersCollection is not empty
         {
             if (mongoUser.UserName === 'Admin' && mongoUser.Name === '' && mongoUser.eMail === '' && mongoUser.Password === '') {
                 if (mongoUser.TempPassword === firstTempPassword)//admin did not yet change the temp password that he got from system
@@ -361,7 +361,7 @@ app.post('/verifyTemporaryPassword', (request, response) => {
 
     console.log('entered verifyTemporaryPassword function');
     const tempPassword = request.body.tempPassword;
-    usersCollection.findOne({'UserName': 'Admin'}).then(function (mongoUser) {
+    workersCollection.findOne({'UserName': 'Admin'}).then(function (mongoUser) {
 
         if (mongoUser.TempPassword !== tempPassword)//not correct temp password
         {
@@ -402,8 +402,8 @@ app.post('/changeTemporaryPassword', (request, response) => {
 
     const NewTempPassword = request.body.new_temp_password;
     console.log('NewTempPassword: ' + NewTempPassword);
-    //update in usersCollection the filed TempPassword that exists in admin with a new password
-    usersCollection.update({'UserName': 'Admin'}, {$set: {TempPassword: NewTempPassword.TempPassword}}, function (err, obj) {
+    //update in workersCollection the filed TempPassword that exists in admin with a new password
+    workersCollection.update({'UserName': 'Admin'}, {$set: {TempPassword: NewTempPassword.TempPassword}}, function (err, obj) {
         if (err) throw err;
         console.log('succeeded changing temp password');
 
@@ -423,7 +423,7 @@ app.post('/verificationCurrentPassword', (request, response) => {
 
     let loggedInCurrentPassword = request.body.logged_in_current_password;
     //try to find in user collection a user with a given username and password
-    usersCollection.findOne({
+    workersCollection.findOne({
         'UserName': loggedInCurrentPassword.username,
         'Password': loggedInCurrentPassword.currentPassword
     }).then(function (mongoUser) {
@@ -454,8 +454,8 @@ app.post('/changeCurrentPassword', (request, response) => {
 
     let logged_in_new_password = request.body.logged_in_new_password;
 
-    //update in usersCollection the the password of user with a new password
-    usersCollection.update({'UserName': logged_in_new_password.username},
+    //update in workersCollection the the password of user with a new password
+    workersCollection.update({'UserName': logged_in_new_password.username},
         {$set: {'Password': logged_in_new_password.new_password}}, function (err, obj) {
             if (err) throw err;
             //return ok
@@ -485,10 +485,10 @@ app.post('/addUser', (request, response) => {
         'Events': userEvents,
     };
     //check if this username does not exist in the system
-    usersCollection.findOne({'UserName': user.UserName}).then(function (mongoUser) {
+    workersCollection.findOne({'UserName': user.UserName}).then(function (mongoUser) {
         if (!mongoUser) {
             //if this username does not exist in the system - add a new user with his details
-            usersCollection.insertOne(user, function (err, res) {
+            workersCollection.insertOne(user, function (err, res) {
                 if (err) throw err;
                 //return the user details with is_admin:false
                 response.writeHead(200, {'Content-Type': 'application/json'});
@@ -503,7 +503,7 @@ app.post('/addUser', (request, response) => {
             //when the username already exists with admin and his fields did not fill
             if (mongoUser.UserName === 'Admin' && mongoUser.Name === '' && mongoUser.eMail === '' && mongoUser.Password === '') {
                 //update the Admin empty details with a new details
-                usersCollection.update({'UserName': 'Admin'}, {
+                workersCollection.update({'UserName': 'Admin'}, {
                     $set: {
                         'Role': 'Administrator', 'Name': user.Name,
                         'eMail': user.eMail, 'Password': user.Password
@@ -544,7 +544,7 @@ app.post('/login', (request, response) => {
     let user = request.body.LoginUser;
     console.log(user.UserName);
     //check if the username and the password exist
-    usersCollection.findOne({'UserName': user.UserName, 'Password': user.Password}).then(function (result) {
+    workersCollection.findOne({'UserName': user.UserName, 'Password': user.Password}).then(function (result) {
         //if no match
         if (!result) {
             console.log('no match!');
@@ -585,11 +585,11 @@ app.post('/addContact', (request, response) => {
     console.log('contact: ' + contact.History);
 
     //check if the contact is already exist by the key - the PhoneNumber
-    contactsCollection.findOne({'PhoneNumber': contact.PhoneNumber}).then(function (result) {
+    customersCollection.findOne({'PhoneNumber': contact.PhoneNumber}).then(function (result) {
 
         if (!result) {
             //if this contact does not exist in the system - add a new contact with his details
-            contactsCollection.insertOne(
+            customersCollection.insertOne(
                 {
                     'Name': contact.Name,
                     'Category': contact.Category,
@@ -626,8 +626,8 @@ app.post('/addContact', (request, response) => {
 app.get('/getContacts', (request, response) => {
 
     console.log('entered getContacts function');
-    //enter all members of contactsCollection to array
-    contactsCollection.find({}).toArray((error, result) => {
+    //enter all members of customersCollection to array
+    customersCollection.find({}).toArray((error, result) => {
         if (error) {
             return response.status(500).send(error);
         }
@@ -644,7 +644,7 @@ app.get('/getContacts', (request, response) => {
 app.get('/getFiles', (request, response) => {
 
     console.log('entered getFiles function');
-    //enter all members of contactsCollection to array
+    //enter all members of customersCollection to array
     filesCollection.find({}).toArray((error, result) => {
         if (error) {
             return response.status(500).send(error);
@@ -670,7 +670,7 @@ app.post('/getUsers', (request, response) => {
     if (status_flag === 'deleteUser') {
         console.log('entered if with : ' + status_flag);
         //get the user list without the administrator
-        usersCollection.find({UserName: {$ne: 'Admin'}}).toArray((error, result) => {
+        workersCollection.find({UserName: {$ne: 'Admin'}}).toArray((error, result) => {
             if (error) {
                 return response.status(500).send(error);
             }
@@ -682,8 +682,8 @@ app.post('/getUsers', (request, response) => {
     //if request is to get the users for show user
 
     else if (status_flag === 'showUsers') {
-        //enter all members of usersCollection to array
-        usersCollection.find({}).toArray((error, result) => {
+        //enter all members of workersCollection to array
+        workersCollection.find({}).toArray((error, result) => {
             if (error) {
                 return response.status(500).send(error);
             }
@@ -705,7 +705,7 @@ app.post('/deleteContact', (request, response) => {
     let contact_to_delete = request.body.contact;
     console.log('contact_to_delete :' + contact_to_delete);
     //delete the contact from contacts collection by his all details
-    contactsCollection.deleteOne({
+    customersCollection.deleteOne({
         'Name': contact_to_delete.Name,
         'Status': contact_to_delete.Status,
         'PhoneNumber': contact_to_delete.PhoneNumber,
@@ -860,8 +860,6 @@ app.post('/addRoleWithStatuses', (request, response) => {
 
     //go through of all statuses
     for (let status of role_with_statuses.Statuses) {
-        //check if the status does not 'add a new status' or '-- Choose status --'
-        if (status !== 'add a new status' && status !== '-- Choose status --') {
             console.log('status: ' + status);
             //add the to status a new role
             statusesWithRolesCollection.updateOne({Status: status}
@@ -870,7 +868,7 @@ app.post('/addRoleWithStatuses', (request, response) => {
                     console.log('after updateOne');
                 });
 
-        }
+
     }
     //response with ok
     response.writeHead(200, {'Content-Type': 'application/json'});
@@ -893,8 +891,6 @@ app.post('/updateRole', (request, response) => {
         });
     //go through statuses
     for (let status of role_to_update.Statuses) {
-        //check if the status does not 'add a new status' or '-- Choose status --'
-        if (status !== 'add a new status' && status !== '-- Choose status --') {
             console.log('status: ' + status);
             console.log('type of status: ' + typeof status);
             //update the status with new role
@@ -903,7 +899,7 @@ app.post('/updateRole', (request, response) => {
                 function (err, res) {
                     console.log('after updateOne');
                 });
-        }
+
 
     }
 });
@@ -934,11 +930,11 @@ function checkExistingStatusesAndRolesAndFiles() {
             console.log('no roles');
             //insert the role : '-- Choose category for role --'
             rolesWithStatusesCollection.insertOne({Role: 'new in the system'});
-            //insert the roles: 'תמיכה טכנית' with statuses: : '-- Choose status for role --','בעיה טכנית' ,,'add a new status' and color:#66ffff'
+            //insert the roles: 'תמיכה טכנית' with statuses: : '-- Choose status for role --','בעיה טכנית'  and color:#66ffff'
             rolesWithStatusesCollection.insertOne({
                 Role: 'תמיכה טכנית',
                 Color: '#66ffff',
-                Statuses: ['בעיה טכנית', 'add a new status']
+                Statuses: ['בעיה טכנית']
             });
             //insert the color:#66ffff' to colorsCollection
             colorsCollection.insertOne({Color: '#66ffff'});
@@ -968,13 +964,18 @@ app.post('/addEvent', (request, response) => {
     let event = request.body.newEvent.event;
     console.log("event: " + event.id);
 
-    usersCollection.updateOne({UserName: user_for_event.UserName}, {$addToSet: {Events: event},}, {upsert: true},
+    workersCollection.updateOne({UserName: user_for_event.UserName}, {$addToSet: {Events: event},}, {upsert: true},
         function (err, res) {
-            console.log('after updateOne');
+            workersCollection.find({Events: user_for_event.Events}).toArray((error, Events) => {
+                if (error) {
+                    return response.status(500).send(error);
+                }
+                console.log(Events);
+                response.writeHead(200, {'Content-Type': 'application/json'});
+                response.end(JSON.stringify({'Events': Events}));
         });
-    response.writeHead(200, {'Content-Type': 'application/json'});
-    response.end();
-});
+
+});});
 
 app.post('/deleteEvent', (request, response) => {
     console.log("/deleteEvent");
@@ -982,7 +983,7 @@ app.post('/deleteEvent', (request, response) => {
     console.log("user_for_task.UserName: " + user_for_event.UserName);
     let event = request.body.deletevent.event;
     console.log("event start: " + event.start + 'end ' + event.end);
-    usersCollection.updateOne(
+    workersCollection.updateOne(
         {UserName: user_for_event.UserName},
         {
             $pull: {
@@ -1012,7 +1013,7 @@ app.post('/updateEvent', (request, response) => {
     let eventBeforeUpdate = request.body.updatEvent.eventBeforeUpdate;
     let eventAfterUpdate = request.body.updatEvent.eventAfterUpdate;
     // console.log("event start: "+ event.start +'end '+ event.end);
-    usersCollection.updateOne(
+    workersCollection.updateOne(
         {
             UserName: user_for_event.UserName,
             Events: eventBeforeUpdate
@@ -1068,16 +1069,16 @@ app.post('/updateContact', (request, response) => {
                 'Address': contact_after_update_body.Address
             }
         };
-        contactsCollection.updateOne(contact_before_update, contact_after_update, function (err, res) {
+        customersCollection.updateOne(contact_before_update, contact_after_update, function (err, res) {
             if (err) throw err;
-            contactsCollection.updateOne({PhoneNumber: contact_after_update_body.PhoneNumber}
+            customersCollection.updateOne({PhoneNumber: contact_after_update_body.PhoneNumber}
                 , {$addToSet: {History: contact_after_update_body.History}},
                 function (err, res) {
                     console.log('after updateOne');
                 });
 
 
-            contactsCollection.find({}).toArray((error, result) => {
+            customersCollection.find({}).toArray((error, result) => {
                 if (error) {
                     return response.status(500).send(error);
                 }
@@ -1086,7 +1087,7 @@ app.post('/updateContact', (request, response) => {
             });
         });
     } else {
-        contactsCollection.findOne({'PhoneNumber': contact_after_update_body.PhoneNumber}).then(function (result) {
+        customersCollection.findOne({'PhoneNumber': contact_after_update_body.PhoneNumber}).then(function (result) {
             if (!result) {
                 let contact_after_update = {
                     $set: {
@@ -1098,14 +1099,14 @@ app.post('/updateContact', (request, response) => {
                         'Address': contact_after_update_body.Address
                     }
                 };
-                contactsCollection.updateOne(contact_before_update, contact_after_update, function (err, res) {
+                customersCollection.updateOne(contact_before_update, contact_after_update, function (err, res) {
                     if (err) throw err;
-                    contactsCollection.updateOne({PhoneNumber: contact_after_update_body.PhoneNumber}
+                    customersCollection.updateOne({PhoneNumber: contact_after_update_body.PhoneNumber}
                         , {$addToSet: {History: contact_after_update_body.History}},
                         function (err, res) {
                             console.log('after updateOne');
                         });
-                    contactsCollection.find({}).toArray((error, result) => {
+                    customersCollection.find({}).toArray((error, result) => {
                         if (error) {
                             return response.status(500).send(error);
                         }
@@ -1141,9 +1142,9 @@ app.post('/updateUser', (request, response) => {
             eMail: user_after_update_body.eMail
         }
     };
-    usersCollection.updateOne(user_before_update, user_after_update, function (err, res) {
+    workersCollection.updateOne(user_before_update, user_after_update, function (err, res) {
         if (err) throw err;
-        usersCollection.find({}).toArray((error, result) => {
+        workersCollection.find({}).toArray((error, result) => {
             if (error) {
                 return response.status(500).send(error);
             }
@@ -1156,7 +1157,7 @@ app.post('/updateUser', (request, response) => {
 
 app.get('/deleteAllContacts', (request, response) => {
 
-    contactsCollection.remove({}, function (err, obj) {
+    customersCollection.remove({}, function (err, obj) {
         if (err) throw err;
         response.writeHead(200, {'Content-Type': 'application/json'});
         response.end(JSON.stringify({'message': 'All contacts have been deleted from the system'}));
@@ -1167,7 +1168,7 @@ app.get('/deleteAllContacts', (request, response) => {
 
 app.get('/deleteAllUsers', (request, response) => {
 
-    usersCollection.remove({UserName: {$ne: 'Admin'}}, function (err, obj) {
+    workersCollection.remove({UserName: {$ne: 'Admin'}}, function (err, obj) {
         if (err) throw err;
         response.writeHead(200, {'Content-Type': 'application/json'});
         response.end(JSON.stringify({'message': 'All users have been deleted from the system'}));
@@ -1253,16 +1254,16 @@ app.post('/deleteUser', (request, response) => {
     let user_to_delete = request.body.username;
 
     console.log('user_to_delete:' + user_to_delete + 'check');
-    usersCollection.findOne({'UserName': user_to_delete}).then(function (result) {
+    workersCollection.findOne({'UserName': user_to_delete}).then(function (result) {
         if (!result) {
             console.log('did not find user to delete ');
         }
         //check if the contact already exists
         else {
-            usersCollection.deleteOne({'UserName': result.UserName}, function (err, obj) {
+            workersCollection.deleteOne({'UserName': result.UserName}, function (err, obj) {
                 if (err) throw err;
                 console.log('1 user deleted');
-                usersCollection.find({}).toArray((error, result) => {
+                workersCollection.find({}).toArray((error, result) => {
                     if (error) {
                         return response.status(500).send(error);
                     }
@@ -1347,7 +1348,11 @@ let storage = multer.diskStorage({ //multers disk storage settings
     filename: function (req, file, cb) {
         //var datetimestamp = Date.now();
         //cb(null, file.fieldname + '-' + datetimestamp + '.' + file.originalname.split('.')[file.originalname.split('.').length - 1]);
-        filesCollection.insertOne({"FileName": file.originalname});
+        filesCollection.updateOne(
+            { FileName: file.originalname },
+            { $set :{ FileName: file.originalname }},
+            { upsert: true }
+        );
         cb(null, file.originalname);
 
     }

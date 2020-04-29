@@ -1,3 +1,4 @@
+
 (function () {
     "use strict";
     var app = angular.module("CRM", ["ngResource", 'ui.calendar', 'ui.bootstrap', 'ui.bootstrap.datetimepicker', 'ngSanitize', 'ui.select', 'ngAnimate', 'toaster', 'ngFileUpload'])
@@ -32,7 +33,6 @@
             var user_before_update;
             var MAX_LETTERS_IN_NAME = 25;
             var MAX_LETTERS_IN_ADDRESS = 35;
-            var new_status_option = "add a new status";
             var status_header = "-- Choose status --";
             var category;
             var status_role;
@@ -40,8 +40,15 @@
             var logged_in_user;
             var incorect_password = false;
             var incorect_current_password = false;
+            var missing_status_system_filed = false;
+            var missing_delete_status_system_field = false;
+            var missing_delete_status_role_field = false;
+            var missing_update_fields = false;
+            var missing_role_to_delete = false;
+            var problem_with_file_selection = false;
+            var missing_file_to_delete = false;
             var missing_role_field = false;
-            var missing_status_field = false;
+            var missing_status_or_role_field = false;
             var delete_all_contacts_flag = false;
             var delete_contact_flag = false;
             var delete_user_flag = false;
@@ -49,6 +56,7 @@
             var missing_details_inside_add_event = false;
             var missing_details_outside_add_event = false;
             var missing_details_edit_event = false;
+            var missing_user_to_delete = false;
 
             var selected_item_part_1;
             var selected_item_part_2;
@@ -118,6 +126,8 @@
             $scope.show_delete_file_modal = function () {
                 //get file list
                 $scope.getFilesList();
+                $scope.file = undefined;
+                selected_items = [];
                 angular.element(delete_file_modal).modal("show");
 
             }
@@ -267,7 +277,7 @@
             $scope.save_edit_event = function (task_with_contact) {
 
 
-                if ($scope.role.Role == undefined || $scope.role.Role == "" || $scope.role.Role == "-- Choose category for role --") {
+                if ($scope.role==undefined || $scope.role==''||$scope.role.Role == undefined || $scope.role.Role == "" || $scope.role.Role == "-- Choose category for role --") {
                     $scope.message = "Category is a must field, please select one";
                     $scope.message_type = "ERROR";
                     angular.element(Message_Modal).modal("show");
@@ -290,17 +300,81 @@
                 if (check_date_range_validation(start_date, end_date, 'edit_task') == true) {
                     return;
                 }
-                //$log.log("edit");
+
+                var same_date=[];
+
+                if(retreivedCalenarEvents!=undefined)
+                {
+                    same_date= retreivedCalenarEvents.filter(function (item) { return item.start === start_date && item.end === end_date; });
+                    $log.log("same_date : "+same_date);
+                    if(same_date.length > 0 )
+                    {
+                        start_date = "";
+                        end_date = "";
+                        same_date = "";
+
+                        $scope.message = "There is a task already exists on this date, please select a different time for this task ";
+                        $scope.message_type = "ERROR";
+                        angular.element(Message_Modal).modal("show");
+                        missing_details_edit_event = true;
+
+                        return;
+                    }
+                }
+
+                if(start_date=="Invalid date"||end_date=="Invalid date")
+                {
+                    start_date = "";
+                    end_date = "";
+
+                    $scope.message = 'Start or end date is Invalid Date ' ;
+                    $scope.message_type = "ERROR";
+                    angular.element(Message_Modal).modal("show");
+                    missing_details_edit_event = true;
+
+                    return;
+                }
+
+
+
+
+                /*
+                    check if the task was chosen for a spesific contact - optional
+                    then id = "contact name" + " contact phone number"
+                */
+                $log.log("task_with_contact : " + task_with_contact);
                 if (task_with_contact == true) {
-                    var description = "Task for contact " + selected_item_part_1 + " " + selected_item_part_2 + " : " + $scope.event_title;
-                    var contact = selected_item_part_1 + " " + selected_item_part_2;
+
+                    $log.log('$scope.contact :'+$scope.contact);
+                    $log.log('selected_item_part_1 :'+selected_item_part_1);
+                    $log.log('selected_item_part_2 :'+selected_item_part_2);
+                    if($scope.contact==" "|| selected_item_part_1 == undefined || selected_item_part_2 == undefined || selected_item_part_1 == " " || selected_item_part_2 == " ")
+                    {
+                        $scope.message = 'You have selected the option for a costumer task and therefore a costumer must be selected' ;
+                        $scope.message_type = "ERROR";
+                        angular.element(Message_Modal).modal("show");
+                        missing_details_edit_event = true;
+
+                        selected_item_part_1 =undefined;
+                        selected_item_part_2 =undefined;
+                        return;
+                    }
+                    else
+                    {
+                        var description = "Task for contact " + selected_item_part_1 + " " + selected_item_part_2 + " : " + $scope.title;
+                        var contact = selected_item_part_1 + " " + selected_item_part_2;
+                        selected_item_part_1 =undefined;
+                        selected_item_part_2 =undefined;
+                    }
+
                 }
 
                 //if the task is not for a spesific contact -> id of contact = '-1'
                 else {
-                    var description = $scope.event_title;
+                    var description = $scope.title;
                     var contact = -1;
                 }
+
                 var eventForUpdate = edit_event_detailes;
                 edit_event_detailes.title = description;
                 edit_event_detailes.start = $scope.event_start;
@@ -350,6 +424,7 @@
                     updatEvent: updatEvent
                 }).then(
                     function (response) {
+
                     },
                     function (response) { //failure callback
                     }
@@ -398,14 +473,37 @@
 
             };
 
+            function get_task_for_specific_contact(contact_phone)
+            {
+                var contact_tasks = [];
+                $log.log("contact_phone : " + contact_phone);
+                for(var i=0; i<retreivedCalenarEvents.length ;i++)
+                {
+                    $log.log('id : '+retreivedCalenarEvents[i].id)
+                    if(String(retreivedCalenarEvents[i].id).includes(contact_phone) )
+                    {
+                        $log.log('enter to if ')
+                        contact_tasks.push(retreivedCalenarEvents[i]);
+                    }
+                }
+                return contact_tasks;
+            }
+
 
             $scope.calendarContact = function (contact) {
 
-                /*var event_id = contact.Name +" "+ contact.PhoneNumber;
+                var event_id = String(contact.Name +" "+ contact.PhoneNumber);
+                //var contact_name = contact.Name;
+                var contact_phone = contact.PhoneNumber;
                 $log.log("event_id : " + event_id);
-                $scope.events = uiCalendarConfig.calendars.myCalendar.fullCalendar('clientEvents', event_id);
+                //retreivedCalenarEvents =  uiCalendarConfig.calendars['myCalendar'].fullCalendar('clientEvents', event_id);
+                $log.log("retreivedCalenarEvents : " + retreivedCalenarEvents);
+                if(retreivedCalenarEvents!=undefined) {
+                    retreivedCalenarEvents = get_task_for_specific_contact(contact_phone);
+                }
+                $log.log("retreivedCalenarEvents : " + retreivedCalenarEvents);
 
-                $log.log("$scope.events : " + $scope.events);*/
+
                 $scope.calendar_function();
 
             };
@@ -582,14 +680,20 @@
                     newEvent: newEvent
                 }).then(
                     function (response) {
+                        retreivedCalenarEvents = response.data.Events;
+                        $log.log('retreivedCalenarEvents=' + retreivedCalenarEvents);
+
                         $scope.role = "";
                         $scope.contact_task = false;
-                        $scope.contact = "";
+                        $scope.contact = undefined;
                         $scope.title = "";
                         $scope.event_start = "";
                         $scope.event_end = "";
                         $scope.date = "";
                         category = "";
+                        selected_item_part_1 = undefined;
+                        selected_item_part_2 = undefined;
+                        $scope.selected_contact="";
 
 
                     },
@@ -608,6 +712,7 @@
                     save the dates in a range of dates in the task in format 'start_date - end_date'
                     by splitting with "-"
                 */
+                var same_date;
                 if (outside_modal == false) {
                     var date = $scope.date.split("-");
                     $log.log("start date : " + date[0]);
@@ -635,8 +740,8 @@
                         return;
                     }
                     $log.log("start date outside $scope.event_start: " + $scope.event_start);
-                    var start_date = moment(String($scope.event_start)).format("MM/DD/YYYY HH:mm").utc(false);
-                    var end_date = moment(String($scope.event_end)).format("MM/DD/YYYY HH:mm").utc(false);
+                    var start_date = moment(String($scope.event_start)).format("MM/DD/YYYY HH:mm");
+                    var end_date = moment(String($scope.event_end)).format("MM/DD/YYYY HH:mm");
                     $log.log("start date outside: " + start_date);
                     $log.log("start date outside: " + end_date);
                     if (check_date_range_validation(start_date, end_date, 'out_of_calendar') == true) {
@@ -646,7 +751,7 @@
                 //$log.log("end date : " + formatDate(date[1]));
                 $log.log("$scope.role : " + $scope.role.Role);
                 //check if the role category was selected in the task modal - this is a must field
-                if ($scope.role.Role == undefined || $scope.role.Role == "" || $scope.role.Role == "-- Choose category for role --") {
+                if ($scope.role==undefined || $scope.role==''|| $scope.role.Role == undefined ) {
                     $scope.message = "Category is a must field, please select one";
                     $scope.message_type = "ERROR";
                     angular.element(Message_Modal).modal("show");
@@ -670,14 +775,79 @@
                     }
                     return;
                 }
+                if(retreivedCalenarEvents!=undefined)
+                {
+                    same_date= retreivedCalenarEvents.filter(function (item) { return item.start === start_date && item.end === end_date; });
+                    $log.log("same_date : "+same_date);
+                    if(same_date.length > 0 )
+                    {
+                        start_date = "";
+                        end_date = "";
+                        same_date = "";
+
+                        $scope.message = "There is a task already exists on this date, please select a different time for this task ";
+                        $scope.message_type = "ERROR";
+                        angular.element(Message_Modal).modal("show");
+                        if (outside_modal == false) {
+                            missing_details_inside_add_event = true;
+                        } else {
+                            missing_details_outside_add_event = true;
+                        }
+                        return;
+                    }
+                }
+
+                if(start_date=="Invalid date"||end_date=="Invalid date")
+                {
+                    start_date = "";
+                    end_date = "";
+
+                    $scope.message = 'Start or end date is Invalid Date ' ;
+                    $scope.message_type = "ERROR";
+                    angular.element(Message_Modal).modal("show");
+                    if (outside_modal == false) {
+                        missing_details_inside_add_event = true;
+                    } else {
+                        missing_details_outside_add_event = true;
+                    }
+                    return;
+                }
+
+
+
 
                 /*
                     check if the task was chosen for a spesific contact - optional
                     then id = "contact name" + " contact phone number"
                 */
+                $log.log("task_with_contact : " + task_with_contact);
                 if (task_with_contact == true) {
-                    var description = "Task for contact " + selected_item_part_1 + " " + selected_item_part_2 + " : " + $scope.title;
-                    var contact = selected_item_part_1 + " " + selected_item_part_2;
+
+                    $log.log('$scope.contact :'+$scope.contact);
+                    $log.log('selected_item_part_1 :'+selected_item_part_1);
+                    $log.log('selected_item_part_2 :'+selected_item_part_2);
+                    if($scope.contact==" "|| selected_item_part_1 == undefined || selected_item_part_2 == undefined || selected_item_part_1 == " " || selected_item_part_2 == " ")
+                    {
+                        $scope.message = 'You have selected the option for a costumer task and therefore a costumer must be selected' ;
+                        $scope.message_type = "ERROR";
+                        angular.element(Message_Modal).modal("show");
+                        if (outside_modal == false) {
+                            missing_details_inside_add_event = true;
+                        } else {
+                            missing_details_outside_add_event = true;
+                        }
+                        selected_item_part_1 =undefined;
+                        selected_item_part_2 =undefined;
+                        return;
+                    }
+                    else
+                    {
+                        var description = "Task for contact " + selected_item_part_1 + " " + selected_item_part_2 + " : " + $scope.title;
+                        var contact = selected_item_part_1 + " " + selected_item_part_2;
+                        selected_item_part_1 =undefined;
+                        selected_item_part_2 =undefined;
+                    }
+
                 }
 
                 //if the task is not for a spesific contact -> id of contact = '-1'
@@ -717,6 +887,24 @@
 
                 //  console.log($scope.pendingRequests);
             };
+            //cancel function from modal in calendar
+            $scope.cancelEvent = function()
+            {
+
+                $scope.role = "";
+                $scope.contact_task = false;
+                $scope.contact = undefined;
+                $scope.title = "";
+                $scope.event_start = "";
+                $scope.event_end = "";
+                $scope.date = "";
+                selected_item_part_1 = undefined;
+                selected_item_part_2 = undefined;
+                $scope.selected_contact="";
+                category = "";
+
+
+            }
 
             //modal for sending mail to a contact
             $scope.sendMailModal = function (contact_email) {
@@ -844,13 +1032,25 @@
 
             //a function for clicking on select file to system
             $scope.submitUpload = function () {
+                $log.log('$scope.file : ' + $scope.file);
                 if ($scope.upload_form.file.$error.maxSize == true) {
                     $scope.message = "The file size is greater than 10 MB ";
                     $scope.message_type = "ERROR";
                     angular.element(Message_Modal).modal("show");
                     $scope.upload_form.file.$error.maxSize = false;
                     $scope.file = "";
+                    problem_with_file_selection = true;
+                    return;
+
                 }
+                if($scope.file == undefined || $scope.file == '') {
+                    $scope.message = "You did not select a file to upload, please select one";
+                    $scope.message_type = "ERROR";
+                    angular.element(Message_Modal).modal("show");
+                    problem_with_file_selection = true;
+                    return;
+                }
+
                 if ($scope.upload_form.file.$valid && $scope.file) { //check if from is valid
                     //if (vm.file) { //check if from is valid
                     $scope.upload($scope.file); //call upload function
@@ -949,6 +1149,7 @@
             //add file to system function
             $scope.add_file = function () {
                 //show modal for add file
+                $scope.file = undefined;
                 angular.element(add_file_modal).modal("show");
 
             }
@@ -1337,45 +1538,56 @@
                     $scope.message_type = "ERROR";
                     angular.element(Message_Modal).modal("show");
                     missing_role_field = true;
+                    return;
                 }
 
                 //if color exists show error modal
-                else if (existing_color == true) {
+                 if (existing_color == true) {
                     $log.log("entered existing_color: " + existing_color);
 
                     $scope.message = "This color already exist, please choose different color";
                     $scope.message_type = "ERROR";
                     angular.element(Message_Modal).modal("show");
                     missing_role_field = true;
+                    return;
                 }
 
+
+                if (selected_items.length == 0) {
+
+                    $scope.message = "You must choose status/es for role";
+                    $scope.message_type = "ERROR";
+                    angular.element(Message_Modal).modal("show");
+                    missing_role_field = true;
+                    return;
+                }
                 //if color does not exist send an http request to server with role details : role color and matching statuses list
-                else {
-                    selected_items.push(new_status_option);
-                    $log.log("new_status_option :" + new_status_option);
-                    var role_with_statuses = {
-                        Role: $scope.role_from_modal,
-                        Color: role_color,
-                        Statuses: selected_items
-                    };
-                    $http.post("http://localhost:3000/addRoleWithStatuses", {
-                        role_with_statuses: role_with_statuses,
-                    }).then(
-                        function (response) { //success callback
-                            $scope.role_from_modal = undefined;
-                            $scope.getRolesList();
-                        },
-                        function (response) { //failure callback
+                var role_with_statuses = {
+                    Role: $scope.role_from_modal,
+                    Color: role_color,
+                    Statuses: selected_items
+                };
+                $http.post("http://localhost:3000/addRoleWithStatuses", {
+                    role_with_statuses: role_with_statuses,
+                }).then(
+                    function (response) { //success callback
+                        $scope.role_from_modal = undefined;
+                        selected_items = [];
+                        $scope.getRolesList();
+                    },
+                    function (response) { //failure callback
 
-                        }
-                    );
-                }
+                    }
+                );
+
 
             }
 
             //a function for showing roles list
             $scope.display_role_list = function () {
                 $scope.getRolesList();
+                $scope.role = undefined;
+                selected_items = [];
                 angular.element(delete_role_modal).modal('show');
             }
 
@@ -1390,28 +1602,37 @@
                     $scope.message = "You must fill in the status field";
                     $scope.message_type = "ERROR";
                     angular.element(Message_Modal).modal("show");
-                    missing_status_field = true;
+                    missing_status_or_role_field = true;
+                    return;
+                }
+                if(selected_items.length == 0)
+                {
+                    $scope.message = "You must choose role/s";
+                    $scope.message_type = "ERROR";
+                    angular.element(Message_Modal).modal("show");
+                    missing_status_or_role_field = true;
+                    return;
                 }
 
                 //if the status field is filled in
-                else {
-                    //save details in json object : status and roles list and call server with http request
-                    var status_with_roles = {Status: $scope.status_from_modal, Roles: selected_items};
-                    $http.post("http://localhost:3000/addStatutsWithRoles", {
-                        status_with_roles: status_with_roles,
-                    }).then(
-                        function (response) { //success callback
-                            $scope.status_from_modal = undefined;
-                            $scope.getOptionsList();
-                            $scope.role = undefined;
-                            $scope.item = undefined;
-                            selected_items = [];
-                        },
-                        function (response) { //failure callback
 
-                        }
-                    );
+            //save details in json object : status and roles list and call server with http request
+            var status_with_roles = {Status: $scope.status_from_modal, Roles: selected_items};
+            $http.post("http://localhost:3000/addStatutsWithRoles", {
+                status_with_roles: status_with_roles,
+            }).then(
+                function (response) { //success callback
+                    $scope.status_from_modal = undefined;
+                    $scope.getOptionsList();
+                    $scope.role = undefined;
+                    $scope.item = undefined;
+                    selected_items = [];
+                },
+                function (response) { //failure callback
+
                 }
+            );
+
 
             }
 
@@ -1429,8 +1650,10 @@
                         $scope.options = response.data.statusOptions;
                         //get roles colors list
                         $scope.getRolesColorsList();
-                        angular.element(add_new_role_modal).modal("show");
                         $scope.role_from_modal = undefined;
+                        selected_items = [];
+
+                        angular.element(add_new_role_modal).modal("show");
 
                         //the list of selected items
                         selected_items = [];
@@ -1455,6 +1678,8 @@
                 $scope.show_users = false;
                 $scope.show_settings = false;
                 $scope.account = false;
+                $scope.calendarNavColor = '#ff0066';
+                $scope.contactsNavColor='#004d99';
                 $scope.getRolesList();
 
                 //clearing the search field
@@ -1662,9 +1887,7 @@
             $scope.onChange = function (option) {
                 $log.log("option : " + option);
                 status_role = option;
-                if (option == new_status_option) {
-                    angular.element(add_new_status_modal).modal("show");
-                }
+
             }
 
             /*
@@ -1705,10 +1928,15 @@
                 with http request to server with the selected file
             */
             $scope.delete_file = function (file) {
-
-                $log.log("file :" + file.FileName);
-
-
+                $log.log('$scope.file : ' + $scope.file);
+                $log.log('file : ' + file);
+                if(file == undefined || file == '') {
+                    $scope.message = "You did not select a file to delete, please select one";
+                    $scope.message_type = "ERROR";
+                    angular.element(Message_Modal).modal("show");
+                    missing_file_to_delete = true;
+                    return;
+                }
                 var file = {FileName: file.FileName}
                 $http.post("http://localhost:3000/deleteFile", {
                     file: file,
@@ -1741,6 +1969,9 @@
 
                         //return the list of the roles
                         $scope.roles = response.data.roles;
+                        $scope.status_from_modal=undefined;
+                        $scope.role=undefined;
+                        selected_items = [];
 
                         //show modal for adding a new status
                         angular.element(add_new_status_modal).modal("show");
@@ -1764,6 +1995,7 @@
             $scope.add_new_status_to_system = function () {
                 //get the status list
                 $scope.getOptionsList();
+                $scope.system_status_from_modal = undefined;
 
                 //show add new status modal
                 angular.element(add_new_status_to_system_modal).modal("show");
@@ -1804,6 +2036,7 @@
                     $scope.message = "You must enter a status";
                     $scope.message_type = "ERROR";
                     angular.element(Message_Modal).modal("show");
+                    missing_status_system_filed = true;
 
                 }
 
@@ -1816,7 +2049,13 @@
                  a function for shoing modal of update role
             */
             $scope.update_role = function () {
+                $scope.role = undefined;
+                $scope.item = undefined;
+                category = undefined;
+                selected_items = [];
+
                 angular.element(update_role_modal).modal("show");
+
             }
 
             /*
@@ -1829,14 +2068,16 @@
                     $scope.message = "You must choose a role";
                     $scope.message_type = "ERROR";
                     angular.element(Message_Modal).modal("show");
+                    missing_update_fields = true;
                     return;
                 }
 
                 //if there were no statuses selected for the role show an error modal
-                if (selected_items == undefined) {
+                if (selected_items.length == 0) {
                     $scope.message = "You must choose a status";
                     $scope.message_type = "ERROR";
                     angular.element(Message_Modal).modal("show");
+                    missing_update_fields = true;
                     return;
                 }
 
@@ -1977,16 +2218,7 @@
                     return;
                 }
 
-                //if the status that was chosen is equal to "add a new status"
-                else if (status_role == new_status_option) {
-                    //then clear the field of the status
-                    if (status_role == new_status_option) {
-                        status_role = "";
-                    }
 
-                    //save the status that was before the update
-                    status_role = contact_before_update.Status;
-                }
 
                 //check the name field if there was entered a new name
                 if ($scope.newName == undefined || $scope.newName == "") {
@@ -2013,7 +2245,7 @@
                 }
 
                 //check if no new status was chosen
-                if ($scope.newStatus == undefined || $scope.newStatus == "" || $scope.newStatus == new_status_option) {
+                if ($scope.newStatus == undefined || $scope.newStatus == "" ) {
                     $scope.newStatus = "";
                 }
 
@@ -2041,9 +2273,9 @@
                         return;
                     }
                 }
-
+$log.log('$scope.newEmail :'+$scope.newEmail);
                 //check if an email address was entered
-                if ($scope.newEmail != undefined) {
+                if ($scope.newEmail != undefined && $scope.newEmail != "") {
                     //save a regular expression for a valid email address
                     var valid_email = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
 
@@ -2054,18 +2286,17 @@
                         $scope.message_type = "ERROR";
                         $scope.message = "This email is invalid";
                         angular.element(Message_Modal).modal("show");
-                        $scope.newEmail = undefined;
                         return;
                     }
                 }
 
                 //if no email address was entered
                 else {
-                    $scope.newEmail = undefined;
+                    $scope.newEmail = "";
                 }
 
                 //check if an address was entered
-                if ($scope.newAddress != undefined) {
+                if ($scope.newAddress != undefined && $scope.newAddress != "") {
                     //save the address
                     var address = $scope.newAddress;
 
@@ -2140,6 +2371,7 @@
                             $scope.newPhoneNumber = undefined;
                             $scope.newEmail = undefined;
                             $scope.newAddress = undefined;
+                            history_array = [];
 
                         }
 
@@ -2148,6 +2380,8 @@
                             $scope.message_type = "ERROR";
                             $scope.message = response.data.phone_exists;
                             angular.element(Message_Modal).modal("show");
+                            history_array = [];
+
                         }
 
                     },
@@ -2190,7 +2424,7 @@
             $scope.changed_detailes = function (contactInfoToUpdate) {
                 var updated_contact_history = "";
                 var change = -1;
-                var contact_history = -1;
+                var contact_history = "";
                 if (category.Role != contact_before_update.Category.Role) {
                     updated_contact_history = "Role changed : " + contact_before_update.Category.Role + " <- : " + category.Role + "\n";
                     change = 0;
@@ -2271,14 +2505,7 @@
                     return;
                 }
 
-                //if there was chosen the default empty status
-                else if (status_role == new_status_option) {
 
-                    if (status_role == new_status_option) {
-                        status_role = "";
-                    }
-                    status_role = contact_before_update.Status;
-                }
 
                 //check if phone number was entered and if it is valid
                 if (contactInfoToUpdate.PhoneNumber != undefined && contactInfoToUpdate.PhoneNumber != "") {
@@ -2464,9 +2691,9 @@
                 }
 
                 //modal for missing status field
-                if (missing_status_field == true) {
+                if (missing_status_or_role_field == true) {
                     angular.element(add_new_status_modal).modal("show");
-                    missing_status_field = false;
+                    missing_status_or_role_field = false;
                 }
 
                 //modal for missing role field in calendar event
@@ -2482,6 +2709,49 @@
                     angular.element(edit_or_delete_event).modal("show");
                     missing_details_edit_event = false;
                 }
+                if(missing_user_to_delete == true)
+                {
+                    $scope.message_type = "Choose user to delete";
+
+                    angular.element(delete_modal).modal("show");
+                    missing_user_to_delete = false
+                }
+                if(missing_status_system_filed == true)
+                {
+                    angular.element(add_new_status_to_system_modal).modal("show");
+                    missing_status_system_filed = false;
+                }
+                if(missing_delete_status_system_field == true)
+                {
+                    angular.element(delete_status_from_system_modal).modal("show");
+                    missing_delete_status_system_field = false;
+                }
+                if( missing_delete_status_role_field == true)
+                {
+                    angular.element(delete_status_from_role_modal).modal("show");
+                    missing_delete_status_role_field = false;
+                }
+                if(missing_update_fields == true)
+                {
+                    angular.element(update_role_modal).modal("show");
+                    missing_update_fields = false;
+                }
+                if(missing_role_to_delete == true)
+                {
+                    angular.element(delete_role_modal).modal("show");
+                    missing_role_to_delete = false;
+                }
+                if(problem_with_file_selection == true)
+                {
+                    angular.element(add_file_modal).modal("show");
+                    problem_with_file_selection = false;
+                }
+                if(missing_file_to_delete == true)
+                {
+                    angular.element(delete_file_modal).modal("show");
+                    missing_file_to_delete = false;
+                }
+
             }
 
             /*
@@ -2574,6 +2844,8 @@
             */
             $scope.delete_status_system_settings = function () {
 
+                $scope.item = undefined;
+                deleted_status = undefined;
                 angular.element(delete_status_from_system_modal).modal("show");
                 $scope.getOptionsList();
 
@@ -2588,6 +2860,7 @@
                     $scope.message = "You must choose a status";
                     $scope.message_type = "ERROR";
                     angular.element(Message_Modal).modal("show");
+                    missing_delete_status_system_field = true;
                     return;
                 }
 
@@ -2596,8 +2869,10 @@
                     status_to_delete: deleted_status,
                 }).then(
                     function (response) { //success callback
+                        deleted_status = undefined;
                     },
                     function (response) { //failure callback
+                        deleted_status = undefined;
 
                     }
                 );
@@ -2607,6 +2882,10 @@
                 a function for showing modal for deleting status from role (from settings tab)
             */
             $scope.delete_status_role_settings = function () {
+                $scope.role = undefined;
+                $scope.status_role = undefined;
+                status_role = undefined;
+                category = undefined;
                 angular.element(delete_status_from_role_modal).modal("show");
                 $scope.getRolesList();
             }
@@ -2620,6 +2899,7 @@
                     $scope.message = "You must choose a category";
                     $scope.message_type = "ERROR";
                     angular.element(Message_Modal).modal("show");
+                    missing_delete_status_role_field = true;
                     return;
                 }
 
@@ -2628,6 +2908,7 @@
                     $scope.message = "You must choose a status";
                     $scope.message_type = "ERROR";
                     angular.element(Message_Modal).modal("show");
+                    missing_delete_status_role_field = true;
                     return;
                 }
 
@@ -2640,9 +2921,13 @@
                 }).then(
                     function (response) { //success callback
                         $scope.roles = response.data.roles;
+                        category = undefined;
+                        status_role =undefined;
 
                     },
                     function (response) { //failure callback
+                        category = undefined;
+                        status_role =undefined;
 
 
                     }
@@ -2786,6 +3071,14 @@
             */
             $scope.delete_user = function (flag) {
                 if (flag == undefined) {
+                    if(selected_item_part_2 == undefined)
+                    {
+                        $scope.message = "You did not select user to delete , Please select one";
+                        $scope.message_type = "Error";
+                        angular.element(Message_Modal).modal("show");
+                        missing_user_to_delete = true;
+                        return;
+                    }
                     selected_item_part_2 = selected_item_part_2;
                 } else {
                     selected_item_part_2 = flag;
@@ -2795,6 +3088,7 @@
                 }).then(
                     function (response) { //success callback
                         $scope.users = response.data.users;
+                        selected_item_part_2 = undefined;
                     },
                     function (response) { //failure callback
 
@@ -2807,6 +3101,15 @@
                 a function for deleting role from server
             */
             $scope.delete_role = function (role) {
+                if(selected_items.length == 0)
+                {
+                    $scope.message = "You did not select a role to delete, please select one";
+                    $scope.message_type = "Error";
+                    angular.element(Message_Modal).modal("show");
+                    missing_role_to_delete = true;
+                    return;
+                }
+
                 $log.log(role);
                 $http.post("http://localhost:3000/deleteRole", {
                     role: role.Role,

@@ -477,10 +477,11 @@
                             <td ng-show="contactIsEdit==false">{{contactInfo.Address}}</td>
 
 
-                            <td ng-show="contactIsEdit==false"><i class="fa fa-calendar"
+                            <td ng-show="contactIsEdit==false" ><i class="fa fa-calendar"
                                                                   style="font-size:24px;color:#cc99ff"
                                                                   aria-hidden="true"
-                                                                  ng-click="calendarContact(contactInfo)"></i></td>
+                                                                  ng-click="calendarContact(contactInfo);"
+                                                                  ></i></td>
                             <td ng-show="contactIsEdit==false"><i class="fa fa-envelope"
                                                                   style="font-size:24px;color:#00b3b3"
                                                                   aria-hidden="true"
@@ -779,6 +780,16 @@
                                         style=" color: rgb(50, 118, 177);" class="fa fa-trash fa-fw"></i> delete file
                                 </a></li>
                             </ul>
+                        </li>
+
+                        <li class="dropdown-menu">
+
+                            <ul class="dropdown-menu">
+                                <li class="hover_color" ng-click="insure_delete_all_contacts()"><a href="#"><i
+                                        style=" color: rgb(50, 118, 177);" class="fa fa-lock fa-fw"></i> change temporary password
+                                    contacts</a></li>
+                            </ul>
+                          
                         </li>
 
 
@@ -1164,7 +1175,8 @@
 
 
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" data-dismiss="modal">
+                    <button type="button" class="btn btn-primary" data-dismiss="modal"
+                            ng-click="cancelEvent();">
                         cancel
                     </button>
                     <button type="button" class="btn btn-primary" data-dismiss="modal"
@@ -1248,7 +1260,7 @@
 
 
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" data-dismiss="modal">
+                    <button type="button" class="btn btn-primary" data-dismiss="modal"  ng-click="cancelEvent();">
                         cancel
                     </button>
                     <button type="button" class="btn btn-primary" data-dismiss="modal"
@@ -1405,7 +1417,7 @@
                         </button>
                     </div>
                     <div ng-show="taskIsEdit==true">
-                        <button type="button" class="btn btn-primary" data-dismiss="modal">
+                        <button type="button" class="btn btn-primary" data-dismiss="modal" ng-click="cancelEvent();">
                             cancel
                         </button>
                         <button type="button" class="btn btn-primary" data-dismiss="modal"

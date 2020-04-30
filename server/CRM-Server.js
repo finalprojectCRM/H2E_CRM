@@ -1389,8 +1389,8 @@ const upload = multer({ //multer settings
 }).single('file');
 
 /** API path that will upload the files */
-app.post('/uploadImage', function (req, res) {
-    console.log('/uploadImage');
+app.post('/uploadFile', function (req, res) {
+    console.log('/uploadFile');
     upload(req, res, function (err) {
         if (err) {
             res.json({errorCode: 1, errDesc: err});

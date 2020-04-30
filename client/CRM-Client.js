@@ -2,6 +2,7 @@
 /*eslint-disable no-unused-vars*/
 /*global angular, document, moment, $*/
 /*eslint no-undef: "error"*/
+/*eslint no-else-return: off*/
 
 (function () {
     'use strict';
@@ -11,8 +12,8 @@
                 const svc = {};
 
                 const restSvc = $resource(null, null, {
-                    'uploadImage': {
-                        url: './uploadImage',
+                    'uploadFile': {
+                        url: './uploadFile',
                         method: 'post',
                         isArray: false,
                         data: {
@@ -22,14 +23,12 @@
                     }
                 });
 
-                svc.uploadImage = function (imageUpload) {
-                    return restSvc.uploadImage(imageUpload).$promise;
+                svc.uploadFile = function (fileUpload) {
+                    return restSvc.uploadFile(fileUpload).$promise;
                 };
                 return svc;
             }
         ])
-
-
         .controller('CRM_controller', ['$scope', '$compile', '$http', '$log', '$timeout', 'sampleUploadService', 'uiCalendarConfig', 'toaster', 'Upload', '$window',
             function ($scope, $compile, $http, $log, $timeout, sampleUploadService, uiCalendarConfig, toaster, Upload, $window) {
                 let contactBeforeUpdate;
@@ -636,7 +635,7 @@
                     }
 
                     for (let i = 0; i < arr.length; i++) {
-                        let arrInfo = arr[i];
+                        const arrInfo = arr[i];
                         if (id === 'UserName') {
                             $scope.selected[arrInfo.UserName] = flag;
                         } else {
@@ -660,7 +659,7 @@
                     }
 
                     for (let i = 0; i < arr.length; i++) {
-                        let arrInfo = arr[i];
+                        const arrInfo = arr[i];
                         if (id === 'UserName') {
                             if ($scope.selected[arrInfo.UserName]) {
                                 emailsListStr = getStringofAllEmails(emailsListStr, arrInfo, i);
@@ -678,7 +677,7 @@
                 };
 
                 function addEventToDataBase(event, user) {
-                    let newEvent = {event: event, user: user};
+                    const newEvent = {event: event, user: user};
                     $http.post(SERVER_URI + '/addEvent', {
                         newEvent: newEvent
                     }).then(
@@ -721,7 +720,7 @@
                     let endDate;
 
                     if (!outsideModal) {
-                        let date = $scope.date.split('-');
+                        const date = $scope.date.split('-');
                         $log.log('start date : ' + date[0]);
                         $log.log('taskWithContact : ' + taskWithContact);
                         //$log.log('type '+typeof date[0]);
@@ -834,27 +833,13 @@
                             selectedItemPart1 = undefined;
                             selectedItemPart2 = undefined;
                         }
-                    }
-
-                    //if the task is not for a spesific contact -> id of contact = '-1'
-                    else {
+                    } else { //if the task is not for a spesific contact -> id of contact = '-1'
                         description = $scope.title;
                         contact = -1;
                     }
 
                     $log.log('description: ' + description);
-
-                    //add (push) event with details to events list
-                    /*$scope.events.push({
-                        title: description,
-                        start: startDate,
-                        end:  endDate,
-                        color: $scope.role.Color,
-                        id : contact,
-                        editable: true,
-                        allDay:false
-                    });*/
-                    let eventToAdd = {
+                    const eventToAdd = {
                         title: description,
                         start: startDate,
                         end: endDate,
@@ -919,7 +904,7 @@
                     }
 
                     $log.log('attachmentFileName :' + attachmentFileName);
-                    let emailData = {
+                    const emailData = {
                         mailRecipient: contactEmail, mailSubject: emailSubject,
                         mailText: emailBody, attachmentFileName: attachmentFileName
                     };
@@ -1034,16 +1019,16 @@
 
                 $scope.upload = function (file) {
                     Upload.upload({
-                        url: 'http://localhost:3000' + '/uploadImage', //webAPI exposed to upload the file
+                        url: SERVER_URI + '/uploadFile', //webAPI exposed to upload the file
                         data: {file: file} //pass file as data, should be user ng-model
                     }).then(function (resp) { //upload function returns a promise
                         $scope.file = '';
                         if (resp.data.errorCode === 0) { //validate success
-                            let successUploded = ' Success to upload the file : ' + resp.config.data.file.name;
+                            const successUploded = ' Success to upload the file : ' + resp.config.data.file.name;
                             toaster.pop('success', successUploded);
 
                         } else {
-                            let errorUploded = 'an error occured';
+                            const errorUploded = 'an error occured';
                             toaster.pop('error', errorUploded);
 
                         }
@@ -1052,66 +1037,11 @@
                         $window.alert('Error status: ' + resp.status);
                     }, function (evt) {
                         console.log(evt);
-                        let progressPercentage = parseInt(100.0 * evt.loaded / evt.total, 10);
+                        const progressPercentage = parseInt(100.0 * evt.loaded / evt.total, 10);
                         console.log('progress: ' + progressPercentage + '% ' + evt.config.data.file.name);
                         $scope.progress = 'progress: ' + progressPercentage + '% '; // capture upload progress
                     });
                 };
-
-                /*angular.element('#fileUploadField').bind('change', function (evt) {
-                  if (evt) {
-                    let fn = evt.target.value;
-                    if (fn && fn.length > 0) {
-                      let idx = fn.lastIndexOf('/');
-                      if (idx >= 0 && idx < fn.length) {
-                        $scope.uploadFileName = fn.substring(idx + 1);
-                      } else {
-                        idx = fn.lastIndexOf('\\');
-                        if (idx >= 0 && idx < fn.length) {
-                          $scope.uploadFileName = fn.substring(idx + 1);
-                        }
-                      }
-                    }
-                    $scope.$apply();
-
-                  }
-                });
-
-                $scope.doUpload = function () {
-                  $scope.uploadSuccessful = false;
-                  let elems = angular.element('#fileUploadField');
-                  if (elems != null && elems.length > 0) {
-                    if (elems[0].files && elems[0].files.length > 0) {
-                      let fr = new FileReader();
-                      fr.onload = function (e) {
-                        if (fr.result && fr.result.length > 0) {
-                          let uploadObj = {
-                            fileName: $scope.uploadFileName,
-                            uploadData: fr.result
-                          };
-                          $log.log(fr.result);
-                          $log.log($scope.uploadFileName);
-
-                          sampleUploadService.uploadImage(uploadObj).then(function (result) {
-                            if (result && result.success === true) {
-                              clearUploadData();
-                              $scope.uploadSuccessful = true;
-                            }
-                          }, function (error) {
-                            if (error) {
-                              $log.log(error);
-                            }
-                          });
-                        }
-                      };
-
-                      fr.readAsDataURL(elems[0].files[0]);
-                    } else {
-                      toaster.pop('error', 'No file has been selected for upload.', '');
-                      return;
-                    }
-                  }
-                };*/
 
                 //clear the field of the file name that has been uploaded
                 function clearFileUpload() {
@@ -1134,7 +1064,7 @@
                 $scope.validationOfTempPassword = function (tempPasswordFromClient) {
                     //$log.log('validationOfTempPassword :' + tempPasswordFromClient);
                     $http.post(SERVER_URI + '/verifyTemporaryPassword', {
-                        tempPassword: tempPasswordFromClient,
+                        tempPassword: tempPasswordFromClient
                     }).then(
                         function (response) {//success callback
                             console.log('validationOfTempPassword: response.data.adminChangedTempPassword=' + response.data.adminChangedTempPassword);
@@ -1179,7 +1109,7 @@
                 */
                 $scope.changeTempPassword = function () {
                     //a regular expression for a valid password
-                    let rePassword = /^((?!.*[\s])(?=.*[A-Z])(?=.*\d))(?=.*?[#?!@$%^&*-]).{8,15}$/;
+                    const rePassword = /^((?!.*[\s])(?=.*[A-Z])(?=.*\d))(?=.*?[#?!@$%^&*-]).{8,15}$/;
 
                     //check the length of the password and if it fits the regular expression pattern
                     if ($scope.newTemporaryPassword === undefined || !rePassword.test($scope.newTemporaryPassword)) {
@@ -1199,9 +1129,9 @@
                     }
 
                     //an http request to server to update the temporary password
-                    let newTempPassword = {TempPassword: $scope.newTemporaryPassword};
+                    const newTempPassword = {TempPassword: $scope.newTemporaryPassword};
                     $http.post(SERVER_URI + '/changeTemporaryPassword', {
-                        newTempPassword: newTempPassword,
+                        newTempPassword: newTempPassword
                     }).then(
                         function (response) { //success callback
 
@@ -1225,8 +1155,8 @@
                     and send them when all are valid to server in an http post request
                 */
                 $scope.signUp = function () {
-                    let reUserName = /^[a-zA-Z]{3,10}$/;
-                    let reName = /^[a-zA-Z\s\u0590-\u05fe]{2,20}$/;
+                    const reUserName = /^[a-zA-Z]{3,10}$/;
+                    const reName = /^[a-zA-Z\s\u0590-\u05fe]{2,20}$/;
 
                     //check if user name has been entered and if it is valid according to the matching regular expression pattern
                     if ($scope.registrationUserName === undefined || !reUserName.test($scope.registrationUserName)) {
@@ -1243,7 +1173,7 @@
                         angular.element(document.querySelector('#msgModal')).modal('show');
                         return;
                     }
-                    let reMail = /^(([^<>()[\]\\.,;:\s@\']+(\.[^<>()[\]\\.,;:\s@\']+)*)|(\'.+\'))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+                    const reMail = /^(([^<>()[\]\\.,;:\s@\']+(\.[^<>()[\]\\.,;:\s@\']+)*)|(\'.+\'))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
 
                     //check if the email has been entered and if it is valid according to the matching regular expression pattern
                     if ($scope.registrationEmail === undefined || !reMail.test($scope.registrationEmail)) {
@@ -1252,7 +1182,7 @@
                         angular.element(document.querySelector('#msgModal')).modal('show');
                         return;
                     }
-                    let rePassword = /^((?!.*[\s])(?=.*[A-Z])(?=.*\d))(?=.*?[#?!@$%^&*-]).{8,15}$/;
+                    const rePassword = /^((?!.*[\s])(?=.*[A-Z])(?=.*\d))(?=.*?[#?!@$%^&*-]).{8,15}$/;
 
                     //check if a password has been entered and if it is valid according to the matching regular expression pattern
                     if ($scope.registrationPassword === undefined || !rePassword.test($scope.registrationPassword)) {
@@ -1273,19 +1203,19 @@
 
 
                     //save users valid details as a json object
-                    let user = {
+                    const user = {
                         UserName: $scope.registrationUserName, Name: $scope.registrationName,
                         eMail: $scope.registrationEmail, Password: $scope.registrationPassword
                     };
                     $log.log('before call server');
                     //call server with http request
                     $http.post(SERVER_URI + '/addUser', {
-                        user: user,
+                        user: user
                     }).then(
                         function (response) { //success callback
 
                             //get response from server
-                            let userFromServer = response.data.user;
+                            const userFromServer = response.data.user;
                             loggedInUser = userFromServer;
 
                             //check if this user name does not exist already
@@ -1321,20 +1251,14 @@
                                     $scope.adminPage = true;
                                     $scope.isAdmin = true;
 
-                                }
-
-                                //if not admin logged in hide admin page and update that not admin logged in -> $scope.isAdmin = false
-                                else {
+                                } else { //if not admin logged in hide admin page and update that not admin logged in -> $scope.isAdmin = false
                                     $scope.adminPage = false;
                                     $scope.isAdmin = false;
                                 }
 
                                 $log.log(userFromServer.UserName);
 
-                            }
-
-                            //if this user name already exists in system -> show error modal
-                            else {
+                            } else { //if this user name already exists in system -> show error modal
                                 $scope.message = response.data.userExists;
                                 $scope.messageType = 'ERROR';
                                 angular.element(document.querySelector('#msgModal')).modal('show');
@@ -1380,7 +1304,7 @@
                     */
                     let LoginUser = {UserName: $scope.UserNameLogin, Password: $scope.PasswordLogin};
                     $http.post(SERVER_URI + '/login', {
-                        LoginUser: LoginUser,
+                        LoginUser: LoginUser
                     }).then(
                         function (response) { //success callback
 
@@ -1398,10 +1322,7 @@
                                 if (LoginUser.adminUser) {
                                     $scope.adminPage = true;
                                     $scope.isAdmin = true;
-                                }
-
-                                //if not admin hide admin page and update that not admin is logged in
-                                else {
+                                } else { //if not admin hide admin page and update that not admin is logged in
                                     $scope.adminPage = false;
                                     $scope.isAdmin = false;
                                 }
@@ -1427,12 +1348,7 @@
                                 $scope.getContactsList();
                                 $scope.getFilesList();
                                 $scope.getUsersList('showUsers');
-
-
-                            }
-
-                            //if there is no match show error modal
-                            else {
+                            } else { //if there is no match show error modal
                                 $scope.message = response.data.noMatch;
                                 $scope.messageType = 'ERROR';
                                 angular.element(document.querySelector('#msgModal')).modal('show');
@@ -1492,12 +1408,12 @@
                     $log.log(document.getElementById('roleColor').value);
 
                     //get a color from user
-                    let roleColor = document.getElementById('roleColor').value;
-                    let color = roleColor.toString();
+                    const roleColor = document.getElementById('roleColor').value;
+                    const color = roleColor.toString();
                     $log.log('color: ' + color);
 
                     //check if color exists
-                    let existingColor = $scope.checkExsistingColor(color);
+                    const existingColor = $scope.checkExsistingColor(color);
                     $log.log('existingColor: ' + existingColor);
 
                     //check if the role field in modal has been filled in if not show error modal
@@ -1530,13 +1446,13 @@
                         return;
                     }
                     //if color does not exist send an http request to server with role details : role color and matching statuses list
-                    let roleWithStatuses = {
+                    const roleWithStatuses = {
                         Role: $scope.roleFromModal,
                         Color: roleColor,
                         Statuses: selectedItems
                     };
                     $http.post(SERVER_URI + '/addRoleWithStatuses', {
-                        roleWithStatuses: roleWithStatuses,
+                        roleWithStatuses: roleWithStatuses
                     }).then(
                         function (response) { //success callback
                             $scope.roleFromModal = undefined;
@@ -1580,9 +1496,9 @@
                     //if the status field is filled in
 
                     //save details in json object : status and roles list and call server with http request
-                    let statusWithRoles = {Status: $scope.statusFromModal, Roles: selectedItems};
+                    const statusWithRoles = {Status: $scope.statusFromModal, Roles: selectedItems};
                     $http.post(SERVER_URI + '/addStatutsWithRoles', {
-                        statusWithRoles: statusWithRoles,
+                        statusWithRoles: statusWithRoles
                     }).then(
                         function (response) { //success callback
                             $scope.statusFromModal = undefined;
@@ -1774,7 +1690,7 @@
                         eMail: contact.eMail,
                         Address: contact.Address
                     };
-                    let indexRole = getIndexOfSelectedItem(contactBeforeUpdate.Category.Role, 'role_list');
+                    const indexRole = getIndexOfSelectedItem(contactBeforeUpdate.Category.Role, 'role_list');
                     console.log('indexRole=' + indexRole);
                     $scope.roleCategory = $scope.roles[indexRole];
                     console.log('$scope.roleCategory=' + JSON.stringify($scope.roleCategory));
@@ -1848,9 +1764,9 @@
                         missingFileToDelete = true;
                         return;
                     }
-                    let fileToDelete = {FileName: file.FileName};
+                    const fileToDelete = {FileName: file.FileName};
                     $http.post(SERVER_URI + '/deleteFile', {
-                        file: fileToDelete,
+                        file: fileToDelete
                     }).then(
                         function (response) { //success callback
                             console.log(response.data.fileDeleted);
@@ -1917,9 +1833,9 @@
                     //if there was chosen a ststus in modal
                     if ($scope.systemStatusFromModal && $scope.systemStatusFromModal !== '') {
                         //save the chosen status in json format
-                        let newSatus = {Status: $scope.systemStatusFromModal};
+                        const newSatus = {Status: $scope.systemStatusFromModal};
                         $http.post(SERVER_URI + '/addOption', {
-                            newSatus: newSatus,
+                            newSatus: newSatus
                         }).then(
                             function (response) { //success callback
 
@@ -1935,11 +1851,7 @@
                                 angular.element(document.querySelector('#msgModal')).modal('show');
                             }
                         );
-
-                    }
-
-                    //if there was no status selected in modal
-                    else {
+                    } else { //if there was no status selected in modal
                         //show error modal
                         $scope.message = 'You must enter a status';
                         $scope.messageType = 'ERROR';
@@ -1986,9 +1898,9 @@
                         return;
                     }
                     //save in json format the role that was chosen with the statuses that were selected
-                    let roleToUpdate = {Role: category, Statuses: selectedItems};
+                    const roleToUpdate = {Role: category, Statuses: selectedItems};
                     $http.post(SERVER_URI + '/updateRole', {
-                        roleToUpdate: roleToUpdate,
+                        roleToUpdate: roleToUpdate
                     }).then(
                         function (response) { //success callback
 
@@ -2049,7 +1961,7 @@
                 $scope.getUsersList = function (flag) {
                     $log.log('flag : ' + flag);
                     $http.post(SERVER_URI + '/getUsers', {
-                        statusFlag: flag,
+                        statusFlag: flag
                     }).then(
                         function (response) {//success callback
 
@@ -2120,13 +2032,9 @@
                         $scope.message = 'You must enter a name';
                         angular.element(document.querySelector('#msgModal')).modal('show');
                         return;
-
-                    }
-
-                    //if there was a new name entered
-                    else {
+                    } else { //if there was a new name entered
                         //save the new name
-                        let name = $scope.newName;
+                        const name = $scope.newName;
 
                         //check the length of the name
                         if (name.length > MAX_LETTERS_IN_NAME) {
@@ -2149,13 +2057,9 @@
                         $scope.message = 'You must enter a phone number';
                         angular.element(document.querySelector('#msgModal')).modal('show');
                         return;
-
-                    }
-
-                    //if a phone number was entered
-                    else {
+                    } else { //if a phone number was entered
                         //a regular expression for a valid phone number
-                        let validPhoneNumber = /^\+?([0-9]{2})?[0-9]{7,10}$/;
+                        const validPhoneNumber = /^\+?([0-9]{2})?[0-9]{7,10}$/;
 
                         //check if the phone number is valid according to regular expression
                         if (!validPhoneNumber.test($scope.newPhoneNumber)) {
@@ -2171,7 +2075,7 @@
                     //check if an email address was entered
                     if ($scope.newEmail && $scope.newEmail !== '') {
                         //save a regular expression for a valid email address
-                        let validEmail = /^(([^<>()[\]\\.,;:\s@\']+(\.[^<>()[\]\\.,;:\s@\']+)*)|(\'.+\'))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+                        const validEmail = /^(([^<>()[\]\\.,;:\s@\']+(\.[^<>()[\]\\.,;:\s@\']+)*)|(\'.+\'))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
 
                         //check if the email address is valid according to regular expression
                         if (!validEmail.test($scope.newEmail)) {
@@ -2182,17 +2086,14 @@
                             angular.element(document.querySelector('#msgModal')).modal('show');
                             return;
                         }
-                    }
-
-                    //if no email address was entered
-                    else {
+                    } else { //if no email address was entered
                         $scope.newEmail = '';
                     }
 
                     //check if an address was entered
                     if ($scope.newAddress && $scope.newAddress !== '') {
                         //save the address
-                        let address = $scope.newAddress;
+                        const address = $scope.newAddress;
 
                         //check the length of the address
                         if (address.length > MAX_LETTERS_IN_ADDRESS) {
@@ -2202,11 +2103,7 @@
                             $scope.newAddress = $scope.newAddress.slice(0, MAX_LETTERS_IN_ADDRESS);
                             return;
                         }
-
-                    }
-
-                    //if no address was entered
-                    else {
+                    } else { //if no address was entered
                         $scope.newAddress = '';
                     }
 
@@ -2221,11 +2118,11 @@
                 */
                 $scope.getCurrentDate = function () {
                     let date = new Date();
-                    let MM = String(date.getMinutes()).padStart(2, '0');
-                    let HH = String(date.getHours()).padStart(2, '0');
-                    let dd = String(date.getDate()).padStart(2, '0');
-                    let mm = String(date.getMonth() + 1).padStart(2, '0'); //January is 0!
-                    let yyyy = date.getFullYear();
+                    const MM = String(date.getMinutes()).padStart(2, '0');
+                    const HH = String(date.getHours()).padStart(2, '0');
+                    const dd = String(date.getDate()).padStart(2, '0');
+                    const mm = String(date.getMonth() + 1).padStart(2, '0'); //January is 0!
+                    const yyyy = date.getFullYear();
 
                     date = mm + '/' + dd + '/' + yyyy + ' ' + HH + ':' + MM;
 
@@ -2238,12 +2135,12 @@
                 */
                 $scope.addNewContact = function () {
                     //save the current date
-                    let contactHistory = 'Date : ' + $scope.getCurrentDate() + '\n\nContact Addition\n ';
+                    const contactHistory = 'Date : ' + $scope.getCurrentDate() + '\n\nContact Addition\n ';
 
                     //add to history the action
                     historyArray.push(contactHistory);
                     $log.log('contactHistory :' + contactHistory);
-                    let contact = {
+                    const contact = {
                         Name: $scope.newName,
                         Category: category,
                         Status: statusRole,
@@ -2253,7 +2150,7 @@
                         History: historyArray
                     };
                     $http.post(SERVER_URI + '/addContact', {
-                        contact: contact,
+                        contact: contact
                     }).then(
                         function (response) { //success callback
 
@@ -2266,10 +2163,7 @@
                                 $scope.newEmail = undefined;
                                 $scope.newAddress = undefined;
                                 historyArray = [];
-                            }
-
-                            //if exists show error modal
-                            else {
+                            } else { //if exists show error modal
                                 $scope.messageType = 'ERROR';
                                 $scope.message = response.data.phoneExists;
                                 angular.element(document.querySelector('#msgModal')).modal('show');
@@ -2298,7 +2192,7 @@
                 $scope.deleteContactFunction = function (contact) {
 
                     $http.post(SERVER_URI + '/deleteContact', {
-                        contact: contact,
+                        contact: contact
                     }).then(
                         function (response) { //success callback
                             $scope.getContactsList();
@@ -2374,10 +2268,7 @@
                         $scope.message = 'You must enter a name';
                         angular.element(document.querySelector('#msgModal')).modal('show');
                         return;
-                    }
-
-                    //if a name was entered
-                    else {
+                    } else { //if a name was entered
                         if (contactInfoToUpdate.Name.length > MAX_LETTERS_IN_NAME) {//check the length of the name
                             $scope.messageType = 'WARNNING';
                             $scope.message = 'This name is too long, therefore only ' + MAX_LETTERS_IN_NAME + ' characters including spaces will be saved';
@@ -2398,7 +2289,7 @@
 
                     //check if phone number was entered and if it is valid
                     if (contactInfoToUpdate.PhoneNumber && contactInfoToUpdate.PhoneNumber !== '') {
-                        let validPhoneNumber = /^\+?([0-9]{2})?[0-9]{7,10}$/;
+                        const validPhoneNumber = /^\+?([0-9]{2})?[0-9]{7,10}$/;
                         //if the phone number is invalid shoe an error modal
                         if (!validPhoneNumber.test(contactInfoToUpdate.PhoneNumber)) {
                             $scope.messageType = 'ERROR';
@@ -2406,10 +2297,7 @@
                             angular.element(document.querySelector('#msgModal')).modal('show');
                             return;
                         }
-                    }
-
-                    //if no phone number was entered show an error modal
-                    else {
+                    } else { //if no phone number was entered show an error modal
                         $scope.messageType = 'ERROR';
                         $scope.message = 'You must enter a phone number';
                         angular.element(document.querySelector('#msgModal')).modal('show');
@@ -2418,7 +2306,7 @@
 
                     //check if an email address was entered and if it is valid
                     if (contactInfoToUpdate.eMail && contactInfoToUpdate.eMail !== '') {
-                        let validEmail = /^(([^<>()[\]\\.,;:\s@\']+(\.[^<>()[\]\\.,;:\s@\']+)*)|(\'.+\'))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+                        const validEmail = /^(([^<>()[\]\\.,;:\s@\']+(\.[^<>()[\]\\.,;:\s@\']+)*)|(\'.+\'))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
                         if (!validEmail.test(contactInfoToUpdate.eMail)) {//check the email
                             $scope.messageType = 'ERROR';
                             $scope.message = 'This email is invalid';
@@ -2444,10 +2332,10 @@
                     }
 
                     //save the changes on contact in the history
-                    let contactHistory = $scope.changedDtails(contactInfoToUpdate);
+                    const contactHistory = $scope.changedDtails(contactInfoToUpdate);
 
                     //save the details of the updated contact in a json format
-                    let updatedContact = {
+                    const updatedContact = {
                         Name: contactInfoToUpdate.Name,
                         Category: category,
                         Status: statusRole,
@@ -2467,10 +2355,7 @@
                                 $scope.getContactsList();
                                 category = undefined;
                                 statusRole = undefined;
-                            }
-
-                            //if the phone already exsist show an error modal
-                            else {
+                            } else { //if the phone already exsist show an error modal
                                 $scope.messageType = 'ERROR';
                                 $scope.message = response.data.phoneExists;
                                 angular.element(document.querySelector('#msgModal')).modal('show');
@@ -2490,10 +2375,10 @@
                 */
                 $scope.saveUpdatedUser = function (userToUpdate) {
                     //regular expression for a valid user name
-                    let reUserName = /^[a-zA-Z]{3,10}$/;
+                    const reUserName = /^[a-zA-Z]{3,10}$/;
 
                     //regular expression for a valid name
-                    let reName = /^[a-zA-Z\s\u0590-\u05fe]{2,20}$/;
+                    const reName = /^[a-zA-Z\s\u0590-\u05fe]{2,20}$/;
 
                     $log.log('category : ' + category);
                     //if no role was selected show an error modal
@@ -2520,7 +2405,7 @@
                         angular.element(document.querySelector('#msgModal')).modal('show');
                         return;
                     }
-                    let reMail = /^(([^<>()[\]\\.,;:\s@\']+(\.[^<>()[\]\\.,;:\s@\']+)*)|(\'.+\'))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+                    const reMail = /^(([^<>()[\]\\.,;:\s@\']+(\.[^<>()[\]\\.,;:\s@\']+)*)|(\'.+\'))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
 
                     //check if an email address was entered and if it is valid
                     if (userToUpdate.eMail === undefined || !reMail.test(userToUpdate.eMail)) {
@@ -2532,7 +2417,7 @@
 
 
                     //save the updated details of the user
-                    let updatedUser = {
+                    const updatedUser = {
                         Role: category,
                         UserName: userToUpdate.UserName,
                         Name: userToUpdate.Name,
@@ -2636,7 +2521,7 @@
                     the function gets the new password
                 */
                 $scope.changePasswordFunction = function (newPassword) {
-                    let rePassword = /^((?!.*[\s])(?=.*[A-Z])(?=.*\d))(?=.*?[#?!@$%^&*-]).{8,15}$/;
+                    const rePassword = /^((?!.*[\s])(?=.*[A-Z])(?=.*\d))(?=.*?[#?!@$%^&*-]).{8,15}$/;
 
                     //check the new password is valid according to regular expression
                     if ($scope.newPassword === undefined || !rePassword.test($scope.newPassword)) {
@@ -2661,9 +2546,9 @@
                     }
 
                     //save the new password in server with an hyyp request
-                    let loggedInNewPassword = {username: loggedInUser.UserName, newPassword: $scope.newPassword};
+                    const loggedInNewPassword = {username: loggedInUser.UserName, newPassword: $scope.newPassword};
                     $http.post(SERVER_URI + '/changeCurrentPassword', {
-                        loggedInNewPassword: loggedInNewPassword,
+                        loggedInNewPassword: loggedInNewPassword
                     }).then(
                         function (response) { //success callback
                             $scope.newPassword = undefined;
@@ -2685,9 +2570,9 @@
                     with the password in server for the current user name
                 */
                 $scope.verifyPassword = function (currenPassword) {
-                    let loggedInCurrentPassword = {username: loggedInUser.UserName, currentPassword: currenPassword};
+                    const loggedInCurrentPassword = {username: loggedInUser.UserName, currentPassword: currenPassword};
                     $http.post(SERVER_URI + '/verificationCurrentPassword', {
-                        loggedInCurrentPassword: loggedInCurrentPassword,
+                        loggedInCurrentPassword: loggedInCurrentPassword
                     }).then(
                         function (response) { //success callback
                             $scope.currenPassword = undefined;
@@ -2695,10 +2580,7 @@
                             //the current password was verified for this username
                             if (response.data.verified) {
                                 angular.element(document.querySelector('#changePasswordModal')).modal('show');
-                            }
-
-                            //the current password was not verified for this username
-                            else {
+                            } else { //the current password was not verified for this username
                                 console.log('verifyPassword: response.data.notVerified=' + response.data.notVerified);
                                 $scope.messageType = 'ERROR';
                                 $scope.message = response.data.notVerified;
@@ -2741,7 +2623,7 @@
 
                     //call server with http request to delete status from system
                     $http.post(SERVER_URI + '/deleteStatusFromSystem', {
-                        statusToDelete: deletedStatus,
+                        statusToDelete: deletedStatus
                     }).then(
                         function (response) { //success callback
                             deletedStatus = undefined;
@@ -2788,7 +2670,7 @@
                     }
 
                     //save the status to delete and from which role to delete
-                    let statusToDelete = {Role: category.Role, Status: statusRole};
+                    const statusToDelete = {Role: category.Role, Status: statusRole};
 
                     //call server with http request for deleting status from role
                     $http.post(SERVER_URI + '/deleteStatusFromRole', {
@@ -2916,26 +2798,21 @@
                     a function for saving the user name of user to delete that was selected at modal
                 */
                 $scope.itemSelected = function (item, flag) {
-                    let res;
-                    let res1;
-                    let res2;
                     $scope.selectedContact = item;
 
-                    res = item.split(',');
+                    const res = item.split(',');
 
                     if (flag === 'contact_list') {
-                        res2 = res[0].split(':');//contact name
+                        const res2 = res[0].split(':');//contact name
                         selectedItemPart1 = String(res2[1]).trim();
                     }
 
-                    res1 = res[1].split(':');
+                    const res1 = res[1].split(':');
 
                     selectedItemPart2 = res1[1].split(' ');
                     selectedItemPart2 = String(selectedItemPart2[1]).trim();
 
                     $scope.selectedContact = selectedItemPart1 + ' ' + selectedItemPart2;
-
-
                     $log.log(selectedItemPart2);
                 };
 
@@ -2956,7 +2833,7 @@
                         selectedItemPart2 = flag;
                     }
                     $http.post(SERVER_URI + '/deleteUser', {
-                        username: selectedItemPart2,
+                        username: selectedItemPart2
                     }).then(
                         function (response) { //success callback
                             $scope.users = response.data.users;
@@ -2983,7 +2860,7 @@
 
                     $log.log(role);
                     $http.post(SERVER_URI + '/deleteRole', {
-                        role: role.Role,
+                        role: role.Role
                     }).then(
                         function (response) { //success callback
                             $scope.roles = response.data.roles;
@@ -3030,7 +2907,7 @@
                     $('[data-toggle="popover"]').popover('hide');
                 }
             });
-            let getTemplate = function () {
+            const getTemplate = function () {
                 $templateCache.put('templateId.html', 'This is the content of the template');
                 console.log($templateCache.get('popover_template.html'));
                 return $templateCache.get('popover_template.html');
@@ -3042,9 +2919,9 @@
                 link: function (scope, element, attrs) {
                     let popOverContent;
                     if (scope.history) {
-                        let html = getTemplate();
+                        const html = getTemplate();
                         popOverContent = $compile(html)(scope);
-                        let options = {
+                        const options = {
                             content: popOverContent,
                             placement: 'right',
                             html: true,

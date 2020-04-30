@@ -1,3 +1,5 @@
+/*jshint unused:false*/
+
 //the libraries that not existing fundamentally in node js
 const fs = require('fs');
 const nodeMailer = require('nodemailer');
@@ -7,6 +9,7 @@ const MongoClient = require('mongodb').MongoClient;
 const ReadPreference = require('mongodb').ReadPreference;
 const config = require('./config/default.json');
 const multer = require('multer');
+const morgan = require('morgan');
 
 //the name of app
 const APP_NAME = require('os').hostname();
@@ -24,6 +27,7 @@ const SERVER_EMAIL = 'h2e.crm@gmail.com';
 
 app.use(BodyParser.json());
 app.use(BodyParser.urlencoded({extended: true}));
+morgan(':method :host :status :res[content-length] - :response-time ms');
 
 
 //create an approach to send emails from the system by using node mailer library
@@ -66,6 +70,53 @@ function getMongoConnectionString() {
 app.listen(APP_PORT, () => {
     console.log('server ' + APP_NAME + ' is listening on port ' + APP_PORT);
 });
+
+/*
+ This function is to check if the collections : statuses , roles and files are empty
+*/
+function checkExistingStatusesAndRolesAndFiles() {
+    console.log('checkExistingStatusesAndRoles FUNCTION');
+
+    //count the documents in statuses collection
+    statusesCollection.countDocuments(function (err, count) {
+        console.log('there are statuses');
+        //if the collection does not have documents
+        if (!err && count === 0) {
+            console.log('no statuses');
+
+            //insert the statuses : '-- Choose status for role --','בעיה טכנית'
+            //statusesCollection.insertOne({'Status':'-- Choose status for role --'});
+            statusesCollection.insertOne({'Status': 'בעיה טכנית'});
+        }
+    });
+
+    //count the documents in rolesWithStatusesCollection
+    rolesWithStatusesCollection.countDocuments(function (err, count) {
+        if (!err && count === 0) {
+            console.log('no roles');
+            //insert the role : '-- Choose category for role --'
+            rolesWithStatusesCollection.insertOne({Role: 'new in the system'});
+            //insert the roles: 'תמיכה טכנית' with statuses: : '-- Choose status for role --','בעיה טכנית'  and color:#66ffff'
+            rolesWithStatusesCollection.insertOne({
+                Role: 'תמיכה טכנית',
+                Color: '#66ffff',
+                Statuses: ['בעיה טכנית']
+            });
+            //insert the color:#66ffff' to colorsCollection
+            colorsCollection.insertOne({Color: '#66ffff'});
+
+        }
+    });
+    //count the documents in statusesWithRolesCollection
+    statusesWithRolesCollection.countDocuments(function (err, count) {
+        if (!err && count === 0) {
+            console.log('no statuses');
+            //insert the statuses : '-- Choose status for role --','בעיה טכנית'
+            //statusesWithRolesCollection.insertOne({Status:'-- Choose status for role --'});
+            statusesWithRolesCollection.insertOne({Status: 'בעיה טכנית', Roles: ['תמיכה טכנית']});
+        }
+    });
+}
 
 //get main page and connect to mongo db
 app.get('/', (request, response) => {
@@ -325,18 +376,18 @@ app.get('/firstSystemLoad', (request, response) => {
                     if (err) throw err;
                 });
             response.writeHead(200, {'Content-Type': 'application/json'});
-            response.end(JSON.stringify({'admin_first_load': true}));//Admin has been loaded first time to mongodb
+            response.end(JSON.stringify({'adminFirstLoad': true}));//Admin has been loaded first time to mongodb
         } else//there is a user in system and Admin exists = mongo db workersCollection is not empty
         {
             if (mongoUser.UserName === 'Admin' && mongoUser.Name === '' && mongoUser.eMail === '' && mongoUser.Password === '') {
                 if (mongoUser.TempPassword === firstTempPassword)//admin did not yet change the temp password that he got from system
                 {
                     response.writeHead(200, {'Content-Type': 'application/json'});
-                    response.end(JSON.stringify({'admin_changed_temp_password': false}));
+                    response.end(JSON.stringify({'adminChangedTempPassword': false}));
                 } else//admin changed temp password that he got from system
                 {
                     response.writeHead(200, {'Content-Type': 'application/json'});
-                    response.end(JSON.stringify({'admin_changed_temp_password': true}));//go to registration page with admin
+                    response.end(JSON.stringify({'adminChangedTempPassword': true}));//go to registration page with admin
                 }
 
             } else//Admin has filled in all his details
@@ -373,11 +424,11 @@ app.post('/verifyTemporaryPassword', (request, response) => {
                 if (mongoUser.TempPassword === firstTempPassword)//admin did not yet change the temp password that he got from system
                 {
                     response.writeHead(200, {'Content-Type': 'application/json'});
-                    response.end(JSON.stringify({'admin_changed_temp_password': false}));
+                    response.end(JSON.stringify({'adminChangedTempPassword': false}));
                 } else//admin changed temp password that he got from system
                 {
                     response.writeHead(200, {'Content-Type': 'application/json'});
-                    response.end(JSON.stringify({'admin_changed_temp_password': true}));//go to registration page with admin
+                    response.end(JSON.stringify({'adminChangedTempPassword': true}));//go to registration page with admin
                 }
             } else {
                 //the user has a good password that changed by admin
@@ -400,7 +451,7 @@ app.post('/changeTemporaryPassword', (request, response) => {
 
     console.log('entered changeTemporaryPassword function');
 
-    const NewTempPassword = request.body.new_temp_password;
+    const NewTempPassword = request.body.NewTempPassword;
     console.log('NewTempPassword: ' + NewTempPassword);
     //update in workersCollection the filed TempPassword that exists in admin with a new password
     workersCollection.update({'UserName': 'Admin'}, {$set: {TempPassword: NewTempPassword.TempPassword}}, function (err, obj) {
@@ -421,7 +472,7 @@ app.post('/verificationCurrentPassword', (request, response) => {
 
     console.log('entered verificationCurrentPassword function');
 
-    let loggedInCurrentPassword = request.body.logged_in_current_password;
+    let loggedInCurrentPassword = request.body.loggedInCurrentPassword;
     //try to find in user collection a user with a given username and password
     workersCollection.findOne({
         'UserName': loggedInCurrentPassword.username,
@@ -452,11 +503,11 @@ app.post('/changeCurrentPassword', (request, response) => {
 
     console.log('entered changeCurrentPassword function');
 
-    let logged_in_new_password = request.body.logged_in_new_password;
+    let loggedInNewPassword = request.body.loggedInNewPassword;
 
     //update in workersCollection the the password of user with a new password
-    workersCollection.update({'UserName': logged_in_new_password.username},
-        {$set: {'Password': logged_in_new_password.new_password}}, function (err, obj) {
+    workersCollection.update({'UserName': loggedInNewPassword.username},
+        {$set: {'Password': loggedInNewPassword.newPassword}}, function (err, obj) {
             if (err) throw err;
             //return ok
             response.writeHead(200, {'Content-Type': 'application/json'});
@@ -490,12 +541,12 @@ app.post('/addUser', (request, response) => {
             //if this username does not exist in the system - add a new user with his details
             workersCollection.insertOne(user, function (err, res) {
                 if (err) throw err;
-                //return the user details with is_admin:false
+                //return the user details with isAdmin:false
                 response.writeHead(200, {'Content-Type': 'application/json'});
                 response.end(JSON.stringify({
                     'user': {
                         'Role': user.Role, 'UserName': user.UserName, 'Name': user.Name,
-                        'eMail': user.eMail, 'Password': user.Password, is_admin: false
+                        'eMail': user.eMail, 'Password': user.Password, isAdmin: false
                     }
                 }));
             });
@@ -515,7 +566,7 @@ app.post('/addUser', (request, response) => {
                     response.end(JSON.stringify({
                         'user': {
                             'Role': 'Administrator', 'UserName': user.UserName, 'Name': user.Name,
-                            'eMail': user.eMail, 'Password': user.Password, is_admin: true
+                            'eMail': user.eMail, 'Password': user.Password, isAdmin: true
                         }
                     }));
                     console.log('admin register');
@@ -525,7 +576,7 @@ app.post('/addUser', (request, response) => {
             } else {
                 //if the username already exists and he is not the Admin
                 response.writeHead(200, {'Content-Type': 'application/json'});
-                response.end(JSON.stringify({user_exists: 'This user name already exists.'}));
+                response.end(JSON.stringify({userExists: 'This user name already exists.'}));
             }
         }
 
@@ -550,7 +601,7 @@ app.post('/login', (request, response) => {
             console.log('no match!');
             response.writeHead(200, {'Content-Type': 'application/json'});
             //post a response with The user name or password is incorrect. Try again.
-            response.end(JSON.stringify({no_match: 'The user name or password is incorrect. Try again.'}));
+            response.end(JSON.stringify({noMatch: 'The user name or password is incorrect. Try again.'}));
         } else {
             //if there is matching
             console.log(result.Name);
@@ -558,7 +609,7 @@ app.post('/login', (request, response) => {
             //check if the user is admin and return a user details with 'adminUser':true
             if (result.UserName === 'Admin') {
                 response.end(JSON.stringify({
-                    user_login: {
+                    userLogin: {
                         'adminUser': true, 'Role': result.Role, 'UserName': result.UserName, 'Name': result.Name,
                         'eMail': result.eMail, 'Password': result.Password, 'Events': result.Events
                     }
@@ -566,7 +617,7 @@ app.post('/login', (request, response) => {
             }
             //if the user is not admin rturn user datails
             else {
-                response.end(JSON.stringify({user_login: result}));
+                response.end(JSON.stringify({userLogin: result}));
             }
         }
 
@@ -609,7 +660,7 @@ app.post('/addContact', (request, response) => {
         else {
             response.writeHead(200, {'Content-Type': 'application/json'});
             //response with error massage
-            response.end(JSON.stringify({'phone_exists': 'ERROR : this phone number already exists, change it or search for this user.'}));
+            response.end(JSON.stringify({'phoneExists': 'ERROR : this phone number already exists, change it or search for this user.'}));
         }
 
 
@@ -657,18 +708,49 @@ app.get('/getFiles', (request, response) => {
 
 });
 
+app.get('/getUserEvents/:UserName', (request, response) => {
+    console.log('/getUserEvents/' + request.params.UserName);
+    //enter all members of customersCollection to array
+    workersCollection.find({UserName: request.params.UserName}).toArray((error, result) => {
+        if (error) {
+            return response.status(500).send(error);
+        }
+        //response with ok, and with the users list
+        response.writeHead(200, {'Content-Type': 'application/json'});
+        response.end(JSON.stringify({ 'userEvents': result[0].Events}));
+    });
+});
+
+app.get('/getCustomerEvents/:UserName/:eventId', (request, response) => {
+    console.log('/getUserEvents/' + request.params.UserName + '/' + request.params.eventId);
+    //enter all members of customersCollection to array
+    //Events: { $elemMatch: { id: request.params.eventId } } }).toArray((error, result) => {
+    //'Events.id': request.params.eventId
+    //UserName: request.params.UserName,
+    workersCollection.find({
+        Events: { $elemMatch: { id: request.params.eventId } }
+    }).toArray((error, result) => {
+        if (error || !result[0]) {
+            return response.status(500).send(error);
+        }
+        //response with ok, and with the users list
+        response.writeHead(200, {'Content-Type': 'application/json'});
+        response.end(JSON.stringify({ 'customerEvents': result[0].Events}));
+    });
+});
+
 /*
 	This request is to get the list of users
 */
 app.post('/getUsers', (request, response) => {
 
     console.log('entered getUsers function');
-    let status_flag = request.body.status_flag;
-    console.log('status_flag : ' + status_flag);
+    let statusFlag = request.body.statusFlag;
+    console.log('statusFlag : ' + statusFlag);
 
     //if request is to get the users for the delete user
-    if (status_flag === 'deleteUser') {
-        console.log('entered if with : ' + status_flag);
+    if (statusFlag === 'deleteUser') {
+        console.log('entered if with : ' + statusFlag);
         //get the user list without the administrator
         workersCollection.find({UserName: {$ne: 'Admin'}}).toArray((error, result) => {
             if (error) {
@@ -681,7 +763,7 @@ app.post('/getUsers', (request, response) => {
     }
     //if request is to get the users for show user
 
-    else if (status_flag === 'showUsers') {
+    else if (statusFlag === 'showUsers') {
         //enter all members of workersCollection to array
         workersCollection.find({}).toArray((error, result) => {
             if (error) {
@@ -702,15 +784,15 @@ app.post('/getUsers', (request, response) => {
 app.post('/deleteContact', (request, response) => {
     console.log('entered deleteContact function');
     //the contact to delete with his details
-    let contact_to_delete = request.body.contact;
-    console.log('contact_to_delete :' + contact_to_delete);
+    let contactToDelete = request.body.contact;
+    console.log('contactToDelete :' + contactToDelete);
     //delete the contact from contacts collection by his all details
     customersCollection.deleteOne({
-        'Name': contact_to_delete.Name,
-        'Status': contact_to_delete.Status,
-        'PhoneNumber': contact_to_delete.PhoneNumber,
-        'eMail': contact_to_delete.eMail,
-        'Address': contact_to_delete.Address
+        'Name': contactToDelete.Name,
+        'Status': contactToDelete.Status,
+        'PhoneNumber': contactToDelete.PhoneNumber,
+        'eMail': contactToDelete.eMail,
+        'Address': contactToDelete.Address
     }, function (err, obj) {
         if (err) throw err;
         console.log('1 document deleted');
@@ -726,15 +808,15 @@ app.post('/deleteContact', (request, response) => {
 */
 app.post('/deleteFile', (request, response) => {
     console.log('entered deleteContact function');
-    let file_to_delete = request.body.file;
-    const path = './uploads/' + file_to_delete.FileName;
+    let fileToDelete = request.body.file;
+    const path = './uploads/' + fileToDelete.FileName;
     try {
         fs.unlinkSync(path);
-        filesCollection.deleteOne({'FileName': file_to_delete.FileName}, function (err, obj) {
+        filesCollection.deleteOne({'FileName': fileToDelete.FileName}, function (err, obj) {
             if (err) throw err;
             console.log('1 document deleted');
             if (obj) {
-                var fileDeleted = 'The file ' + file_to_delete.FileName + ' has been deleted.';
+                let fileDeleted = 'The file ' + fileToDelete.FileName + ' has been deleted.';
                 response.writeHead(200, {'Content-Type': 'application/json'});
                 response.end(JSON.stringify({fileDeleted: fileDeleted}));
             }
@@ -801,22 +883,22 @@ app.get('/getRolesColors', (request, response) => {
 */
 app.post('/addStatutsWithRoles', (request, response) => {
 
-    let status_with_roles = request.body.status_with_roles;
+    let statusWithRoles = request.body.statusWithRoles;
     console.log('before updateOne');
     //add a new add a new status with an appropriate roles only if the status does not exist
-    statusesWithRolesCollection.updateOne({Status: status_with_roles.Status},
-        {$setOnInsert: {Status: status_with_roles.Status, Roles: status_with_roles.Roles}},
+    statusesWithRolesCollection.updateOne({Status: statusWithRoles.Status},
+        {$setOnInsert: {Status: statusWithRoles.Status, Roles: statusWithRoles.Roles}},
         {upsert: true}, function (err, res) {
             console.log('after updateOne');
         });
 
-    console.log('status_with_roles.Roles: ' + status_with_roles.Roles);
+    console.log('statusWithRoles.Roles: ' + statusWithRoles.Roles);
 
     //go through of all roles
-    for (let role of status_with_roles.Roles) {
+    for (let role of statusWithRoles.Roles) {
         console.log('role: ' + role);
         //add to role a new status
-        rolesWithStatusesCollection.updateOne({Role: role}, {$addToSet: {Statuses: status_with_roles.Status}},
+        rolesWithStatusesCollection.updateOne({Role: role}, {$addToSet: {Statuses: statusWithRoles.Status}},
             function (err, res) {
                 console.log('after updateOne');
             });
@@ -826,8 +908,8 @@ app.post('/addStatutsWithRoles', (request, response) => {
 
     //add to the statuses list a new status
     statusesCollection.updateOne(
-        {'Status': status_with_roles.Status},
-        {$setOnInsert: {'Status': status_with_roles.Status}},
+        {'Status': statusWithRoles.Status},
+        {$setOnInsert: {'Status': statusWithRoles.Status}},
         {upsert: true}
     );
     //response with ok
@@ -840,17 +922,16 @@ app.post('/addStatutsWithRoles', (request, response) => {
 */
 app.post('/addRoleWithStatuses', (request, response) => {
 
-    let role_with_statuses = request.body.role_with_statuses;
+    let roleWithStatuses = request.body.roleWithStatuses;
     console.log('before updateOne');
     //insert to the colors list the role color
-    colorsCollection.insertOne({Color: role_with_statuses.Color});
+    colorsCollection.insertOne({Color: roleWithStatuses.Color});
     //add a new add a new role with an appropriate statuses only if the role does not exist
-    rolesWithStatusesCollection.updateOne({Role: role_with_statuses.Role}
-        , {
+    rolesWithStatusesCollection.updateOne({Role: roleWithStatuses.Role}, {
             $setOnInsert: {
-                Role: role_with_statuses.Role,
-                Color: role_with_statuses.Color,
-                Statuses: role_with_statuses.Statuses
+                Role: roleWithStatuses.Role,
+                Color: roleWithStatuses.Color,
+                Statuses: roleWithStatuses.Statuses
             }
         },
         {upsert: true},
@@ -859,11 +940,10 @@ app.post('/addRoleWithStatuses', (request, response) => {
         });
 
     //go through of all statuses
-    for (let status of role_with_statuses.Statuses) {
+    for (let status of roleWithStatuses.Statuses) {
             console.log('status: ' + status);
             //add the to status a new role
-            statusesWithRolesCollection.updateOne({Status: status}
-                , {$addToSet: {Roles: role_with_statuses.Role}}, {upsert: true},
+            statusesWithRolesCollection.updateOne({Status: status}, {$addToSet: {Roles: roleWithStatuses.Role}}, {upsert: true},
                 function (err, res) {
                     console.log('after updateOne');
                 });
@@ -879,23 +959,21 @@ app.post('/addRoleWithStatuses', (request, response) => {
 */
 app.post('/updateRole', (request, response) => {
     //the role to update
-    let role_to_update = request.body.role_to_update;
+    let roleToUpdate = request.body.roleToUpdate;
     //the appropriate statuses to role
-    let statuses = role_to_update.Statuses;
+    let statuses = roleToUpdate.Statuses;
     console.log('before updateOne');
     //update the role with new statuses
-    rolesWithStatusesCollection.updateOne({Role: role_to_update.Role}
-        , {$addToSet: {Statuses: {$each: statuses}}},
+    rolesWithStatusesCollection.updateOne({Role: roleToUpdate.Role}, {$addToSet: {Statuses: {$each: statuses}}},
         function (err, res) {
             console.log('after updateOne');
         });
     //go through statuses
-    for (let status of role_to_update.Statuses) {
+    for (let status of roleToUpdate.Statuses) {
             console.log('status: ' + status);
             console.log('type of status: ' + typeof status);
             //update the status with new role
-            statusesWithRolesCollection.updateOne({Status: status}
-                , {$addToSet: {Roles: role_to_update.Role}},
+            statusesWithRolesCollection.updateOne({Status: status}, {$addToSet: {Roles: roleToUpdate.Role}},
                 function (err, res) {
                     console.log('after updateOne');
                 });
@@ -904,69 +982,20 @@ app.post('/updateRole', (request, response) => {
     }
 });
 
-
-/*
- This function is to check if the collections : statuses , roles and files are empty
-*/
-function checkExistingStatusesAndRolesAndFiles() {
-    console.log('checkExistingStatusesAndRoles FUNCTION');
-
-    //count the documents in statuses collection
-    statusesCollection.countDocuments(function (err, count) {
-        console.log('there are statuses');
-        //if the collection does not have documents
-        if (!err && count === 0) {
-            console.log('no statuses');
-
-            //insert the statuses : '-- Choose status for role --','בעיה טכנית'
-            //statusesCollection.insertOne({'Status':'-- Choose status for role --'});
-            statusesCollection.insertOne({'Status': 'בעיה טכנית'});
-        }
-    });
-
-    //count the documents in rolesWithStatusesCollection
-    rolesWithStatusesCollection.countDocuments(function (err, count) {
-        if (!err && count === 0) {
-            console.log('no roles');
-            //insert the role : '-- Choose category for role --'
-            rolesWithStatusesCollection.insertOne({Role: 'new in the system'});
-            //insert the roles: 'תמיכה טכנית' with statuses: : '-- Choose status for role --','בעיה טכנית'  and color:#66ffff'
-            rolesWithStatusesCollection.insertOne({
-                Role: 'תמיכה טכנית',
-                Color: '#66ffff',
-                Statuses: ['בעיה טכנית']
-            });
-            //insert the color:#66ffff' to colorsCollection
-            colorsCollection.insertOne({Color: '#66ffff'});
-
-        }
-    });
-    //count the documents in statusesWithRolesCollection
-    statusesWithRolesCollection.countDocuments(function (err, count) {
-        if (!err && count === 0) {
-            console.log('no statuses');
-            //insert the statuses : '-- Choose status for role --','בעיה טכנית'
-            //statusesWithRolesCollection.insertOne({Status:'-- Choose status for role --'});
-            statusesWithRolesCollection.insertOne({Status: 'בעיה טכנית', Roles: ['תמיכה טכנית']});
-        }
-    });
-
-}
-
 /*
 	update contact details only with phone number that does not exist in the system
 */
 
 app.post('/addEvent', (request, response) => {
-    console.log("/addEvent");
-    let user_for_event = request.body.newEvent.user;
-    console.log("user_for_task.UserName: " + user_for_event.UserName);
+    console.log('/addEvent');
+    let userForEvent = request.body.newEvent.user;
+    console.log('user_for_task.UserName: ' + userForEvent.UserName);
     let event = request.body.newEvent.event;
-    console.log("event: " + event.id);
+    console.log('event: ' + event.id);
 
-    workersCollection.updateOne({UserName: user_for_event.UserName}, {$addToSet: {Events: event},}, {upsert: true},
+    workersCollection.updateOne({UserName: userForEvent.UserName}, {$addToSet: {Events: event},}, {upsert: true},
         function (err, res) {
-            workersCollection.find({Events: user_for_event.Events}).toArray((error, Events) => {
+            workersCollection.find({Events: userForEvent.Events}).toArray((error, Events) => {
                 if (error) {
                     return response.status(500).send(error);
                 }
@@ -978,13 +1007,13 @@ app.post('/addEvent', (request, response) => {
 });});
 
 app.post('/deleteEvent', (request, response) => {
-    console.log("/deleteEvent");
-    let user_for_event = request.body.deletevent.user;
-    console.log("user_for_task.UserName: " + user_for_event.UserName);
+    console.log('/deleteEvent');
+    let userForEvent = request.body.deletevent.user;
+    console.log('user_for_task.UserName: ' + userForEvent.UserName);
     let event = request.body.deletevent.event;
-    console.log("event start: " + event.start + 'end ' + event.end);
+    console.log('event start: ' + event.start + 'end ' + event.end);
     workersCollection.updateOne(
-        {UserName: user_for_event.UserName},
+        {UserName: userForEvent.UserName},
         {
             $pull: {
                 Events: {
@@ -1007,30 +1036,28 @@ app.post('/deleteEvent', (request, response) => {
 });
 
 app.post('/updateEvent', (request, response) => {
-    console.log("/updateEvent");
-    let user_for_event = request.body.updatEvent.user;
-    console.log("user_for_task.UserName: " + user_for_event.UserName);
+    console.log('/updateEvent');
+    let userForEvent = request.body.updatEvent.user;
+    console.log('user_for_task.UserName: ' + userForEvent.UserName);
     let eventBeforeUpdate = request.body.updatEvent.eventBeforeUpdate;
     let eventAfterUpdate = request.body.updatEvent.eventAfterUpdate;
-    // console.log("event start: "+ event.start +'end '+ event.end);
+    // console.log('event start: '+ event.start +'end '+ event.end);
     workersCollection.updateOne(
         {
-            UserName: user_for_event.UserName,
+            UserName: userForEvent.UserName,
             Events: eventBeforeUpdate
         },
         {
             $set: {
-                Events: [{
-                    title: eventAfterUpdate.title,
-                    start: eventAfterUpdate.start,
-                    end: eventAfterUpdate.end,
-                    color: eventAfterUpdate.color,
-                    id: eventAfterUpdate.id,
-                    editable: eventAfterUpdate.editable,
-                    allDay: eventAfterUpdate.allDay
-                }]
-            }
-        }, function (err, document) {
+                'Events.$.title': eventAfterUpdate.title,
+                'Events.$.start': eventAfterUpdate.start,
+                'Events.$.end': eventAfterUpdate.end,
+                'Events.$.color': eventAfterUpdate.color,
+                'Events.$.id': eventAfterUpdate.id,
+                'Events.$.editable': eventAfterUpdate.editable,
+                'Events.$.allDay': eventAfterUpdate.allDay
+                }
+        } , function (err, document) {
             if (err) {
                 console.log(err);
                 response.writeHead(500, {'Content-Type': 'application/json'});
@@ -1041,38 +1068,51 @@ app.post('/updateEvent', (request, response) => {
             }
             response.end();
         });
+
+    /*{
+    $addToSet: {
+        Events: [{
+            title: eventAfterUpdate.title,
+            start: eventAfterUpdate.start,
+            end: eventAfterUpdate.end,
+            color: eventAfterUpdate.color,
+            id: eventAfterUpdate.id,
+            editable: eventAfterUpdate.editable,
+            allDay: eventAfterUpdate.allDay
+        }]
+    }
+}*/
 });
 
 
 app.post('/updateContact', (request, response) => {
 //update contact
     console.log('updateContact FUNCTION');
-    let contact_before_update_body = request.body.contact_before_update;
-    let contact_after_update_body = request.body.updated_contact;
-    let contact_before_update = {
-        'Name': contact_before_update_body.Name,
-        'Category': contact_before_update_body.Category,
-        'Status': contact_before_update_body.Status,
-        'PhoneNumber': contact_before_update_body.PhoneNumber,
-        'eMail': contact_before_update_body.eMail,
-        'Address': contact_before_update_body.Address
+    let contactBeforeUpdateBody = request.body.contactBeforeUpdate;
+    let contactAfterUpdateBody = request.body.updatedContact;
+    let contactBeforeUpdate = {
+        'Name': contactBeforeUpdateBody.Name,
+        'Category': contactBeforeUpdateBody.Category,
+        'Status': contactBeforeUpdateBody.Status,
+        'PhoneNumber': contactBeforeUpdateBody.PhoneNumber,
+        'eMail': contactBeforeUpdateBody.eMail,
+        'Address': contactBeforeUpdateBody.Address
     };
 
-    if (contact_after_update_body.PhoneNumber == contact_before_update_body.PhoneNumber) {
-        let contact_after_update = {
+    if (contactAfterUpdateBody.PhoneNumber === contactBeforeUpdateBody.PhoneNumber) {
+        let contactAfterUpdate = {
             $set: {
-                'Name': contact_after_update_body.Name,
-                'Category': contact_after_update_body.Category,
-                'Status': contact_after_update_body.Status,
-                'PhoneNumber': contact_after_update_body.PhoneNumber,
-                'eMail': contact_after_update_body.eMail,
-                'Address': contact_after_update_body.Address
+                'Name': contactAfterUpdateBody.Name,
+                'Category': contactAfterUpdateBody.Category,
+                'Status': contactAfterUpdateBody.Status,
+                'PhoneNumber': contactAfterUpdateBody.PhoneNumber,
+                'eMail': contactAfterUpdateBody.eMail,
+                'Address': contactAfterUpdateBody.Address
             }
         };
-        customersCollection.updateOne(contact_before_update, contact_after_update, function (err, res) {
+        customersCollection.updateOne(contactBeforeUpdate, contactAfterUpdate, function (err, res) {
             if (err) throw err;
-            customersCollection.updateOne({PhoneNumber: contact_after_update_body.PhoneNumber}
-                , {$addToSet: {History: contact_after_update_body.History}},
+            customersCollection.updateOne({PhoneNumber: contactAfterUpdateBody.PhoneNumber}, {$addToSet: {History: contactAfterUpdateBody.History}},
                 function (err, res) {
                     console.log('after updateOne');
                 });
@@ -1087,22 +1127,21 @@ app.post('/updateContact', (request, response) => {
             });
         });
     } else {
-        customersCollection.findOne({'PhoneNumber': contact_after_update_body.PhoneNumber}).then(function (result) {
+        customersCollection.findOne({'PhoneNumber': contactAfterUpdateBody.PhoneNumber}).then(function (result) {
             if (!result) {
-                let contact_after_update = {
+                let contactAfterUpdate = {
                     $set: {
-                        'Name': contact_after_update_body.Name,
-                        'Category': contact_after_update_body.Category,
-                        'Status': contact_after_update_body.Status,
-                        'PhoneNumber': contact_after_update_body.PhoneNumber,
-                        'eMail': contact_after_update_body.eMail,
-                        'Address': contact_after_update_body.Address
+                        'Name': contactAfterUpdateBody.Name,
+                        'Category': contactAfterUpdateBody.Category,
+                        'Status': contactAfterUpdateBody.Status,
+                        'PhoneNumber': contactAfterUpdateBody.PhoneNumber,
+                        'eMail': contactAfterUpdateBody.eMail,
+                        'Address': contactAfterUpdateBody.Address
                     }
                 };
-                customersCollection.updateOne(contact_before_update, contact_after_update, function (err, res) {
+                customersCollection.updateOne(contactBeforeUpdate, contactAfterUpdate, function (err, res) {
                     if (err) throw err;
-                    customersCollection.updateOne({PhoneNumber: contact_after_update_body.PhoneNumber}
-                        , {$addToSet: {History: contact_after_update_body.History}},
+                    customersCollection.updateOne({PhoneNumber: contactAfterUpdateBody.PhoneNumber}, {$addToSet: {History: contactAfterUpdateBody.History}},
                         function (err, res) {
                             console.log('after updateOne');
                         });
@@ -1117,7 +1156,7 @@ app.post('/updateContact', (request, response) => {
                 });
             } else {
                 response.writeHead(200, {'Content-Type': 'application/json'});
-                response.end(JSON.stringify({'phone_exists': 'This phone number already exists, change it or search for this user.'}));
+                response.end(JSON.stringify({'phoneExists': 'This phone number already exists, change it or search for this user.'}));
             }
 
         });
@@ -1126,23 +1165,23 @@ app.post('/updateContact', (request, response) => {
 app.post('/updateUser', (request, response) => {
 //update contact
     console.log('update users FUNCTION');
-    let user_before_update_body = request.body.user_before_update;
-    let user_after_update_body = request.body.updated_user;
-    let user_before_update = {
-        Role: user_before_update_body.Role,
-        UserName: user_before_update_body.UserName,
-        Name: user_before_update_body.Name,
-        eMail: user_before_update_body.eMail
+    let userBeforeUpdateBody = request.body.userBeforeUpdate;
+    let userAfterUpdateBody = request.body.updatedUser;
+    let userBeforeUpdate = {
+        Role: userBeforeUpdateBody.Role,
+        UserName: userBeforeUpdateBody.UserName,
+        Name: userBeforeUpdateBody.Name,
+        eMail: userBeforeUpdateBody.eMail
     };
-    let user_after_update = {
+    let userAfterUpdate = {
         $set: {
-            Role: user_after_update_body.Role,
-            UserName: user_after_update_body.UserName,
-            Name: user_after_update_body.Name,
-            eMail: user_after_update_body.eMail
+            Role: userAfterUpdateBody.Role,
+            UserName: userAfterUpdateBody.UserName,
+            Name: userAfterUpdateBody.Name,
+            eMail: userAfterUpdateBody.eMail
         }
     };
-    workersCollection.updateOne(user_before_update, user_after_update, function (err, res) {
+    workersCollection.updateOne(userBeforeUpdate, userAfterUpdate, function (err, res) {
         if (err) throw err;
         workersCollection.find({}).toArray((error, result) => {
             if (error) {
@@ -1181,12 +1220,12 @@ app.get('/deleteAllUsers', (request, response) => {
 app.post('/deleteStatusFromRole', (request, response) => {
 //add new contact
     console.log('entered deleteStatusFromRole function');
-    let status_to_delete = request.body.status_to_delete;
-    console.log('status_to_delete.Role ' + status_to_delete.Role);
-    console.log('status_to_delete.Status ' + status_to_delete.Status);
-    let Status = status_to_delete.Status;
+    let statusToDelete = request.body.statusToDelete;
+    console.log('statusToDelete.Role ' + statusToDelete.Role);
+    console.log('statusToDelete.Status ' + statusToDelete.Status);
+    let Status = statusToDelete.Status;
 
-    rolesWithStatusesCollection.updateOne({Role: status_to_delete.Role}, {$pull: {Statuses: Status}}, function (err, obj) {
+    rolesWithStatusesCollection.updateOne({Role: statusToDelete.Role}, {$pull: {Statuses: Status}}, function (err, obj) {
         if (err) throw err;
         console.log('1 status was deleted from role ');
         rolesWithStatusesCollection.find({}).toArray((error, result) => {
@@ -1205,11 +1244,11 @@ app.post('/deleteStatusFromRole', (request, response) => {
 app.post('/deleteStatusFromSystem', (request, response) => {
 //add new contact
     console.log('entered deleteStatusFromSystem function');
-    let status_to_delete = request.body.status_to_delete;
-    let statuses, roles_statuses, statuses_roles;
+    let statusToDelete = request.body.statusToDelete;
+    let statuses, rolesStatuses, statusesRoles;
 
-    console.log('status_to_delete:' + status_to_delete);
-    statusesCollection.deleteOne({'Status': status_to_delete}, function (err, obj) {
+    console.log('statusToDelete:' + statusToDelete);
+    statusesCollection.deleteOne({'Status': statusToDelete}, function (err, obj) {
         if (err) throw err;
         console.log('1 status deleted');
         statusesCollection.find({}).toArray((error, result) => {
@@ -1218,25 +1257,25 @@ app.post('/deleteStatusFromSystem', (request, response) => {
             }
             statuses = result;
         });
-        statusesWithRolesCollection.deleteOne({'Status': status_to_delete}, function (err, obj) {
+        statusesWithRolesCollection.deleteOne({'Status': statusToDelete}, function (err, obj) {
             if (err) throw err;
             console.log('1 status deleted');
             statusesWithRolesCollection.find({}).toArray((error, result) => {
                 if (error) {
                     return response.status(500).send(error);
                 }
-                statuses_roles = result;
+                statusesRoles = result;
             });
         });
-        rolesWithStatusesCollection.updateMany({}, {$pull: {Statuses: {$in: [status_to_delete]}}}, function (err, obj) {
+        rolesWithStatusesCollection.updateMany({}, {$pull: {Statuses: {$in: [statusToDelete]}}}, function (err, obj) {
             if (err) throw err;
             console.log('1 status was deleted from role ');
-            rolesWithStatusesCollection.find({}).toArray((error, roles_statuses) => {
+            rolesWithStatusesCollection.find({}).toArray((error, rolesStatuses) => {
                 if (error) {
                     return response.status(500).send(error);
                 }
 
-                roles_statuses = roles_statuses;
+                //rolesStatuses = rolesStatuses;
 
             });
         });
@@ -1244,17 +1283,17 @@ app.post('/deleteStatusFromSystem', (request, response) => {
     });
 
     response.writeHead(200, {'Content-Type': 'application/json'});
-    response.end(JSON.stringify({'statuses': statuses, 'roles': roles_statuses}));
+    response.end(JSON.stringify({'statuses': statuses, 'roles': rolesStatuses}));
 
 });
 
 app.post('/deleteUser', (request, response) => {
 //add new contact
     console.log('entered deleteUser function');
-    let user_to_delete = request.body.username;
+    let userToDelete = request.body.username;
 
-    console.log('user_to_delete:' + user_to_delete + 'check');
-    workersCollection.findOne({'UserName': user_to_delete}).then(function (result) {
+    console.log('userToDelete:' + userToDelete + 'check');
+    workersCollection.findOne({'UserName': userToDelete}).then(function (result) {
         if (!result) {
             console.log('did not find user to delete ');
         }
@@ -1277,17 +1316,17 @@ app.post('/deleteUser', (request, response) => {
 
 
     }).catch(function (err) {
-        response.send({error: err})
-    })
+        response.send({error: err});
+    });
 });
 app.post('/deleteRole', (request, response) => {
 //add new contact
     console.log('entered deleteRole function');
-    let role_to_delete = request.body.role;
+    let roleToDelete = request.body.role;
 
-    console.log('role_to_delete:' + role_to_delete);
+    console.log('roleToDelete:' + roleToDelete);
 
-    rolesWithStatusesCollection.deleteOne({Role: role_to_delete}, function (err, obj) {
+    rolesWithStatusesCollection.deleteOne({Role: roleToDelete}, function (err, obj) {
         if (err) throw err;
         console.log('1 user deleted');
         rolesWithStatusesCollection.find({}).toArray((error, result) => {
@@ -1300,15 +1339,15 @@ app.post('/deleteRole', (request, response) => {
 
     });
 
-    statusesWithRolesCollection.updateMany({}, {$pull: {Roles: {$in: [role_to_delete]}}}, function (err, obj) {
+    statusesWithRolesCollection.updateMany({}, {$pull: {Roles: {$in: [roleToDelete]}}}, function (err, obj) {
         if (err) throw err;
         console.log('1 status was deleted from role ');
-        statusesWithRolesCollection.find({}).toArray((error, roles_statuses) => {
+        statusesWithRolesCollection.find({}).toArray((error, rolesStatuses) => {
             if (error) {
                 return response.status(500).send(error);
             }
 
-            roles_statuses = roles_statuses;
+            //rolesStatuses = rolesStatuses;
 
         });
     });
@@ -1317,8 +1356,8 @@ app.post('/deleteRole', (request, response) => {
 app.post('/deleteStatus', (request, response) => {
 //add new contact
     console.log('entered deleteStatus function');
-    let status_to_delete = request.body.Status;
-    statusesCollection.deleteOne({'Status': status_to_delete}, function (err, obj) {
+    let statusToDelete = request.body.Status;
+    statusesCollection.deleteOne({'Status': statusToDelete}, function (err, obj) {
         if (err) throw err;
         console.log('1 status deleted');
 
@@ -1330,11 +1369,11 @@ app.post('/deleteStatus', (request, response) => {
 //add a new status
 app.post('/addOption', (request, response) => {
 //add new option
-    let status_to_add = request.body.new_status;
+    let statusToAdd = request.body.newSatus;
 
     statusesCollection.updateOne(
-        {'Status': status_to_add.Status},
-        {$setOnInsert: {'Status': status_to_add.Status}},
+        {'Status': statusToAdd.Status},
+        {$setOnInsert: {'Status': statusToAdd.Status}},
         {upsert: true}
     );
     response.writeHead(200, {'Content-Type': 'application/json'});
@@ -1367,38 +1406,38 @@ app.post('/uploadImage', function (req, res) {
     console.log('/uploadImage');
     upload(req, res, function (err) {
         if (err) {
-            res.json({error_code: 1, err_desc: err});
+            res.json({errorCode: 1, errDesc: err});
             return;
         }
-        res.json({error_code: 0, err_desc: null});
+        res.json({errorCode: 0, errDesc: null});
     });
 });
 
 
 app.post('/sendEmail', (request, response) => {
     console.log('sendEmail');
-    let email_data = request.body.email_data;
+    let emailData = request.body.emailData;
 
     let mailOptions = {
         from: SERVER_EMAIL,
-        to: email_data.mail_recipient,
-        subject: email_data.mail_subject,
-        text: email_data.mail_text
+        to: emailData.mailRecipient,
+        subject: emailData.mailSubject,
+        text: emailData.mailText
     };
 
-    if (email_data.attachment_file_name) {
-        mailOptions.attachments = [{path: './uploads/' + email_data.attachment_file_name}]
+    if (emailData.attachmentFileName) {
+        mailOptions.attachments = [{path: './uploads/' + emailData.attachmentFileName}];
     }
 
     transporter.sendMail(mailOptions, function (error, info) {
         if (error) {
             console.log(error);
             response.writeHead(500, {'Content-Type': 'application/json'});
-            response.end(JSON.stringify({error: 'mail failed to be sent to ' + email_data.mail_recipient}));
+            response.end(JSON.stringify({error: 'mail failed to be sent to ' + emailData.mailRecipient}));
         } else {
             console.log('Email sent: ' + info.response);
             response.writeHead(200, {'Content-Type': 'application/json'});
-            response.end(JSON.stringify({ok: 'mail has been sent successfully to ' + email_data.mail_recipient}));
+            response.end(JSON.stringify({ok: 'mail has been sent successfully to ' + emailData.mailRecipient}));
         }
     });
 });

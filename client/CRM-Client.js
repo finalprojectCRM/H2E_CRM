@@ -1,12 +1,16 @@
 /*jshint unused:false*/
+/*eslint-disable no-unused-vars*/
+/*global angular, document, moment, $*/
+/*eslint no-undef: "error"*/
+
 (function () {
     'use strict';
-    let app = angular.module('CRM', ['ngResource', 'ui.calendar', 'ui.bootstrap', 'ui.bootstrap.datetimepicker', 'ngSanitize', 'ui.select', 'ngAnimate', 'toaster', 'ngFileUpload'])
+    const app = angular.module('CRM', ['ngResource', 'ui.calendar', 'ui.bootstrap', 'ui.bootstrap.datetimepicker', 'ngSanitize', 'ui.select', 'ngAnimate', 'toaster', 'ngFileUpload'])
         .factory('sampleUploadService', ['$resource',
             function ($resource) {
-                let svc = {};
+                const svc = {};
 
-                let restSvc = $resource(null, null, {
+                const restSvc = $resource(null, null, {
                     'uploadImage': {
                         url: './uploadImage',
                         method: 'post',
@@ -133,7 +137,7 @@
                 }
 
                 function changeDateFormat(date) {
-                    let strDate = date.toString();
+                    const strDate = date.toString();
                     let dbDate;
                     $log.log('date=' + date);
                     $log.log('strDate=' + strDate);
@@ -206,7 +210,7 @@
                 }
 
                 function checkDateRangeValidation(startDate, endDate, callPlacement) {
-                    let regExp = /(\d{1,2})\/(\d{1,2})\/(\d{2,4})/;
+                    const regExp = /(\d{1,2})\/(\d{1,2})\/(\d{2,4})/;
                     if (parseInt(endDate.replace(regExp, '$3$2$1')) < parseInt(startDate.replace(regExp, '$3$2$1'))) {
                         $scope.message = 'Start date must be earlier than end date';
                         $scope.messageType = 'ERROR';
@@ -229,7 +233,7 @@
                     let startDate = changeDateFormat($scope.eventStart);
                     let endDate = changeDateFormat($scope.eventEnd);
 
-                    let eventAfterUpdateDB = {
+                    const eventAfterUpdateDB = {
                         title: eventAfterUpdate.title,
                         start: startDate,
                         end: endDate,
@@ -244,7 +248,7 @@
                     startDate = changeDateFormat(eventBeforeUpdate.start);
                     endDate = changeDateFormat(eventBeforeUpdate.end);
 
-                    let eventBeforeUpdateDB = {
+                    const eventBeforeUpdateDB = {
                         title: eventBeforeUpdate.title,
                         start: startDate,
                         end: endDate,
@@ -255,7 +259,7 @@
                     $log.log('before update :' + eventBeforeUpdate.title + ' ' + eventBeforeUpdate.start + ' ' + eventBeforeUpdate.end + ' ' +
                         eventBeforeUpdate.color + ' ' + eventBeforeUpdate.id + ' ' + eventBeforeUpdate.editable + ' ' + eventBeforeUpdate.allDay);
 
-                    let updatEvent = {
+                    const updatEvent = {
                         eventBeforeUpdate: eventBeforeUpdateDB,
                         eventAfterUpdate: eventAfterUpdateDB,
                         user: user
@@ -324,7 +328,7 @@
                     views: {
                         month: {columnHeaderFormat: 'ddd', displayEventEnd: true, eventLimit: 3},
                         week: {columnHeaderFormat: 'ddd DD', titleRangeSeparator: ' \u2013 '},
-                        day: {columnHeaderFormat: 'dddd'},
+                        day: {columnHeaderFormat: 'dddd'}
                     },
                     columnFormat: {
                         month: 'ddd',
@@ -386,22 +390,22 @@
                             id: event.id,
                             editable: event.editable, allDay: event.allDay
                         };
-                        let indexRole = getIndexOfSelectedItem(event.color, 'color_of_role');
+                        const indexRole = getIndexOfSelectedItem(event.color, 'color_of_role');
                         $log.log('indexRole : ' + indexRole);
                         $scope.role = $scope.roles[indexRole];
 
                         //if a contact was not selected for the event, the event id is = '-1'
                         if (editEventDetails.id !== -1) {
                             //split title by ':'
-                            let title = event.title.split(':');
+                            const title = event.title.split(':');
 
                             //save the event id
                             $scope.contactEvent = event.id;
                             $log.log('contact id: ' + event.id);
-                            let splitContactPhone = event.id.split(' ');
-                            let contactPhone = splitContactPhone[splitContactPhone.length - 1];
+                            const splitContactPhone = event.id.split(' ');
+                            const contactPhone = splitContactPhone[splitContactPhone.length - 1];
                             $log.log('contactPhone: ' + contactPhone);
-                            let contact = $scope.contactsInfo[getIndexOfSelectedItem(contactPhone, 'contact_list')];
+                            const contact = $scope.contactsInfo[getIndexOfSelectedItem(contactPhone, 'contact_list')];
                             $scope.selectedContact = event.id;
                             $log.log('$scope.contact :' + $scope.contact);
                             //save the event title
@@ -410,9 +414,7 @@
                             $scope.contactSelected = true;
                             $scope.taskIsEdit = true;
                             $scope.contactTask = true;
-                        }
-                        //if no contact was selected for the event then $scope.contactSelected = false;
-                        else {
+                        } else { //if no contact was selected for the event then $scope.contactSelected = false;
                             $scope.eventTitle = event.title;
                             $scope.contactSelected = false;
                         }
@@ -505,10 +507,7 @@
                             selectedItemPart1 = undefined;
                             selectedItemPart2 = undefined;
                         }
-
-                    }
-                    //if the task is not for a spesific contact -> id of contact = '-1'
-                    else {
+                    } else { //if the task is not for a spesific contact -> id of contact = '-1'
                         description = $scope.eventTitle;
                         console.log('description=' + description);
                         contact = -1;
@@ -537,7 +536,7 @@
                 $scope.goToContact = function () {
 
                     //get contacts phone number as an ID
-                    let contactPhoneNumber = $scope.contactEvent.split(' ');
+                    const contactPhoneNumber = $scope.contactEvent.split(' ');
 
                     //get contacts list
                     $scope.getContactsFunction();
@@ -559,24 +558,23 @@
                 };
 
                 $scope.calendarContact = function (contact) {
-                    //let eventId = String(contact.Name + ' ' + contact.PhoneNumber);
-                    let eventId = String(contact.PhoneNumber);
+                    const eventId = String(contact.Name + ' ' + contact.PhoneNumber);
                     //let contact_name = contact.Name;
-                    let contactPhone = contact.PhoneNumber;
+                    const contactPhone = contact.PhoneNumber;
                     $log.log('eventId : ' + eventId);
                     retreivedCalenarEvents = refreshCustomerCalendarEvents(eventId);
                     $scope.calendarFunction();
                 };
 
                 function deleteEventFromDataBase(event, user) {
-                    let date = $scope.eventDate.split('-');
+                    const date = $scope.eventDate.split('-');
                     $log.log('start date : ' + date[0]);
                     //$log.log('type '+typeof date[0]);
                     $log.log('end date : ' + date[1]);
-                    let startDate = moment(String(date[0]), 'DD/MM/YYYY HH:mm').format('MM/DD/YYYY HH:mm');
-                    let endDate = moment(String(date[1]), 'DD/MM/YYYY HH:mm').format('MM/DD/YYYY HH:mm');
+                    const startDate = moment(String(date[0]), 'DD/MM/YYYY HH:mm').format('MM/DD/YYYY HH:mm');
+                    const endDate = moment(String(date[1]), 'DD/MM/YYYY HH:mm').format('MM/DD/YYYY HH:mm');
 
-                    let eventToDelete = {
+                    const eventToDelete = {
                         title: event.title,
                         start: startDate,
                         end: endDate,
@@ -585,9 +583,9 @@
                         editable: event.editable, allDay: event.allDay
                     };
 
-                    let deletevent = {event: eventToDelete, user: user};
+                    const deleteEvent = {event: eventToDelete, user: user};
                     $http.post(SERVER_URI + '/deleteEvent', {
-                        deletevent: deletevent
+                        deletevent: deleteEvent
                     }).then(
                         function (response) {
                         },
@@ -595,7 +593,6 @@
                         }
                     );
                 }
-
 
                 $scope.deleteEvent = function (event, element, view) {
                     uiCalendarConfig.calendars['myCalendar'].fullCalendar('removeEvents', function (event) {
@@ -971,20 +968,18 @@
                         means that administrator has not yet changed the temporary password
                         that he got with the system	- then change now
                     */
-                    if (response.data.adminFirstLoad === true || response.data.adminChangedTempPassword === false)//go to change password page
-                    {
+                    if (response.data.adminFirstLoad === true || response.data.adminChangedTempPassword === false) { //go to change password page
                         //save 'firstLoad = true'
                         $scope.firstLoad = true;
 
                         //present the temp password page
                         $scope.tempPasswordPage = true;
 
-                    }
-                    /*
+                    } else if (response.data.adminChangedTempPassword === true) {
+                        /*
                         if admin had changed the temporary password
                         so then it is not the first load to yhe system
                     */
-                    else if (response.data.adminChangedTempPassword === true) {
                         //save taht not first load 'firstLoad = false'
                         $scope.firstLoad = false;
 
@@ -993,15 +988,13 @@
 
                         //present the tamp password page for login in to the system
                         $scope.tempPasswordPage = true;
-                    }
-
-                    /*
+                    } else {
+                        /*
                         after entering the system with the temp password
                         presents the login page for inserting personal details
                         for admin the usae name field will be filled in automaticly
                         by the default with 'Administrator'
                     */
-                    else {
                         $scope.loginPage = true;
                         $scope.firstLoad = false;
                     }
@@ -1144,33 +1137,25 @@
                         tempPassword: tempPasswordFromClient,
                     }).then(
                         function (response) {//success callback
-
+                            console.log('response.data.verified=' + response.data.verified);
                             //verified passwords (not for Admin user)
                             if (response.data.verified) {
+                                console.log('is verified');
                                 $scope.newTempPasswordPage = false;
                                 $scope.tempPasswordPage = false;
                                 $scope.registerPage = true;
-                            }
-
-                            //admin did not yet change temp password that he got with the system
-                            else if (!response.data.adminChangedTempPassword) {
+                            } else if (!response.data.adminChangedTempPassword) { //admin did not yet change temp password that he got with the system
                                 $scope.newTempPasswordPage = true;
                                 $scope.tempPasswordPage = false;
 
                                 $scope.registerPage = false;
-                            }
-
-                            //admin changed temp password that he got with the system
-                            else if (response.data.adminChangedTempPassword) {
+                            } else if (response.data.adminChangedTempPassword) { //admin changed temp password that he got with the system
                                 $scope.newTempPasswordPage = false;
                                 $scope.tempPasswordPage = false;
                                 $scope.registerPage = true;
                                 $scope.registrationUserName = 'Admin';
                                 $scope.Admin = true;
-                            }
-
-                            //not correct temprorary password
-                            else {
+                            } else { //not correct temprorary password
                                 $scope.message = response.data.notVerified;
                                 $scope.messageType = 'ERROR';
                                 angular.element(document.querySelector('#msgModal')).modal('show');
@@ -1287,7 +1272,7 @@
                         UserName: $scope.registrationUserName, Name: $scope.registrationName,
                         eMail: $scope.registrationEmail, Password: $scope.registrationPassword
                     };
-                    $log.log('befor call server');
+                    $log.log('before call server');
                     //call server with http request
                     $http.post(SERVER_URI + '/addUser', {
                         user: user,
@@ -2276,7 +2261,6 @@
                                 $scope.newEmail = undefined;
                                 $scope.newAddress = undefined;
                                 historyArray = [];
-
                             }
 
                             //if exists show error modal
@@ -2436,10 +2420,7 @@
                             angular.element(document.querySelector('#msgModal')).modal('show');
                             return;
                         }
-                    }
-
-                    //if no email address was entered
-                    else {
+                    } else { //if no email address was entered
                         contactInfoToUpdate.eMail = '';
                     }
 
@@ -2938,13 +2919,13 @@
 
                     if (flag === 'contact_list') {
                         res2 = res[0].split(':');//contact name
-                        selectedItemPart1 = String(res2[1]);
+                        selectedItemPart1 = String(res2[1]).trim();
                     }
 
                     res1 = res[1].split(':');
 
                     selectedItemPart2 = res1[1].split(' ');
-                    selectedItemPart2 = String(selectedItemPart2[1]);
+                    selectedItemPart2 = String(selectedItemPart2[1]).trim();
 
                     $scope.selectedContact = selectedItemPart1 + ' ' + selectedItemPart2;
 
@@ -3030,6 +3011,7 @@
                     $scope.showSettings = false;
                     $scope.showCalendar = false;
                     $scope.account = true;
+                    $window.location.reload();
                 };
             }
         ]).directive('popOver', function ($compile, $templateCache, $log) {//pop over option for history

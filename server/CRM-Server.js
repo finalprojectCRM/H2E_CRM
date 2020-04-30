@@ -1,4 +1,5 @@
 /*jshint unused:false*/
+/* eslint-disable no-unused-vars */
 
 //the libraries that not existing fundamentally in node js
 const fs = require('fs');
@@ -10,6 +11,8 @@ const ReadPreference = require('mongodb').ReadPreference;
 const config = require('./config/default.json');
 const multer = require('multer');
 const morgan = require('morgan');
+const helmet = require('helmet');
+
 
 //the name of app
 const APP_NAME = require('os').hostname();
@@ -27,8 +30,8 @@ const SERVER_EMAIL = 'h2e.crm@gmail.com';
 
 app.use(BodyParser.json());
 app.use(BodyParser.urlencoded({extended: true}));
-morgan(':method :host :status :res[content-length] - :response-time ms');
-
+app.use(morgan('dev'));
+app.use(helmet());
 
 //create an approach to send emails from the system by using node mailer library
 const transporter = nodeMailer.createTransport({
@@ -42,11 +45,11 @@ const transporter = nodeMailer.createTransport({
 //get to mongo db Permissions
 function getMongoConnectionString() {
     let connectionString = '';
-    let mongoConfig = config.mongo;
-    let authType = mongoConfig.authType;
+    const mongoConfig = config.mongo;
+    const authType = mongoConfig.authType;
 
-    let dbUserName = process.env.SECRET_USERNAME;
-    let dbUserPassword = process.env.SECRET_PASSWORD;
+    const dbUserName = process.env.SECRET_USERNAME;
+    const dbUserPassword = process.env.SECRET_PASSWORD;
     if (authType === 'none') {
         if (mongoConfig.uriPrefix) {
             connectionString = mongoConfig.uriPrefix + '://';
@@ -55,7 +58,7 @@ function getMongoConnectionString() {
             mongoConfig.mongodbPort + '/' +
             mongoConfig.mongodbName + '?';
 
-        let replicaSet = mongoConfig.replicaSet;
+        const replicaSet = mongoConfig.replicaSet;
         if (replicaSet) {
             connectionString += 'replicaSet=' + replicaSet;
         }
@@ -122,9 +125,9 @@ function checkExistingStatusesAndRolesAndFiles() {
 app.get('/', (request, response) => {
     console.log('--Rendering html page--');
 
-    let mongoConfig = config.mongo;
-    let dbName = mongoConfig.mongodbName;
-    let connString = getMongoConnectionString();
+    const mongoConfig = config.mongo;
+    const dbName = mongoConfig.mongodbName;
+    const connString = getMongoConnectionString();
     console.log('db uri: ' + connString);
     MongoClient.connect(connString,
         {
@@ -246,7 +249,7 @@ app.get('/common/select.css', (request, response) => {
 
 
 //get CSS of the system page
-app.get('/CRM-Client.css', (request, response) => {   //bring the client/CRM-Client.css file
+app.get('/CRM-Client.css', (request, response) => { //bring the client/CRM-Client.css file
     console.log('--Rendering client/CRM-Client.css file--');
     fs.readFile('../client/CRM-Client.css', function (error, data) {
         if (error) {
@@ -365,8 +368,8 @@ app.get('/firstSystemLoad', (request, response) => {
     //check if data exists in statuses & roles & files collection
     checkExistingStatusesAndRolesAndFiles();
     workersCollection.findOne({'UserName': 'Admin'}).then(function (mongoUser) {
-        if (!mongoUser)//Admin not yet in system = mongo db workersCollection is empty
-        {
+        //Admin not yet in system = mongo db workersCollection is empty
+        if (!mongoUser) {
             //insert to users collection the first user - Admin
             workersCollection.insertOne(
                 {
@@ -378,24 +381,20 @@ app.get('/firstSystemLoad', (request, response) => {
             response.writeHead(200, {'Content-Type': 'application/json'});
             response.end(JSON.stringify({'adminFirstLoad': true}));//Admin has been loaded first time to mongodb
         } else//there is a user in system and Admin exists = mongo db workersCollection is not empty
-        {
-            if (mongoUser.UserName === 'Admin' && mongoUser.Name === '' && mongoUser.eMail === '' && mongoUser.Password === '') {
-                if (mongoUser.TempPassword === firstTempPassword)//admin did not yet change the temp password that he got from system
-                {
-                    response.writeHead(200, {'Content-Type': 'application/json'});
-                    response.end(JSON.stringify({'adminChangedTempPassword': false}));
-                } else//admin changed temp password that he got from system
-                {
-                    response.writeHead(200, {'Content-Type': 'application/json'});
-                    response.end(JSON.stringify({'adminChangedTempPassword': true}));//go to registration page with admin
-                }
-
-            } else//Admin has filled in all his details
-            {
+        if (mongoUser.UserName === 'Admin' && mongoUser.Name === '' && mongoUser.eMail === '' && mongoUser.Password === '') {
+            //admin did not yet change the temp password that he got from system
+            if (mongoUser.TempPassword === firstTempPassword) {
                 response.writeHead(200, {'Content-Type': 'application/json'});
-                response.end(JSON.stringify({'admin_exists_with_details': true}));
+                response.end(JSON.stringify({'adminChangedTempPassword': false}));
+
+            } else { //admin changed temp password that he got from system
+                response.writeHead(200, {'Content-Type': 'application/json'});
+                response.end(JSON.stringify({'adminChangedTempPassword': true}));//go to registration page with admin
             }
 
+        } else { //Admin has filled in all his details
+            response.writeHead(200, {'Content-Type': 'application/json'});
+            response.end(JSON.stringify({'admin_exists_with_details': true}));
         }
 
     }).catch(function (err) {
@@ -414,28 +413,23 @@ app.post('/verifyTemporaryPassword', (request, response) => {
     const tempPassword = request.body.tempPassword;
     workersCollection.findOne({'UserName': 'Admin'}).then(function (mongoUser) {
 
-        if (mongoUser.TempPassword !== tempPassword)//not correct temp password
-        {
+        if (mongoUser.TempPassword !== tempPassword) { //not correct temp password
             console.log('!result not a password');
             response.writeHead(200, {'Content-Type': 'application/json'});
             response.end(JSON.stringify({notVerified: 'You do not have a correct temporary password , Please get it from the administrator'}));
-        } else {
-            if (mongoUser.UserName === 'Admin' && mongoUser.Name === '' && mongoUser.eMail === '' && mongoUser.Password === '') {
-                if (mongoUser.TempPassword === firstTempPassword)//admin did not yet change the temp password that he got from system
-                {
-                    response.writeHead(200, {'Content-Type': 'application/json'});
-                    response.end(JSON.stringify({'adminChangedTempPassword': false}));
-                } else//admin changed temp password that he got from system
-                {
-                    response.writeHead(200, {'Content-Type': 'application/json'});
-                    response.end(JSON.stringify({'adminChangedTempPassword': true}));//go to registration page with admin
-                }
-            } else {
-                //the user has a good password that changed by admin
-                console.log('good password');
+        } else if (mongoUser.UserName === 'Admin' && mongoUser.Name === '' && mongoUser.eMail === '' && mongoUser.Password === '') {
+            if (mongoUser.TempPassword === firstTempPassword) { //admin did not yet change the temp password that he got from system
                 response.writeHead(200, {'Content-Type': 'application/json'});
-                response.end(JSON.stringify({verified: true}));
+                response.end(JSON.stringify({'adminChangedTempPassword': false}));
+            } else { //admin changed temp password that he got from system
+                response.writeHead(200, {'Content-Type': 'application/json'});
+                response.end(JSON.stringify({'adminChangedTempPassword': true}));//go to registration page with admin
             }
+        } else {
+            //the user has a good password that changed by admin
+            console.log('good password');
+            response.writeHead(200, {'Content-Type': 'application/json'});
+            response.end(JSON.stringify({verified: true}));
         }
 
     }).catch(function (err) {
@@ -451,10 +445,10 @@ app.post('/changeTemporaryPassword', (request, response) => {
 
     console.log('entered changeTemporaryPassword function');
 
-    const NewTempPassword = request.body.NewTempPassword;
-    console.log('NewTempPassword: ' + NewTempPassword);
+    const newTempPassword = request.body.newTempPassword;
+    console.log('NewTempPassword: ' + newTempPassword);
     //update in workersCollection the filed TempPassword that exists in admin with a new password
-    workersCollection.update({'UserName': 'Admin'}, {$set: {TempPassword: NewTempPassword.TempPassword}}, function (err, obj) {
+    workersCollection.update({'UserName': 'Admin'}, {$set: {TempPassword: newTempPassword.TempPassword}}, function (err, obj) {
         if (err) throw err;
         console.log('succeeded changing temp password');
 
@@ -472,20 +466,18 @@ app.post('/verificationCurrentPassword', (request, response) => {
 
     console.log('entered verificationCurrentPassword function');
 
-    let loggedInCurrentPassword = request.body.loggedInCurrentPassword;
+    const loggedInCurrentPassword = request.body.loggedInCurrentPassword;
     //try to find in user collection a user with a given username and password
     workersCollection.findOne({
         'UserName': loggedInCurrentPassword.username,
         'Password': loggedInCurrentPassword.currentPassword
     }).then(function (mongoUser) {
 
-        if (mongoUser == null)//no such username with this current password
-        {
+        if (mongoUser == null) { //no such username with this current password
             console.log('entered if ');
             response.writeHead(200, {'Content-Type': 'application/json'});
             response.end(JSON.stringify({'notVerified': 'The current password is incorrect, please try again.'}));
-        } else//found the user that the username and the current password match
-        {
+        } else { //found the user that the username and the current password match
             console.log('entered else');
             response.writeHead(200, {'Content-Type': 'application/json'});
             response.end(JSON.stringify({'verified': true}));
@@ -503,7 +495,7 @@ app.post('/changeCurrentPassword', (request, response) => {
 
     console.log('entered changeCurrentPassword function');
 
-    let loggedInNewPassword = request.body.loggedInNewPassword;
+    const loggedInNewPassword = request.body.loggedInNewPassword;
 
     //update in workersCollection the the password of user with a new password
     workersCollection.update({'UserName': loggedInNewPassword.username},
@@ -525,7 +517,7 @@ app.post('/addUser', (request, response) => {
 
     console.log('entered addUser function');
     let user = request.body.user;
-    let userEvents = [];
+    const userEvents = [];
     //user with his details : Role , UserName ,Name ,eMail,Password
     user = {
         'Role': 'new in the system',
@@ -533,7 +525,7 @@ app.post('/addUser', (request, response) => {
         'Name': user.Name,
         'eMail': user.eMail,
         'Password': user.Password,
-        'Events': userEvents,
+        'Events': userEvents
     };
     //check if this username does not exist in the system
     workersCollection.findOne({'UserName': user.UserName}).then(function (mongoUser) {
@@ -592,7 +584,7 @@ app.post('/addUser', (request, response) => {
 app.post('/login', (request, response) => {
 
     console.log('entered login function');
-    let user = request.body.LoginUser;
+    const user = request.body.LoginUser;
     console.log(user.UserName);
     //check if the username and the password exist
     workersCollection.findOne({'UserName': user.UserName, 'Password': user.Password}).then(function (result) {
@@ -614,9 +606,7 @@ app.post('/login', (request, response) => {
                         'eMail': result.eMail, 'Password': result.Password, 'Events': result.Events
                     }
                 }));
-            }
-            //if the user is not admin rturn user datails
-            else {
+            } else { //if the user is not admin rturn user datails
                 response.end(JSON.stringify({userLogin: result}));
             }
         }
@@ -632,7 +622,7 @@ app.post('/login', (request, response) => {
 app.post('/addContact', (request, response) => {
     console.log('addContact FUNCTION');
     //add new contact
-    let contact = request.body.contact;
+    const contact = request.body.contact;
     console.log('contact: ' + contact.History);
 
     //check if the contact is already exist by the key - the PhoneNumber
@@ -655,9 +645,7 @@ app.post('/addContact', (request, response) => {
 
 
             response.end();
-        }
-        //check if the contact already exists
-        else {
+        } else { //check if the contact already exists
             response.writeHead(200, {'Content-Type': 'application/json'});
             //response with error massage
             response.end(JSON.stringify({'phoneExists': 'ERROR : this phone number already exists, change it or search for this user.'}));
@@ -717,25 +705,28 @@ app.get('/getUserEvents/:UserName', (request, response) => {
         }
         //response with ok, and with the users list
         response.writeHead(200, {'Content-Type': 'application/json'});
-        response.end(JSON.stringify({ 'userEvents': result[0].Events}));
+        response.end(JSON.stringify({'userEvents': result[0].Events}));
     });
 });
 
 app.get('/getCustomerEvents/:UserName/:eventId', (request, response) => {
     console.log('/getUserEvents/' + request.params.UserName + '/' + request.params.eventId);
-    //enter all members of customersCollection to array
-    //Events: { $elemMatch: { id: request.params.eventId } } }).toArray((error, result) => {
-    //'Events.id': request.params.eventId
-    //UserName: request.params.UserName,
-    workersCollection.find({
-        Events: { $elemMatch: { id: request.params.eventId } }
-    }).toArray((error, result) => {
-        if (error || !result[0]) {
-            return response.status(500).send(error);
+    workersCollection.find(
+        {
+            'UserName': request.params.UserName,
+            'Events.id': request.params.eventId}).forEach(function (doc) {
+        doc.Events = doc.Events.filter(function (event) {
+            if (event.id === request.params.eventId) {
+                return event;
+            }
+        });
+        console.dir(doc.Events);
+        if (doc.Events) {
+            response.writeHead(200, {'Content-Type': 'application/json'});
+            response.end(JSON.stringify({ 'customerEvents': doc.Events}));
+        } else {
+            response.end(JSON.stringify({ 'customerEvents': {}}));
         }
-        //response with ok, and with the users list
-        response.writeHead(200, {'Content-Type': 'application/json'});
-        response.end(JSON.stringify({ 'customerEvents': result[0].Events}));
     });
 });
 
@@ -745,7 +736,7 @@ app.get('/getCustomerEvents/:UserName/:eventId', (request, response) => {
 app.post('/getUsers', (request, response) => {
 
     console.log('entered getUsers function');
-    let statusFlag = request.body.statusFlag;
+    const statusFlag = request.body.statusFlag;
     console.log('statusFlag : ' + statusFlag);
 
     //if request is to get the users for the delete user
@@ -760,10 +751,7 @@ app.post('/getUsers', (request, response) => {
             response.writeHead(200, {'Content-Type': 'application/json'});
             response.end(JSON.stringify({'deleteUser': true, 'users': result}));
         });
-    }
-    //if request is to get the users for show user
-
-    else if (statusFlag === 'showUsers') {
+    } else if (statusFlag === 'showUsers') { //if request is to get the users for show user
         //enter all members of workersCollection to array
         workersCollection.find({}).toArray((error, result) => {
             if (error) {
@@ -784,7 +772,7 @@ app.post('/getUsers', (request, response) => {
 app.post('/deleteContact', (request, response) => {
     console.log('entered deleteContact function');
     //the contact to delete with his details
-    let contactToDelete = request.body.contact;
+    const contactToDelete = request.body.contact;
     console.log('contactToDelete :' + contactToDelete);
     //delete the contact from contacts collection by his all details
     customersCollection.deleteOne({
@@ -808,7 +796,7 @@ app.post('/deleteContact', (request, response) => {
 */
 app.post('/deleteFile', (request, response) => {
     console.log('entered deleteContact function');
-    let fileToDelete = request.body.file;
+    const fileToDelete = request.body.file;
     const path = './uploads/' + fileToDelete.FileName;
     try {
         fs.unlinkSync(path);
@@ -816,7 +804,7 @@ app.post('/deleteFile', (request, response) => {
             if (err) throw err;
             console.log('1 document deleted');
             if (obj) {
-                let fileDeleted = 'The file ' + fileToDelete.FileName + ' has been deleted.';
+                const fileDeleted = 'The file ' + fileToDelete.FileName + ' has been deleted.';
                 response.writeHead(200, {'Content-Type': 'application/json'});
                 response.end(JSON.stringify({fileDeleted: fileDeleted}));
             }
@@ -883,7 +871,7 @@ app.get('/getRolesColors', (request, response) => {
 */
 app.post('/addStatutsWithRoles', (request, response) => {
 
-    let statusWithRoles = request.body.statusWithRoles;
+    const statusWithRoles = request.body.statusWithRoles;
     console.log('before updateOne');
     //add a new add a new status with an appropriate roles only if the status does not exist
     statusesWithRolesCollection.updateOne({Status: statusWithRoles.Status},
@@ -895,7 +883,7 @@ app.post('/addStatutsWithRoles', (request, response) => {
     console.log('statusWithRoles.Roles: ' + statusWithRoles.Roles);
 
     //go through of all roles
-    for (let role of statusWithRoles.Roles) {
+    for (const role of statusWithRoles.Roles) {
         console.log('role: ' + role);
         //add to role a new status
         rolesWithStatusesCollection.updateOne({Role: role}, {$addToSet: {Statuses: statusWithRoles.Status}},
@@ -922,31 +910,31 @@ app.post('/addStatutsWithRoles', (request, response) => {
 */
 app.post('/addRoleWithStatuses', (request, response) => {
 
-    let roleWithStatuses = request.body.roleWithStatuses;
+    const roleWithStatuses = request.body.roleWithStatuses;
     console.log('before updateOne');
     //insert to the colors list the role color
     colorsCollection.insertOne({Color: roleWithStatuses.Color});
     //add a new add a new role with an appropriate statuses only if the role does not exist
     rolesWithStatusesCollection.updateOne({Role: roleWithStatuses.Role}, {
-            $setOnInsert: {
-                Role: roleWithStatuses.Role,
-                Color: roleWithStatuses.Color,
-                Statuses: roleWithStatuses.Statuses
-            }
-        },
-        {upsert: true},
-        function (err, res) {
-            console.log('after updateOne');
-        });
+        $setOnInsert: {
+            Role: roleWithStatuses.Role,
+            Color: roleWithStatuses.Color,
+            Statuses: roleWithStatuses.Statuses
+        }
+    },
+    {upsert: true},
+    function (err, res) {
+        console.log('after updateOne');
+    });
 
     //go through of all statuses
-    for (let status of roleWithStatuses.Statuses) {
-            console.log('status: ' + status);
-            //add the to status a new role
-            statusesWithRolesCollection.updateOne({Status: status}, {$addToSet: {Roles: roleWithStatuses.Role}}, {upsert: true},
-                function (err, res) {
-                    console.log('after updateOne');
-                });
+    for (const status of roleWithStatuses.Statuses) {
+        console.log('status: ' + status);
+        //add the to status a new role
+        statusesWithRolesCollection.updateOne({Status: status}, {$addToSet: {Roles: roleWithStatuses.Role}}, {upsert: true},
+            function (err, res) {
+                console.log('after updateOne');
+            });
 
 
     }
@@ -959,9 +947,9 @@ app.post('/addRoleWithStatuses', (request, response) => {
 */
 app.post('/updateRole', (request, response) => {
     //the role to update
-    let roleToUpdate = request.body.roleToUpdate;
+    const roleToUpdate = request.body.roleToUpdate;
     //the appropriate statuses to role
-    let statuses = roleToUpdate.Statuses;
+    const statuses = roleToUpdate.Statuses;
     console.log('before updateOne');
     //update the role with new statuses
     rolesWithStatusesCollection.updateOne({Role: roleToUpdate.Role}, {$addToSet: {Statuses: {$each: statuses}}},
@@ -969,14 +957,14 @@ app.post('/updateRole', (request, response) => {
             console.log('after updateOne');
         });
     //go through statuses
-    for (let status of roleToUpdate.Statuses) {
-            console.log('status: ' + status);
-            console.log('type of status: ' + typeof status);
-            //update the status with new role
-            statusesWithRolesCollection.updateOne({Status: status}, {$addToSet: {Roles: roleToUpdate.Role}},
-                function (err, res) {
-                    console.log('after updateOne');
-                });
+    for (const status of roleToUpdate.Statuses) {
+        console.log('status: ' + status);
+        console.log('type of status: ' + typeof status);
+        //update the status with new role
+        statusesWithRolesCollection.updateOne({Status: status}, {$addToSet: {Roles: roleToUpdate.Role}},
+            function (err, res) {
+                console.log('after updateOne');
+            });
 
 
     }
@@ -988,12 +976,12 @@ app.post('/updateRole', (request, response) => {
 
 app.post('/addEvent', (request, response) => {
     console.log('/addEvent');
-    let userForEvent = request.body.newEvent.user;
+    const userForEvent = request.body.newEvent.user;
     console.log('user_for_task.UserName: ' + userForEvent.UserName);
-    let event = request.body.newEvent.event;
+    const event = request.body.newEvent.event;
     console.log('event: ' + event.id);
 
-    workersCollection.updateOne({UserName: userForEvent.UserName}, {$addToSet: {Events: event},}, {upsert: true},
+    workersCollection.updateOne({UserName: userForEvent.UserName}, {$addToSet: {Events: event}}, {upsert: true},
         function (err, res) {
             workersCollection.find({Events: userForEvent.Events}).toArray((error, Events) => {
                 if (error) {
@@ -1002,15 +990,16 @@ app.post('/addEvent', (request, response) => {
                 console.log(Events);
                 response.writeHead(200, {'Content-Type': 'application/json'});
                 response.end(JSON.stringify({'Events': Events}));
-        });
+            });
 
-});});
+        });
+});
 
 app.post('/deleteEvent', (request, response) => {
     console.log('/deleteEvent');
-    let userForEvent = request.body.deletevent.user;
+    const userForEvent = request.body.deletevent.user;
     console.log('user_for_task.UserName: ' + userForEvent.UserName);
-    let event = request.body.deletevent.event;
+    const event = request.body.deletevent.event;
     console.log('event start: ' + event.start + 'end ' + event.end);
     workersCollection.updateOne(
         {UserName: userForEvent.UserName},
@@ -1037,10 +1026,10 @@ app.post('/deleteEvent', (request, response) => {
 
 app.post('/updateEvent', (request, response) => {
     console.log('/updateEvent');
-    let userForEvent = request.body.updatEvent.user;
+    const userForEvent = request.body.updatEvent.user;
     console.log('user_for_task.UserName: ' + userForEvent.UserName);
-    let eventBeforeUpdate = request.body.updatEvent.eventBeforeUpdate;
-    let eventAfterUpdate = request.body.updatEvent.eventAfterUpdate;
+    const eventBeforeUpdate = request.body.updatEvent.eventBeforeUpdate;
+    const eventAfterUpdate = request.body.updatEvent.eventAfterUpdate;
     // console.log('event start: '+ event.start +'end '+ event.end);
     workersCollection.updateOne(
         {
@@ -1056,8 +1045,8 @@ app.post('/updateEvent', (request, response) => {
                 'Events.$.id': eventAfterUpdate.id,
                 'Events.$.editable': eventAfterUpdate.editable,
                 'Events.$.allDay': eventAfterUpdate.allDay
-                }
-        } , function (err, document) {
+            }
+        }, function (err, document) {
             if (err) {
                 console.log(err);
                 response.writeHead(500, {'Content-Type': 'application/json'});
@@ -1088,9 +1077,9 @@ app.post('/updateEvent', (request, response) => {
 app.post('/updateContact', (request, response) => {
 //update contact
     console.log('updateContact FUNCTION');
-    let contactBeforeUpdateBody = request.body.contactBeforeUpdate;
-    let contactAfterUpdateBody = request.body.updatedContact;
-    let contactBeforeUpdate = {
+    const contactBeforeUpdateBody = request.body.contactBeforeUpdate;
+    const contactAfterUpdateBody = request.body.updatedContact;
+    const contactBeforeUpdate = {
         'Name': contactBeforeUpdateBody.Name,
         'Category': contactBeforeUpdateBody.Category,
         'Status': contactBeforeUpdateBody.Status,
@@ -1100,7 +1089,7 @@ app.post('/updateContact', (request, response) => {
     };
 
     if (contactAfterUpdateBody.PhoneNumber === contactBeforeUpdateBody.PhoneNumber) {
-        let contactAfterUpdate = {
+        const contactAfterUpdate = {
             $set: {
                 'Name': contactAfterUpdateBody.Name,
                 'Category': contactAfterUpdateBody.Category,
@@ -1129,7 +1118,7 @@ app.post('/updateContact', (request, response) => {
     } else {
         customersCollection.findOne({'PhoneNumber': contactAfterUpdateBody.PhoneNumber}).then(function (result) {
             if (!result) {
-                let contactAfterUpdate = {
+                const contactAfterUpdate = {
                     $set: {
                         'Name': contactAfterUpdateBody.Name,
                         'Category': contactAfterUpdateBody.Category,
@@ -1165,15 +1154,15 @@ app.post('/updateContact', (request, response) => {
 app.post('/updateUser', (request, response) => {
 //update contact
     console.log('update users FUNCTION');
-    let userBeforeUpdateBody = request.body.userBeforeUpdate;
-    let userAfterUpdateBody = request.body.updatedUser;
-    let userBeforeUpdate = {
+    const userBeforeUpdateBody = request.body.userBeforeUpdate;
+    const userAfterUpdateBody = request.body.updatedUser;
+    const userBeforeUpdate = {
         Role: userBeforeUpdateBody.Role,
         UserName: userBeforeUpdateBody.UserName,
         Name: userBeforeUpdateBody.Name,
         eMail: userBeforeUpdateBody.eMail
     };
-    let userAfterUpdate = {
+    const userAfterUpdate = {
         $set: {
             Role: userAfterUpdateBody.Role,
             UserName: userAfterUpdateBody.UserName,
@@ -1220,10 +1209,10 @@ app.get('/deleteAllUsers', (request, response) => {
 app.post('/deleteStatusFromRole', (request, response) => {
 //add new contact
     console.log('entered deleteStatusFromRole function');
-    let statusToDelete = request.body.statusToDelete;
+    const statusToDelete = request.body.statusToDelete;
     console.log('statusToDelete.Role ' + statusToDelete.Role);
     console.log('statusToDelete.Status ' + statusToDelete.Status);
-    let Status = statusToDelete.Status;
+    const Status = statusToDelete.Status;
 
     rolesWithStatusesCollection.updateOne({Role: statusToDelete.Role}, {$pull: {Statuses: Status}}, function (err, obj) {
         if (err) throw err;
@@ -1244,7 +1233,7 @@ app.post('/deleteStatusFromRole', (request, response) => {
 app.post('/deleteStatusFromSystem', (request, response) => {
 //add new contact
     console.log('entered deleteStatusFromSystem function');
-    let statusToDelete = request.body.statusToDelete;
+    const statusToDelete = request.body.statusToDelete;
     let statuses, rolesStatuses, statusesRoles;
 
     console.log('statusToDelete:' + statusToDelete);
@@ -1290,15 +1279,13 @@ app.post('/deleteStatusFromSystem', (request, response) => {
 app.post('/deleteUser', (request, response) => {
 //add new contact
     console.log('entered deleteUser function');
-    let userToDelete = request.body.username;
+    const userToDelete = request.body.username;
 
     console.log('userToDelete:' + userToDelete + 'check');
     workersCollection.findOne({'UserName': userToDelete}).then(function (result) {
         if (!result) {
             console.log('did not find user to delete ');
-        }
-        //check if the contact already exists
-        else {
+        } else { //check if the contact already exists
             workersCollection.deleteOne({'UserName': result.UserName}, function (err, obj) {
                 if (err) throw err;
                 console.log('1 user deleted');
@@ -1322,7 +1309,7 @@ app.post('/deleteUser', (request, response) => {
 app.post('/deleteRole', (request, response) => {
 //add new contact
     console.log('entered deleteRole function');
-    let roleToDelete = request.body.role;
+    const roleToDelete = request.body.role;
 
     console.log('roleToDelete:' + roleToDelete);
 
@@ -1356,7 +1343,7 @@ app.post('/deleteRole', (request, response) => {
 app.post('/deleteStatus', (request, response) => {
 //add new contact
     console.log('entered deleteStatus function');
-    let statusToDelete = request.body.Status;
+    const statusToDelete = request.body.Status;
     statusesCollection.deleteOne({'Status': statusToDelete}, function (err, obj) {
         if (err) throw err;
         console.log('1 status deleted');
@@ -1369,7 +1356,7 @@ app.post('/deleteStatus', (request, response) => {
 //add a new status
 app.post('/addOption', (request, response) => {
 //add new option
-    let statusToAdd = request.body.newSatus;
+    const statusToAdd = request.body.newSatus;
 
     statusesCollection.updateOne(
         {'Status': statusToAdd.Status},
@@ -1380,7 +1367,7 @@ app.post('/addOption', (request, response) => {
     response.end();
 });
 
-let storage = multer.diskStorage({ //multers disk storage settings
+const storage = multer.diskStorage({ //multers disk storage settings
     destination: function (req, file, cb) {
         cb(null, './uploads/');
     },
@@ -1388,16 +1375,16 @@ let storage = multer.diskStorage({ //multers disk storage settings
         //var datetimestamp = Date.now();
         //cb(null, file.fieldname + '-' + datetimestamp + '.' + file.originalname.split('.')[file.originalname.split('.').length - 1]);
         filesCollection.updateOne(
-            { FileName: file.originalname },
-            { $set :{ FileName: file.originalname }},
-            { upsert: true }
+            {FileName: file.originalname},
+            {$set: {FileName: file.originalname}},
+            {upsert: true}
         );
         cb(null, file.originalname);
 
     }
 });
 
-let upload = multer({ //multer settings
+const upload = multer({ //multer settings
     storage: storage
 }).single('file');
 
@@ -1416,9 +1403,9 @@ app.post('/uploadImage', function (req, res) {
 
 app.post('/sendEmail', (request, response) => {
     console.log('sendEmail');
-    let emailData = request.body.emailData;
+    const emailData = request.body.emailData;
 
-    let mailOptions = {
+    const mailOptions = {
         from: SERVER_EMAIL,
         to: emailData.mailRecipient,
         subject: emailData.mailSubject,

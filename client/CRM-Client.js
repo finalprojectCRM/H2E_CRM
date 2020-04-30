@@ -1137,25 +1137,30 @@
                         tempPassword: tempPasswordFromClient,
                     }).then(
                         function (response) {//success callback
-                            console.log('response.data.verified=' + response.data.verified);
+                            console.log('validationOfTempPassword: response.data.adminChangedTempPassword=' + response.data.adminChangedTempPassword);
+                            console.log('validationOfTempPassword: response.data.verified=' + response.data.verified);
+                            console.log('validationOfTempPassword: response.data.notVerified=' + response.data.notVerified);
                             //verified passwords (not for Admin user)
                             if (response.data.verified) {
                                 console.log('is verified');
                                 $scope.newTempPasswordPage = false;
                                 $scope.tempPasswordPage = false;
                                 $scope.registerPage = true;
-                            } else if (!response.data.adminChangedTempPassword) { //admin did not yet change temp password that he got with the system
+                            } else if (response.data.adminChangedTempPassword === false) { //admin did not yet change temp password that he got with the system
+                                console.log('validationOfTempPassword: !response.data.adminChangedTempPassword=' + response.data.adminChangedTempPassword);
                                 $scope.newTempPasswordPage = true;
                                 $scope.tempPasswordPage = false;
 
                                 $scope.registerPage = false;
                             } else if (response.data.adminChangedTempPassword) { //admin changed temp password that he got with the system
+                                console.log('validationOfTempPassword: response.data.adminChangedTempPassword=' + response.data.adminChangedTempPassword);
                                 $scope.newTempPasswordPage = false;
                                 $scope.tempPasswordPage = false;
                                 $scope.registerPage = true;
                                 $scope.registrationUserName = 'Admin';
                                 $scope.Admin = true;
                             } else { //not correct temprorary password
+                                console.log('validationOfTempPassword: response.data.notVerified=' + response.data.notVerified);
                                 $scope.message = response.data.notVerified;
                                 $scope.messageType = 'ERROR';
                                 angular.element(document.querySelector('#msgModal')).modal('show');
@@ -2694,6 +2699,7 @@
 
                             //the current password was not verified for this username
                             else {
+                                console.log('verifyPassword: response.data.notVerified=' + response.data.notVerified);
                                 $scope.messageType = 'ERROR';
                                 $scope.message = response.data.notVerified;
                                 angular.element(document.querySelector('#msgModal')).modal('show');

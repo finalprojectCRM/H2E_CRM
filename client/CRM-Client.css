@@ -20,6 +20,14 @@ body {
     width: 65%;
 
 
+}#eventsDiv {
+    font-size: 17px;
+    margin-left: 5%;
+    margin-top: 5%;
+    float: left;
+    width: 65%;
+
+
 }
 
 #calendar_div {

@@ -29,8 +29,8 @@
                 return svc;
             }
         ])
-        .controller('CRM_controller', ['$scope', '$compile', '$http', '$log', '$timeout', 'sampleUploadService', 'uiCalendarConfig', 'toaster', 'Upload', '$window',
-            function ($scope, $compile, $http, $log, $timeout, sampleUploadService, uiCalendarConfig, toaster, Upload, $window) {
+        .controller('CRM_controller', ['$scope','$compile', '$http', '$log', '$timeout', 'sampleUploadService', 'uiCalendarConfig', 'toaster', 'Upload', '$filter', '$window',
+            function ($scope, $compile, $http, $log, $timeout, sampleUploadService, uiCalendarConfig, toaster, Upload, $filter, $window) {
                 let contactBeforeUpdate;
                 let userBeforeUpdate;
                 const MAX_LETTERS_IN_NAME = 25;
@@ -66,20 +66,14 @@
                 let editEventDetails = {};
                 let evenBeforeUpdate;
                 let userToDelete;
-                let retreivedCalenarEvents = [];
                 const SERVER_URI = 'http://localhost:3000';
 
-
-                /*$scope.PhoneNumberBeforeUpdate = undefined;
-                $scope.show_update_expression = false;
-                $scope.showUpdateInput = false;
-                $scope.showOutside = true;
-                $scope.check_phone_enable = false;*/
                 $scope.account = false;
                 $scope.click = false;
                 $scope.menu = false;
                 $scope.showCalendar = false;
                 $scope.showContacts = false;
+                $scope.showWorkersEvents = false;
                 $scope.getNewContactDetails = false;
                 $scope.showSettings = false;
                 $scope.loginPage = false;
@@ -90,21 +84,24 @@
                 $scope.showUsers = false;
                 $scope.addEvent = false;
                 $scope.taskIsEdit = false;
+                $scope.chooseContactToEmail = false;
                 $scope.contactsInfo = [];
                 $scope.users = [];
                 $scope.options = [];
                 $scope.roles = [];
                 $scope.files = [];
                 $scope.rolesColors = [];
+                $scope.retreivedCalendarEvents = [];
 
                 function refreshCalendarEvents() {
                     $log.log('refreshCalendarEvents');
                     $http.get(SERVER_URI + '/getUserEvents/' + loggedInUser.UserName).then(
                         function (response) {//success callback
-                            retreivedCalenarEvents = response.data.userEvents;
-                            $log.log('retreivedCalenarEvents=' + JSON.stringify(retreivedCalenarEvents));
+                            $scope.retreivedCalendarEvents = response.data.userEvents;
+                            //$scope.retreivedCalendarEvents = Object.assign({}, response.data.userEvents);
+                            $log.log('retreivedCalendarEvents=' + JSON.stringify($scope.retreivedCalendarEvents));
                             uiCalendarConfig.calendars.myCalendar.fullCalendar('removeEvents');
-                            uiCalendarConfig.calendars.myCalendar.fullCalendar('addEventSource', retreivedCalenarEvents);
+                            uiCalendarConfig.calendars.myCalendar.fullCalendar('addEventSource', $scope.retreivedCalendarEvents);
                             uiCalendarConfig.calendars.myCalendar.fullCalendar('rerenderEvents');
                         },
                         function (response) {//failure callback
@@ -120,10 +117,10 @@
                     $log.log('refreshCustomerCalendarEvents');
                     $http.get(SERVER_URI + '/getCustomerEvents/' + loggedInUser.UserName + '/' + eventId).then(
                         function (response) {//success callback
-                            retreivedCalenarEvents = response.data.customerEvents;
-                            $log.log('retreivedCalenarEvents=' + JSON.stringify(retreivedCalenarEvents));
+                            $scope.retreivedCalendarEvents = response.data.customerEvents;
+                            $log.log('retreivedCalendarEvents=' + JSON.stringify($scope.retreivedCalendarEvents));
                             uiCalendarConfig.calendars.myCalendar.fullCalendar('removeEvents');
-                            uiCalendarConfig.calendars.myCalendar.fullCalendar('addEventSource', retreivedCalenarEvents);
+                            uiCalendarConfig.calendars.myCalendar.fullCalendar('addEventSource', $scope.retreivedCalendarEvents);
                             uiCalendarConfig.calendars.myCalendar.fullCalendar('rerenderEvents');
                         },
                         function (response) {//failure callback
@@ -297,6 +294,31 @@
                     selectedItems = [];
                     angular.element(document.querySelector('#deleteFileModal')).modal('show');
 
+                }; /*
+                    a modal that pops up when press on delete file,
+                    delete file by running over file list
+                */
+                $scope.getSpecificEvents = function () {
+                    $log.log('$scope.getSpecificEvents');
+                    $scope.loginPage = false;
+                    $scope.showContacts = false;
+                    $scope.showUsers = false;
+                    $scope.showSettings = false;
+                    $scope.showWorkersEvents = true;
+                    $scope.click = true;
+                    $scope.showCalendar = false;
+                    $scope.account = true;
+
+                    refreshCalendarEvents();
+                    $scope.userEvents = Object.assign({}, $scope.retreivedCalendarEvents);
+                    $scope.retreivedCalendarEvents.forEach(function(event, index) {
+                        let title = event.title;
+                        if (event.id !== -1 && title.includes(':')) {
+                            title = title.split(':')[1].trim();
+                        }
+                        $scope.userEvents[index].title = title;
+                        $log.log('index: ' + index + ' ,title=' + title);
+                    });
                 };
                 /*
                     a function to render the calendar
@@ -305,7 +327,6 @@
                     $log.log('renderCalender');
                     //console.log($scope.events)
                     //uiCalendarConfig.calendars.myCalendar.fullCalendar('removeEventSource', sourceFullView, $scope.events);
-
                 };
 
                 /*
@@ -342,13 +363,13 @@
                     eventLimit: true,
                     renderCalender: $scope.renderCalender(),
 
-                    events: function (start, end, timezone, callback) { // Fetch your events here
-                        $log.log('retreivedCalenarEvents=' + retreivedCalenarEvents);
+                    /*events: function (start, end, timezone, callback) { // Fetch your events here
+                        $log.log('retreivedCalendarEvents=' + $scope.retreivedCalendarEvents);
                         // This could be an ajax call or you could get the events locally
-                        callback(retreivedCalenarEvents);
-                    },
+                        callback($scope.retreivedCalendarEvents);
+                    },*/
                     /*
-                        select date whith clicking trigger
+                        select date with clicking trigger
                         and save start and end date in format : 'DD/MM/YYYY HH:mm'
                     */
                     select: function (start, end, allDay, jsEvent) {
@@ -465,8 +486,8 @@
 
                     let sameDate = [];
 
-                    if (retreivedCalenarEvents) {
-                        sameDate = retreivedCalenarEvents.filter(function (item) {
+                    if ($scope.retreivedCalendarEvents) {
+                        sameDate = $scope.retreivedCalendarEvents.filter(function (item) {
                             return item.start === startDate && item.end === endDate;
                         });
                         $log.log('sameDate : ' + sameDate);
@@ -561,7 +582,7 @@
                     //let contact_name = contact.Name;
                     const contactPhone = contact.PhoneNumber;
                     $log.log('eventId : ' + eventId);
-                    retreivedCalenarEvents = refreshCustomerCalendarEvents(eventId);
+                    $scope.retreivedCalendarEvents = refreshCustomerCalendarEvents(eventId);
                     $scope.calendarFunction();
                 };
 
@@ -672,7 +693,16 @@
                             }
                         }
                     }
+                    if(emailsListStr.length === 0){
+                        $scope.message = 'You did not select any one for sending email, please select one';
+                        $scope.messageType = 'ERROR';
+                        angular.element(document.querySelector('#msgModal')).modal('show');
+                        return;
+                    }
                     $scope.contactEmail = emailsListStr;
+                    $scope.chooseContactToEmail = false;
+                    $scope.chooseUserToEmail = false;
+                    $scope.showSendOrCancelMultipleButtonContacts = false;
                     angular.element(document.querySelector('#emailModal')).modal('show');
                 };
 
@@ -682,8 +712,8 @@
                         newEvent: newEvent
                     }).then(
                         function (response) {
-                            //retreivedCalenarEvents = response.data.Events;
-                            //$log.log('retreivedCalenarEvents=' + retreivedCalenarEvents);
+                            //retreivedCalendarEvents = response.data.Events;
+                            //$log.log('retreivedCalendarEvents=' + retreivedCalendarEvents);
 
                             $scope.role = '';
                             $scope.contactTask = false;
@@ -784,8 +814,8 @@
                         }
                         return;
                     }
-                    if (retreivedCalenarEvents) {
-                        sameDate = retreivedCalenarEvents.filter(function (item) {
+                    if ($scope.retreivedCalendarEvents) {
+                        sameDate = $scope.retreivedCalendarEvents.filter(function (item) {
                             return item.start === startDate && item.end === endDate;
                         });
                         $log.log('sameDate : ' + sameDate);
@@ -1315,8 +1345,9 @@
                             //if there is a match between user name and password at server side
                             if (!response.data.noMatch) {
                                 // $scope.events = LoginUser.Events;
-                                retreivedCalenarEvents = LoginUser.Events;
-                                $log.log('Events : ' + $scope.events);
+                                //$scope.retreivedCalendarEvents = LoginUser.Events;
+                                refreshCalendarEvents();
+                                //$log.log('Events : ' + $scope.events);
 
                                 //if admin show admin page and update that admin is logged in
                                 if (LoginUser.adminUser) {
@@ -1376,6 +1407,8 @@
                     $scope.click = true;
                     $scope.showCalendar = false;
                     $scope.account = true;
+                    $scope.showWorkersEvents = false;
+
 
 
                     $scope.getContactsList();
@@ -1553,6 +1586,7 @@
                     $scope.showCalendar = true;
                     $scope.showUsers = false;
                     $scope.showSettings = false;
+                    $scope.showWorkersEvents = false;
                     $scope.account = false;
                     $scope.calendarNavColor = '#ff0066';
                     $scope.contactsNavColor = '#004d99';
@@ -1578,6 +1612,8 @@
                     $scope.showContacts = false;
                     $scope.showUsers = false;
                     $scope.showCalendar = false;
+                    $scope.showWorkersEvents = false;
+
 
                     //clearing the search field
                     $scope.search = '';
@@ -1997,7 +2033,7 @@
                     $scope.showSettings = false;
                     $scope.showContacts = false;
                     $scope.showCalendar = false;
-
+                    $scope.showWorkersEvents = false;
                     $scope.account = true;
                     $scope.getUsersList(flag);
                     $scope.getRolesList();

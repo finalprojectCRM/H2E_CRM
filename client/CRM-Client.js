@@ -7,30 +7,8 @@
 (function () {
     'use strict';
     const app = angular.module('CRM', ['ngResource', 'ui.calendar', 'ui.bootstrap', 'ui.bootstrap.datetimepicker', 'ngSanitize', 'ui.select', 'ngAnimate', 'toaster', 'ngFileUpload'])
-        .factory('sampleUploadService', ['$resource',
-            function ($resource) {
-                const svc = {};
-
-                const restSvc = $resource(null, null, {
-                    'uploadFile': {
-                        url: './uploadFile',
-                        method: 'post',
-                        isArray: false,
-                        data: {
-                            fileName: '@fileName',
-                            uploadData: '@uploadData'
-                        }
-                    }
-                });
-
-                svc.uploadFile = function (fileUpload) {
-                    return restSvc.uploadFile(fileUpload).$promise;
-                };
-                return svc;
-            }
-        ])
-        .controller('CRM_controller', ['$scope','$compile', '$http', '$log', '$timeout', 'sampleUploadService', 'uiCalendarConfig', 'toaster', 'Upload', '$filter', '$window',
-            function ($scope, $compile, $http, $log, $timeout, sampleUploadService, uiCalendarConfig, toaster, Upload, $filter, $window) {
+        .controller('CRM_controller', ['$scope','$compile', '$http', '$log', '$timeout', 'uiCalendarConfig', 'toaster', 'Upload', '$filter', '$window',
+            function ($scope, $compile, $http, $log, $timeout, uiCalendarConfig, toaster, Upload, $filter, $window) {
                 let contactBeforeUpdate;
                 let userBeforeUpdate;
                 const MAX_LETTERS_IN_NAME = 25;
@@ -706,6 +684,21 @@
                     angular.element(document.querySelector('#emailModal')).modal('show');
                 };
 
+                function updateContactHistory(history ,contactPhoneNumber){
+                    const updateHistory = {contactPhoneNumber: contactPhoneNumber, contactHistory: history};
+                    $http.post(SERVER_URI + '/updateContactHistory', {
+                        updateHistory: updateHistory
+                    }).then(
+                        function (response){
+                            historyArray = [];
+
+
+                        }, function (response) { //failure callback
+                        }
+                    );
+
+                }
+
                 function addEventToDataBase(event, user) {
                     const newEvent = {event: event, user: user};
                     $http.post(SERVER_URI + '/addEvent', {
@@ -714,6 +707,8 @@
                         function (response) {
                             //retreivedCalendarEvents = response.data.Events;
                             //$log.log('retreivedCalendarEvents=' + retreivedCalendarEvents);
+                            $log.log('selectedItemPart2: '+ selectedItemPart2)
+                            updateContactHistory(historyArray ,selectedItemPart2);
 
                             $scope.role = '';
                             $scope.contactTask = false;
@@ -733,6 +728,14 @@
                         }
                     );
                 }
+                function addHistoryToContactEvent(description,startDate,endDate,color,contact){
+                    let history='';
+                    history = 'New Task\n'+'Start Date : '+ startDate+' End Date : '+endDate+'\n';
+                    history = history+'Category : '+$scope.roles[getIndexOfSelectedItem(color,'color_of_role')].Role+'\n';
+                    history = history+description+'\n';
+                    $log.log(history);
+                    return history;
+                }
 
                 /*
                     a function for adding a task from calendar when press on a day in calendar,
@@ -748,6 +751,7 @@
                     let contact;
                     let startDate;
                     let endDate;
+                    let contactHistory;
 
                     if (!outsideModal) {
                         const date = $scope.date.split('-');
@@ -860,8 +864,9 @@
                         } else {
                             description = 'Task for contact ' + selectedItemPart1 + ' ' + selectedItemPart2 + ' : ' + $scope.title;
                             contact = selectedItemPart1 + ' ' + selectedItemPart2;
-                            selectedItemPart1 = undefined;
-                            selectedItemPart2 = undefined;
+                            contactHistory = addHistoryToContactEvent(description,startDate,endDate,$scope.role.Color,contact);
+                            historyArray.push(contactHistory);
+
                         }
                     } else { //if the task is not for a spesific contact -> id of contact = '-1'
                         description = $scope.title;
@@ -1072,12 +1077,6 @@
                         $scope.progress = 'progress: ' + progressPercentage + '% '; // capture upload progress
                     });
                 };
-
-                //clear the field of the file name that has been uploaded
-                function clearFileUpload() {
-                    $scope.uploadFileName = '';
-                    angular.element('#fileUploadField').val(null);
-                }
 
                 //add file to system function
                 $scope.addFile = function () {

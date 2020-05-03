@@ -1,20 +1,16 @@
-// *************** Require External Modules ****************//
 const express = require('express');
 const bodyParser = require('body-parser');
-// *************** Require Internal Modules ****************//
 const serverApiRequestHandler = require('./server-api-request-handler');
 const config = require('config');
 const utils = require('../utils');
-//*************** Global vars ****************//
 const router = new express.Router();
 
-//*************** Internal Functions ****************//
-router.use(bodyParser.text({type: '*/*', limit: '50mb'}));
+router.use(bodyParser.json());
+router.use(bodyParser.urlencoded({extended: true}));
+//router.use(bodyParser.text({type: '*/*', limit: '50mb'}));
 
-//get main page and connect to mongo db
-/*router.route(config.server.api.root, (request, response) => {
-    utils.getFile(request, response, true, 'CRM-Client.html');
-});*/
+
+//get main page
 router.route(config.server.api.root)
     .get(serverApiRequestHandler.getClientFile);
 
@@ -107,11 +103,19 @@ router.route('/getRoles')
     .get(serverApiRequestHandler.getRoles);
 
 router.route('/getUserEvents/:UserName')
-    .get(serverApiRequestHandler.getUserEvents)
+    .get(serverApiRequestHandler.getUserEvents);
+
+router.route('/uploadFile')
+    .post(serverApiRequestHandler.uploadFile);
+
+router.route('/sendEmail')
+    .post(serverApiRequestHandler.sendEmail);
+
+router.route('/verifyTemporaryPassword')
+    .post(serverApiRequestHandler.verifyTemporaryPassword);
 
 router.route('*')
     .get(utils.handleInvalidRequest);
-
 
 //*************** Export ****************//
 module.exports = router;

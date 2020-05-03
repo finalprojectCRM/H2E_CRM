@@ -46,27 +46,22 @@ module.exports = {
 
         transporter.sendMail(mailOptions, function (error, info) {
             if (error) {
-                console.log(error);
+                logger.error(error);
                 response.writeHead(500, {'Content-Type': 'application/json'});
                 response.end(JSON.stringify({error: 'mail failed to be sent to ' + emailData.mailRecipient}));
             } else {
-                console.log('Email sent: ' + info.response);
+                logger.info('Email sent: ' + info.response);
                 response.writeHead(200, {'Content-Type': 'application/json'});
                 response.end(JSON.stringify({ok: 'mail has been sent successfully to ' + emailData.mailRecipient}));
             }
         });
     },
-    uploadFile: function (filesCollection, req, res) {
+    uploadFile: function (req, res, handler) {
         const storage = multer.diskStorage({ //multers disk storage settings
             destination: function (req, file, cb) {
                 cb(null, config.server.data.uploadFolder);
             },
             filename: function (req, file, cb) {
-                filesCollection.updateOne(
-                    {FileName: file.originalname},
-                    {$set: {FileName: file.originalname}},
-                    {upsert: true}
-                );
                 cb(null, file.originalname);
 
             }
@@ -77,11 +72,14 @@ module.exports = {
         }).single('file');
 
         upload(req, res, function (err) {
-            if (err) {
+            if (err || !req.file.originalname) {
                 res.json({errorCode: 1, errDesc: err});
                 return;
             }
-            res.json({errorCode: 0, errDesc: null});
+            (async function () {
+                await handler(req.file.originalname);
+                res.json({errorCode: 0, errDesc: null});
+            })();
         });
     },
     getErrorStatus: function (errorMessage, errorCode) {
@@ -121,10 +119,10 @@ module.exports = {
                 if (ext === '.html') {
                     contentType = 'text/html';
                 }
-                console.log(util.format('rendering file: %s'), filePath);
+                logger.info(util.format('rendering file: %s'), filePath);
                 fs.readFile(filePath, function (error, data) {
                     if (error) {
-                        console.log(util.format('cannot get %s. Error: %s'), filePath, error);
+                        logger.info(util.format('cannot get %s. Error: %s'), filePath, error);
                         const errorMessage = module.exports.getErrorStatus(util.format(config.server.errors.general.ERROR_NO_SUCH_FILE, filePath));
                         response.status(400).send({'error': errorMessage});
                     } else {

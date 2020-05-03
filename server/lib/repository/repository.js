@@ -123,6 +123,9 @@ async function getItems(req, res, collectionName, desc, condition = {}, arrayVal
     res.end(response);
 }
 
+async function updateFileCollection(fileName){
+    await storage.updateItem({FileName: fileName}, 'file');
+}
 
 exports.init = init;
 exports.getDBConnectionStatus = getDBConnectionStatus;
@@ -132,3 +135,4 @@ exports.addDefaultAdminUser = addDefaultAdminUser;
 exports.getUserLogInInfo = getUserLogInInfo;
 exports.getAllCollectionItems = getAllCollectionItems;
 exports.getItems = getItems;
+exports.updateFileCollection = updateFileCollection;

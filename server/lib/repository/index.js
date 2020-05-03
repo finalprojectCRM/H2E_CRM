@@ -8,5 +8,6 @@ module.exports = {
     addDefaultAdminUser: repo.addDefaultAdminUser,
     getUserLogInInfo: repo.getUserLogInInfo,
     getAllCollectionItems: repo.getAllCollectionItems,
-    getItems: repo.getItems
+    getItems: repo.getItems,
+    updateFileCollection: repo.updateFileCollection
 };

@@ -82,6 +82,10 @@ module.exports = {
         return await dbHandle.collection(collections[type]).insertOne(item);
     },
 
+    updateItem: async function (item, type) {
+        await dbHandle.collection(collections[type]).updateOne(item, {$set : item}, {upsert: true});
+    },
+
     addItems: async function (items, type) {
         return await dbHandle.collection(collections[type]).insertMany(items);
     },

@@ -1,4 +1,3 @@
-const util = require("util");
 const config = require('config');
 const storage = require('./' + config.storage);
 
@@ -7,9 +6,9 @@ module.exports = {
     countItems: storage.countItems,
     populateEmptyCollectionByDefaultValue: storage.populateEmptyCollectionByDefaultValue,
     addItem: storage.addItem,
+    updateItem: storage.updateItem,
     addItems: storage.addItems,
     getItem: storage.getItem,
     deleteItem: storage.deleteItem,
     getAllItems: storage.getAllItems
-
 };

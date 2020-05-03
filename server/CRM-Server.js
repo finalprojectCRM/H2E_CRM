@@ -3,30 +3,28 @@
 
 const fs = require('fs');
 const util = require('util');
-const express = require('express');
+const Express = require('express');
 const bodyParser = require('body-parser');
-//const MongoClient = require('mongodb').MongoClient;
-const ReadPreference = require('mongodb').ReadPreference;
 const morgan = require('morgan');
 const helmet = require('helmet');
 const config = require('config');
 const utils = require('./lib/utils');
-const appName = require('os').hostname();
 const logging = require('./lib/utils/logging');
 const logger = logging.mainLogger;
-const serverApiRequestHandler = require('./lib/routers/server-api-request-handler');
-const serverApiRouter = require("./lib/routers/server-api-router");
-
+const serverApiRouter = require('./lib/routers/server-api-router');
 const repo = require('./lib/repository');
+const multer = require('multer');
+
 let customersCollection, statusesCollection, workersCollection, filesCollection,
     rolesWithStatusesCollection, statusesWithRolesCollection, colorsCollection;
 
-const app = new express();
+const app = new Express();
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(morgan('dev'));
 app.use(helmet());
 app.use(config.server.api.root, serverApiRouter);
+
 
 //start server
 app.listen(config.server.access.port, () => {
@@ -46,43 +44,10 @@ app.listen(config.server.access.port, () => {
     })();
 });
 
-/*
-    this request verify if user that try to register to the system has a password that exists only in administrator hands
-*/
-app.post('/verifyTemporaryPassword', (request, response) => {
-
-    console.log('entered verifyTemporaryPassword function');
-    const tempPassword = request.body.tempPassword;
-    workersCollection.findOne({'UserName': 'Admin'}).then(function (mongoUser) {
-
-        if (mongoUser.TempPassword !== tempPassword) { //not correct temp password
-            console.log('!result not a password');
-            response.writeHead(200, {'Content-Type': 'application/json'});
-            response.end(JSON.stringify({notVerified: 'You do not have a correct temporary password , Please get it from the administrator'}));
-        } else if (mongoUser.UserName === 'Admin' && mongoUser.Name === '' && mongoUser.eMail === '' && mongoUser.Password === '') {
-            if (mongoUser.TempPassword === config.server.access.firstTempPassword) { //admin did not yet change the temp password that he got from system
-                response.writeHead(200, {'Content-Type': 'application/json'});
-                response.end(JSON.stringify({'adminChangedTempPassword': false}));
-            } else { //admin changed temp password that he got from system
-                response.writeHead(200, {'Content-Type': 'application/json'});
-                response.end(JSON.stringify({'adminChangedTempPassword': true}));//go to registration page with admin
-            }
-        } else {
-            //the user has a good password that changed by admin
-            console.log('good password');
-            response.writeHead(200, {'Content-Type': 'application/json'});
-            response.end(JSON.stringify({verified: true}));
-        }
-
-    }).catch(function (err) {
-        response.send({error: err});
-    });
-});
 
 /*
     This request is to change the temporary password that the admin handle
 */
-
 app.post('/changeTemporaryPassword', (request, response) => {
 
     console.log('entered changeTemporaryPassword function');
@@ -890,16 +855,3 @@ app.post('/addOption', (request, response) => {
     response.writeHead(200, {'Content-Type': 'application/json'});
     response.end();
 });
-
-
-app.post('/uploadFile', function (req, res) {
-    console.log('/uploadFile');
-    utils.uploadFile(filesCollection, req, res);
-});
-
-app.post('/sendEmail', (request, response) => {
-    console.log('/sendEmail');
-    utils.sendMail(request.body.emailData, response);
-});
-
-

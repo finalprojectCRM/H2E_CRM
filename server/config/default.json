@@ -1,15 +1,58 @@
 {
+  "logging": {
+    "level": "info",
+    "silent": false,
+    "humanReadable": false
+  },
+  "storage": "mongo",
+  "server": {
+    "name": "CRM",
+    "access" : {
+      "firstTempPassword": "12345678",
+      "port": 3000
+    },
+    "api": {
+      "base": "crm",
+      "root": "/",
+      "angularRoot": "/bower_components/angular/",
+      "angularJs": "angular.min.js"
+
+    },
+    "mail" : {
+      "user": "h2e.crm@gmail.com",
+      "password": "H2E_CRM!@"
+    },
+    "data" : {
+      "uploadFolder" : "./uploads/",
+      "clientRoot": "../client",
+      "clientModulesRoot": "angular_modules"
+    },
+    "errors": {
+      "general": {
+        "ERROR_INTERNAL_GENERAL": "Internal Server Error",
+        "ERROR_UNSUPPORTED_API": "Unsupported API: url[%s] method[%s] headers[%s]",
+        "ERROR_NO_SUCH_FILE": "No such file[%s]"
+      },
+      "DB": {
+        "ERROR_DB_ATTEMPT_TO_CREATE_ITEM_WITH_EMPTY_ID": "DB: Attempt to create an item with empty ID",
+        "ERROR_DB_CONNECTION_FAILED": "Connection to %s DB failed: %s"
+      }
+    }
+  },
   "mongo": {
+    "dbName": "CRM_DB",
+    "dbDefaultUserName": "crm",
+    "dbDefaultUserPassword": "crmuser",
+    "connectTimeoutMS": 60000,
+    "writeTimeout": 5000,
+    "writeConcern": "journal=true",
+    "assetCollection": "assets",
+    "replicaSet": "",
+    "enableMongoMetrics": true,
     "uriPrefix": "mongodb",
-    "clusterUrl": "localhost",
-    "mongodbPort": 27017,
-    "mongodbName": "CRM_DB",
-    "replicaSet": false,
-    "sharded": false,
-    "useSSL": false,
+    "clusterUrl": "localhost:27017",
     "authType": "none",
-    "username": "username",
-    "password": "password"
+    "retryInterval": 60000
   }
 }
 

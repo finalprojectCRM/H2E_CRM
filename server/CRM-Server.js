@@ -1,412 +1,55 @@
 /*jshint unused:false*/
 /* eslint-disable no-unused-vars */
 
-//the libraries that not existing fundamentally in node js
 const fs = require('fs');
-const nodeMailer = require('nodemailer');
-const Express = require('express');
-const BodyParser = require('body-parser');
-const MongoClient = require('mongodb').MongoClient;
+const util = require('util');
+const express = require('express');
+const bodyParser = require('body-parser');
+//const MongoClient = require('mongodb').MongoClient;
 const ReadPreference = require('mongodb').ReadPreference;
-const config = require('./config/default.json');
-const multer = require('multer');
 const morgan = require('morgan');
 const helmet = require('helmet');
+const config = require('config');
+const utils = require('./lib/utils');
+const appName = require('os').hostname();
+const logging = require('./lib/utils/logging');
+const logger = logging.mainLogger;
+const serverApiRequestHandler = require('./lib/routers/server-api-request-handler');
+const serverApiRouter = require("./lib/routers/server-api-router");
 
-
-//the name of app
-const APP_NAME = require('os').hostname();
-//the port that the app running on it
-const APP_PORT = 3000;
-
-//the database and the collections in mongodb
-let database, customersCollection, statusesCollection, workersCollection, filesCollection,
+const repo = require('./lib/repository');
+let customersCollection, statusesCollection, workersCollection, filesCollection,
     rolesWithStatusesCollection, statusesWithRolesCollection, colorsCollection;
-const app = new Express();
-//The temp password that the administrator get with the system
-const firstTempPassword = '12345678';
-//the email of the system
-const SERVER_EMAIL = 'h2e.crm@gmail.com';
 
-app.use(BodyParser.json());
-app.use(BodyParser.urlencoded({extended: true}));
+const app = new express();
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({extended: true}));
 app.use(morgan('dev'));
 app.use(helmet());
+app.use(config.server.api.root, serverApiRouter);
 
-//create an approach to send emails from the system by using node mailer library
-const transporter = nodeMailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: SERVER_EMAIL,
-        pass: 'H2E_CRM!@'
-    }
-});
-
-//get to mongo db Permissions
-function getMongoConnectionString() {
-    let connectionString = '';
-    const mongoConfig = config.mongo;
-    const authType = mongoConfig.authType;
-
-    const dbUserName = process.env.SECRET_USERNAME;
-    const dbUserPassword = process.env.SECRET_PASSWORD;
-    if (authType === 'none') {
-        if (mongoConfig.uriPrefix) {
-            connectionString = mongoConfig.uriPrefix + '://';
+//start server
+app.listen(config.server.access.port, () => {
+    logger.info(util.format('%s server is listening on port %s', config.server.name, config.server.access.port));
+    (async function() {
+        const {status, customers, statuses, workers, files, rolesWithStatuses, statusesWithRoles, colors} = await repo.init();
+        if (status.code !== 200){
+            logger.error(utils.getErrorStatus(util.format(config.server.errors.DB.ERROR_DB_CONNECTION_FAILED, config.storage, status.message)));
         }
-        connectionString += mongoConfig.clusterUrl + ':' +
-            mongoConfig.mongodbPort + '/' +
-            mongoConfig.mongodbName + '?';
-
-        const replicaSet = mongoConfig.replicaSet;
-        if (replicaSet) {
-            connectionString += 'replicaSet=' + replicaSet;
-        }
-    } else if (authType === 'SHA-1') {
-        connectionString = mongoConfig.uriPrefix + '://' + dbUserName + ':' + dbUserPassword + '@' +
-            mongoConfig.clusterUrl;
-    }
-    return connectionString;
-}
-
-//listen to server
-app.listen(APP_PORT, () => {
-    console.log('server ' + APP_NAME + ' is listening on port ' + APP_PORT);
-});
-
-/*
- This function is to check if the collections : statuses , roles and files are empty
-*/
-function checkExistingStatusesAndRolesAndFiles() {
-    console.log('checkExistingStatusesAndRoles FUNCTION');
-
-    //count the documents in statuses collection
-    statusesCollection.countDocuments(function (err, count) {
-        console.log('there are statuses');
-        //if the collection does not have documents
-        if (!err && count === 0) {
-            console.log('no statuses');
-
-            //insert the statuses : '-- Choose status for role --','בעיה טכנית'
-            //statusesCollection.insertOne({'Status':'-- Choose status for role --'});
-            statusesCollection.insertOne({'Status': 'בעיה טכנית'});
-        }
-    });
-
-    //count the documents in rolesWithStatusesCollection
-    rolesWithStatusesCollection.countDocuments(function (err, count) {
-        if (!err && count === 0) {
-            console.log('no roles');
-            //insert the role : '-- Choose category for role --'
-            rolesWithStatusesCollection.insertOne({Role: 'new in the system'});
-            //insert the roles: 'תמיכה טכנית' with statuses: : '-- Choose status for role --','בעיה טכנית'  and color:#66ffff'
-            rolesWithStatusesCollection.insertOne({
-                Role: 'תמיכה טכנית',
-                Color: '#66ffff',
-                Statuses: ['בעיה טכנית']
-            });
-            //insert the color:#66ffff' to colorsCollection
-            colorsCollection.insertOne({Color: '#66ffff'});
-
-        }
-    });
-    //count the documents in statusesWithRolesCollection
-    statusesWithRolesCollection.countDocuments(function (err, count) {
-        if (!err && count === 0) {
-            console.log('no statuses');
-            //insert the statuses : '-- Choose status for role --','בעיה טכנית'
-            //statusesWithRolesCollection.insertOne({Status:'-- Choose status for role --'});
-            statusesWithRolesCollection.insertOne({Status: 'בעיה טכנית', Roles: ['תמיכה טכנית']});
-        }
-    });
-}
-
-//get main page and connect to mongo db
-app.get('/', (request, response) => {
-    console.log('--Rendering html page--');
-
-    const mongoConfig = config.mongo;
-    const dbName = mongoConfig.mongodbName;
-    const connString = getMongoConnectionString();
-    console.log('db uri: ' + connString);
-    MongoClient.connect(connString,
-        {
-            useNewUrlParser: true,
-            readPreference: ReadPreference.NEAREST,
-            autoReconnect: true,
-            reconnectTries: Number.MAX_SAFE_INTEGER,
-            poolSize: 16,
-            connectWithNoPrimary: true,
-            useUnifiedTopology: true,
-            appname: APP_NAME
-        }, (error, client) => {
-            if (error) {
-                console.log('ERROR TO CONNECT TO MONGODB');
-            }
-
-            /*create all collections in mongo db*/
-            database = client.db(dbName);
-            customersCollection = database.collection('customers');
-            statusesCollection = database.collection('statuses');
-            workersCollection = database.collection('workers');
-            filesCollection = database.collection('files');
-            rolesWithStatusesCollection = database.collection('roles with statuses');
-            statusesWithRolesCollection = database.collection('statuses with roles');
-            colorsCollection = database.collection('colors');
-
-            console.log('Connected to `' + dbName + '`!');
-            //only after a good connection to mongo db we can read the main page and send it to client
-            fs.readFile('../client/CRM-Client.html', function (error, data) {
-                if (error) {
-                    console.log('error has happened in client/CRM-Client.html', error);
-                }
-                response.writeHead(200, {'Content-Type': 'text/html'});
-                response.end(data);
-
-            });
-        });
-
-});
-//get bootstrap
-app.get('/common/bootstrap.min.css', (request, response) => {
-    console.log('--Rendering bootstrap-css file--');
-    fs.readFile('../client/angular_modules/common/bootstrap.min.css', function (error, data) {
-        if (error) {
-            console.log('error has happened in bootstrap.min.css', error);
-        }
-        response.writeHead(200, {'Content-Type': 'text/css'});
-        response.end(data);
-    });
-});
-//get angular js
-app.get('/bower_components/angular/angular.min.js', (request, response) => {//bring the angular file
-    console.log('--Rendering ../client/angular_modules/bower_components/angular/angular.min.js file--');
-    fs.readFile('../client/angular_modules/bower_components/angular/angular.min.js', function (error, data) {
-        if (error) {
-            console.log('error has happened in angular.min.js', error);
-        }
-        response.writeHead(200, {'Content-Type': 'text/javascript'});
-        response.end(data);
-    });
-});
-//get angular.min.js.map
-app.get('/bower_components/angular/angular.min.js.map', (request, response) => {//bring the angular file
-    console.log('--Rendering ../client/angular_modules/bower_components/angular/angular.min.js.map file --');
-    fs.readFile('../client/angular_modules/bower_components/angular/angular.min.js.map', function (error, data) {
-        if (error) {
-            console.log('error has happened in angular.min.js.map', error);
-        }
-        response.writeHead(200, {'Content-Type': 'text/javascript'});
-        response.end(data);
-    });
-});
-
-app.get('/ng-file-upload.min.js', (request, response) => {//bring the angular file
-    console.log('--Rendering /ng-file-upload.min.js file--');
-    fs.readFile('../client/angular_modules/ng-file-upload/dist/ng-file-upload.min.js', function (error, data) {
-        if (error) {
-            console.log('error has happened in ng-file-upload.min.js', error);
-        }
-        response.writeHead(200, {'Content-Type': 'text/javascript'});
-        response.end(data);
-    });
-});
-
-app.get('/ng-file-upload-shim.min.js', (request, response) => {//bring the angular file
-    console.log('--Rendering../client/angular_modules/ng-file-upload/dist/ng-file-upload-shim.min.js file--');
-    fs.readFile('../client/angular_modules/ng-file-upload/dist/ng-file-upload-shim.min.js', function (error, data) {
-        if (error) {
-            console.log('error has happened in ng-file-upload-shim.min.js', error);
-        }
-        response.writeHead(200, {'Content-Type': 'text/javascript'});
-        response.end(data);
-    });
-});
-
-//get select.js
-app.get('/common/select.js', (request, response) => {
-    console.log('--Rendering select.js file--');
-    fs.readFile('../client/angular_modules/common/select.js', function (error, data) {
-        if (error) {
-            console.log('error has happened in select.js', error);
-        }
-        response.writeHead(200, {'Content-Type': 'text/javascript'});
-        response.end(data);
-    });
-});
-//get select.css
-app.get('/common/select.css', (request, response) => {
-    console.log('--Rendering select.css file--');
-    fs.readFile('../client/angular_modules/common/select.css', function (error, data) {
-        if (error) {
-            console.log('error has happened in select.css', error);
-        }
-        response.writeHead(200, {'Content-Type': 'text/css'});
-        response.end(data);
-    });
-});
-//get angular
-
-
-//get CSS of the system page
-app.get('/CRM-Client.css', (request, response) => { //bring the client/CRM-Client.css file
-    console.log('--Rendering client/CRM-Client.css file--');
-    fs.readFile('../client/CRM-Client.css', function (error, data) {
-        if (error) {
-            console.log('error has happened in../client/CRM-Client.css', error);
-        }
-        response.writeHead(200, {'Content-Type': 'text/css'});
-        response.end(data);
-    });
-});
-
-
-//get fullcalendar.css component
-app.get('/bower_components/fullcalendar/dist/fullcalendar.css', (request, response) => {
-    console.log('--Rendering fullcalendar.css file--');
-    fs.readFile('../client/angular_modules/bower_components/fullcalendar/dist/fullcalendar.css', function (error, data) {
-        if (error) {
-            console.log('error has happened in fullcalendar.css', error);
-        }
-        response.writeHead(200, {'Content-Type': 'text/css'});
-        response.end(data);
-    });
-});
-//get datetimepicker.css componnent
-app.get('/calendar/datetimepicker.css', (request, response) => {
-    console.log('--Rendering datetimepicker.css file--');
-    fs.readFile('../client/angular_modules/calendar/datetimepicker.css', function (error, data) {
-        if (error) {
-            console.log('error has happened in /datetimepicker.css', error);
-        }
-        response.writeHead(200, {'Content-Type': 'text/css'});
-        response.end(data);
-    });
-});
-
-//get moment.min.js componnent
-app.get('/bower_components/moment/min/moment.min.js', (request, response) => {
-    console.log('--Rendering moment.min.js file--');
-    fs.readFile('../client/angular_modules/bower_components/moment/min/moment.min.js', function (error, data) {
-        if (error) {
-            console.log('error has happened in /moment.min.js', error);
-        }
-        response.writeHead(200, {'Content-Type': 'text/javascript'});
-        response.end(data);
-    });
-});
-//get calendar.js componnent
-app.get('/bower_components/angular-ui-calendar/src/calendar.js', (request, response) => {
-    console.log('--Rendering ui-calendar.js file--');
-    fs.readFile('../client/angular_modules/bower_components/angular-ui-calendar/src/calendar.js', function (error, data) {
-        if (error) {
-            console.log('error has happened in /ui-calendar.js', error);
-        }
-        response.writeHead(200, {'Content-Type': 'text/javascript'});
-        response.end(data);
-    });
-});
-//get datetimepicker.js componnent
-app.get('/calendar/datetimepicker.js', (request, response) => {
-    console.log('--Rendering datetimepicker.js file--');
-    fs.readFile('../client/angular_modules/calendar/datetimepicker.js', function (error, data) {
-        if (error) {
-            console.log('error has happened in /datetimepicker.js', error);
-        }
-        response.writeHead(200, {'Content-Type': 'text/javascript'});
-        response.end(data);
-    });
-});
-app.get('/bower_components/fullcalendar/dist/fullcalendar.min.js', (request, response) => {
-    console.log('--Rendering fullcalendar.min.js file--');
-    fs.readFile('../client/angular_modules/bower_components/fullcalendar/dist/fullcalendar.min.js', function (error, data) {
-        if (error) {
-            console.log('error has happened in fullcalendar.min.js', error);
-        }
-        response.writeHead(200, {'Content-Type': 'text/javascript'});
-        response.end(data);
-    });
-});
-app.get('/bower_components/fullcalendar/dist/gcal.js', (request, response) => {
-    console.log('--Rendering gcal.js file--');
-    fs.readFile('../client/angular_modules/bower_components/fullcalendar/dist/gcal.js', function (error, data) {
-        if (error) {
-            console.log('error has happened in gcal.js', error);
-        }
-        response.writeHead(200, {'Content-Type': 'text/javascript'});
-        response.end(data);
-    });
-});
-
-app.get('/bower_components/jquery/dist/jquery.min.js', (request, response) => {
-    console.log('--Rendering jquery.min.js file--');
-    fs.readFile('../client/angular_modules/bower_components/jquery/dist/jquery.min.js', function (error, data) {
-        if (error) {
-            console.log('error has happened in jquery.min.js', error);
-        }
-        response.writeHead(200, {'Content-Type': 'text/javascript'});
-        response.end(data);
-    });
-});
-
-//get client/CRM-Client.js
-app.get('/CRM-Client.js', (request, response) => {
-    console.log('--Rendering client/CRM-Client.js file--');
-    fs.readFile('../client/CRM-Client.js', function (error, data) {
-        if (error) {
-            console.log('error has happened in../client/CRM-Client.js', error);
-        }
-        response.writeHead(200, {'Content-Type': 'text/javascript'});
-        response.end(data);
-    });
-});
-
-/* a request that initialize the system when it empty*/
-
-app.get('/firstSystemLoad', (request, response) => {
-    console.log('entered firstSystemLoad function');
-    //check if data exists in statuses & roles & files collection
-    checkExistingStatusesAndRolesAndFiles();
-    workersCollection.findOne({'UserName': 'Admin'}).then(function (mongoUser) {
-        //Admin not yet in system = mongo db workersCollection is empty
-        if (!mongoUser) {
-            //insert to users collection the first user - Admin
-            workersCollection.insertOne(
-                {
-                    'UserName': 'Admin', 'Role': 'Administrator', 'Name': '',
-                    'eMail': '', 'Password': '', 'TempPassword': firstTempPassword
-                }, function (err, res) {
-                    if (err) throw err;
-                });
-            response.writeHead(200, {'Content-Type': 'application/json'});
-            response.end(JSON.stringify({'adminFirstLoad': true}));//Admin has been loaded first time to mongodb
-        } else//there is a user in system and Admin exists = mongo db workersCollection is not empty
-        if (mongoUser.UserName === 'Admin' && mongoUser.Name === '' && mongoUser.eMail === '' && mongoUser.Password === '') {
-            //admin did not yet change the temp password that he got from system
-            if (mongoUser.TempPassword === firstTempPassword) {
-                response.writeHead(200, {'Content-Type': 'application/json'});
-                response.end(JSON.stringify({'adminChangedTempPassword': false}));
-
-            } else { //admin changed temp password that he got from system
-                response.writeHead(200, {'Content-Type': 'application/json'});
-                response.end(JSON.stringify({'adminChangedTempPassword': true}));//go to registration page with admin
-            }
-
-        } else { //Admin has filled in all his details
-            response.writeHead(200, {'Content-Type': 'application/json'});
-            response.end(JSON.stringify({'admin_exists_with_details': true}));
-        }
-
-    }).catch(function (err) {
-        response.send({error: err});
-    });
+        customersCollection = customers;
+        statusesCollection = statuses;
+        workersCollection = workers;
+        filesCollection = files;
+        rolesWithStatusesCollection = rolesWithStatuses;
+        statusesWithRolesCollection = statusesWithRoles;
+        colorsCollection = colors;
+    })();
 
 });
 
 /*
-	this request verify if user that try to register to the system has a password that exists only in administrator hands
+    this request verify if user that try to register to the system has a password that exists only in administrator hands
 */
-
 app.post('/verifyTemporaryPassword', (request, response) => {
 
     console.log('entered verifyTemporaryPassword function');
@@ -418,7 +61,7 @@ app.post('/verifyTemporaryPassword', (request, response) => {
             response.writeHead(200, {'Content-Type': 'application/json'});
             response.end(JSON.stringify({notVerified: 'You do not have a correct temporary password , Please get it from the administrator'}));
         } else if (mongoUser.UserName === 'Admin' && mongoUser.Name === '' && mongoUser.eMail === '' && mongoUser.Password === '') {
-            if (mongoUser.TempPassword === firstTempPassword) { //admin did not yet change the temp password that he got from system
+            if (mongoUser.TempPassword === config.server.access.firstTempPassword) { //admin did not yet change the temp password that he got from system
                 response.writeHead(200, {'Content-Type': 'application/json'});
                 response.end(JSON.stringify({'adminChangedTempPassword': false}));
             } else { //admin changed temp password that he got from system
@@ -438,7 +81,7 @@ app.post('/verifyTemporaryPassword', (request, response) => {
 });
 
 /*
-	This request is to change the temporary password that the admin handle
+    This request is to change the temporary password that the admin handle
 */
 
 app.post('/changeTemporaryPassword', (request, response) => {
@@ -579,44 +222,6 @@ app.post('/addUser', (request, response) => {
 
 
 /*
-	This request is to login to the system
-*/
-app.post('/login', (request, response) => {
-
-    console.log('entered login function');
-    const user = request.body.LoginUser;
-    console.log(user.UserName);
-    //check if the username and the password exist
-    workersCollection.findOne({'UserName': user.UserName, 'Password': user.Password}).then(function (result) {
-        //if no match
-        if (!result) {
-            console.log('no match!');
-            response.writeHead(200, {'Content-Type': 'application/json'});
-            //post a response with The user name or password is incorrect. Try again.
-            response.end(JSON.stringify({noMatch: 'The user name or password is incorrect. Try again.'}));
-        } else {
-            //if there is matching
-            console.log(result.Name);
-            response.writeHead(200, {'Content-Type': 'application/json'});
-            //check if the user is admin and return a user details with 'adminUser':true
-            if (result.UserName === 'Admin') {
-                response.end(JSON.stringify({
-                    userLogin: {
-                        'adminUser': true, 'Role': result.Role, 'UserName': result.UserName, 'Name': result.Name,
-                        'eMail': result.eMail, 'Password': result.Password, 'Events': result.Events
-                    }
-                }));
-            } else { //if the user is not admin rturn user datails
-                response.end(JSON.stringify({userLogin: result}));
-            }
-        }
-
-    }).catch(function (err) {
-        response.send({error: err});
-    });
-});
-
-/*
 	This request is to contact only if the contact does not exist
 */
 app.post('/addContact', (request, response) => {
@@ -657,56 +262,6 @@ app.post('/addContact', (request, response) => {
     });
 
 
-});
-
-/*
-	This request is to get the list of contacts
-*/
-app.get('/getContacts', (request, response) => {
-
-    console.log('entered getContacts function');
-    //enter all members of customersCollection to array
-    customersCollection.find({}).toArray((error, result) => {
-        if (error) {
-            return response.status(500).send(error);
-        }
-        //response with ok, and with the contacts list
-        response.writeHead(200, {'Content-Type': 'application/json'});
-        response.end(JSON.stringify({'contacts': result}));
-    });
-
-});
-
-/*
-	This request is to get the list of files
-*/
-app.get('/getFiles', (request, response) => {
-
-    console.log('entered getFiles function');
-    //enter all members of customersCollection to array
-    filesCollection.find({}).toArray((error, result) => {
-        if (error) {
-            return response.status(500).send(error);
-        }
-        //response with ok, and with the contacts list
-
-        response.writeHead(200, {'Content-Type': 'application/json'});
-        response.end(JSON.stringify({'files': result}));
-    });
-
-});
-
-app.get('/getUserEvents/:UserName', (request, response) => {
-    console.log('/getUserEvents/' + request.params.UserName);
-    //enter all members of customersCollection to array
-    workersCollection.find({UserName: request.params.UserName}).toArray((error, result) => {
-        if (error) {
-            return response.status(500).send(error);
-        }
-        //response with ok, and with the users list
-        response.writeHead(200, {'Content-Type': 'application/json'});
-        response.end(JSON.stringify({'userEvents': result[0].Events}));
-    });
 });
 
 app.get('/getCustomerEvents/:UserName/:eventId', (request, response) => {
@@ -797,7 +352,7 @@ app.post('/deleteContact', (request, response) => {
 app.post('/deleteFile', (request, response) => {
     console.log('entered deleteContact function');
     const fileToDelete = request.body.file;
-    const path = './uploads/' + fileToDelete.FileName;
+    const path = config.server.data.uploadFolder + fileToDelete.FileName;
     try {
         fs.unlinkSync(path);
         filesCollection.deleteOne({'FileName': fileToDelete.FileName}, function (err, obj) {
@@ -820,25 +375,9 @@ app.post('/deleteFile', (request, response) => {
 });
 
 /*
-	This request is to get the statuses list
-*/
-app.get('/getStatusOptions', (request, response) => {
-    console.log('entered getStatusOptions function');
-    //enter all members of statusesCollection to array
-    statusesCollection.find({}).toArray((error, result) => {
-        if (error) {
-            return response.status(500).send(error);
-        }
-        //response with ok, and with the statuses list
-        response.writeHead(200, {'Content-Type': 'application/json'});
-        response.end(JSON.stringify({'statusOptions': result}));
-    });
-});
-
-/*
 	This request is to get the roles (every role with his statuses) list
 */
-app.get('/getRoles', (request, response) => {
+app.get('/ggetContactsetRoles', (request, response) => {
     //enter all members of rolesWithStatusesCollection to array
     rolesWithStatusesCollection.find({}).toArray((error, result) => {
         if (error) {
@@ -851,21 +390,7 @@ app.get('/getRoles', (request, response) => {
 
 });
 
-/*
-	This request is to get the colors of roles list
-*/
-app.get('/getRolesColors', (request, response) => {
-    //enter all members of colorsCollection to array
-    colorsCollection.find({}).toArray((error, result) => {
-        if (error) {
-            return response.status(500).send(error);
-        }
-        //response with ok, and with the colors list
-        response.writeHead(200, {'Content-Type': 'application/json'});
-        response.end(JSON.stringify({'colors': result}));
-    });
 
-});
 /*
 	This request is add a new status with an appropriate roles
 */
@@ -1367,66 +892,15 @@ app.post('/addOption', (request, response) => {
     response.end();
 });
 
-const storage = multer.diskStorage({ //multers disk storage settings
-    destination: function (req, file, cb) {
-        cb(null, './uploads/');
-    },
-    filename: function (req, file, cb) {
-        //var datetimestamp = Date.now();
-        //cb(null, file.fieldname + '-' + datetimestamp + '.' + file.originalname.split('.')[file.originalname.split('.').length - 1]);
-        filesCollection.updateOne(
-            {FileName: file.originalname},
-            {$set: {FileName: file.originalname}},
-            {upsert: true}
-        );
-        cb(null, file.originalname);
 
-    }
-});
-
-const upload = multer({ //multer settings
-    storage: storage
-}).single('file');
-
-/** API path that will upload the files */
 app.post('/uploadFile', function (req, res) {
     console.log('/uploadFile');
-    upload(req, res, function (err) {
-        if (err) {
-            res.json({errorCode: 1, errDesc: err});
-            return;
-        }
-        res.json({errorCode: 0, errDesc: null});
-    });
+    utils.uploadFile(filesCollection, req, res);
 });
 
-
 app.post('/sendEmail', (request, response) => {
-    console.log('sendEmail');
-    const emailData = request.body.emailData;
-
-    const mailOptions = {
-        from: SERVER_EMAIL,
-        to: emailData.mailRecipient,
-        subject: emailData.mailSubject,
-        text: emailData.mailText
-    };
-
-    if (emailData.attachmentFileName) {
-        mailOptions.attachments = [{path: './uploads/' + emailData.attachmentFileName}];
-    }
-
-    transporter.sendMail(mailOptions, function (error, info) {
-        if (error) {
-            console.log(error);
-            response.writeHead(500, {'Content-Type': 'application/json'});
-            response.end(JSON.stringify({error: 'mail failed to be sent to ' + emailData.mailRecipient}));
-        } else {
-            console.log('Email sent: ' + info.response);
-            response.writeHead(200, {'Content-Type': 'application/json'});
-            response.end(JSON.stringify({ok: 'mail has been sent successfully to ' + emailData.mailRecipient}));
-        }
-    });
+    console.log('/sendEmail');
+    utils.sendMail(request.body.emailData, response);
 });
 
 

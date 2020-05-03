@@ -9,28 +9,30 @@ const logger = logging.mainLogger;
 let status = {};
 
 async function init() {
-    let status = {};
-    await setDBConnectionStatus(utils.getErrorStatus(util.format(config.server.errors.DB.ERROR_DB_CONNECTION_FAILED,
-        config.storage, 'possible networking issues')), false);
+    let connStatus = {};
     logger.info(util.format('connecting to %s DB ...', config.storage));
     try {
+        await setDBConnectionStatus(utils.getErrorStatus(util.format(config.server.errors.DB.ERROR_DB_CONNECTION_FAILED,
+            config.storage, 'possible networking issues')), false);
         const {statusCode, statusMessage, dbHandle} = await storage.init(mediator, logger);
-        status = {
+        connStatus = {
             'code': statusCode,
             'message': statusMessage
         };
         if (statusCode !== 200) {
-            return status;
+            connStatus = await getDBConnectionStatus();
+            return {status: connStatus};
         }
-        status = {
+        connStatus = {
             'code': 200,
             'message': util.format('Connected to %s DB: %s', config.storage, statusMessage)
         };
-        await setDBConnectionStatus(status);
+        await setDBConnectionStatus(connStatus);
+        connStatus = await getDBConnectionStatus();
 
         // create db collections
         return {
-            status: status,
+            status: connStatus,
             customers: dbHandle.collection('customers'),
             statuses: dbHandle.collection('statuses'),
             workers: dbHandle.collection('workers'),
@@ -97,6 +99,31 @@ async function getUserLogInInfo(user) {
     return await storage.getItem({'UserName': user.UserName, 'Password': user.Password}, 'worker');
 }
 
+async function getItems(req, res, collectionName, desc, condition = {}, arrayValue='') {
+    let status = {
+        code: 200,
+        message: 'OK'
+    };
+    try {
+        let itemArray = await getAllCollectionItems(collectionName, condition);
+        //OK response with the list of all statuses
+        status.code = 200;
+        if (arrayValue) {
+            itemArray = itemArray[0][arrayValue];
+        }
+        const resJson = JSON.stringify({desc: itemArray}).replace('desc', desc);
+        status.message = JSON.parse(resJson);
+    } catch (err) {
+        logger.error(util.format('happened error[%s]', err));
+        status = module.exports.getErrorStatus(err);
+    }
+    const response = status.code === 200 ? JSON.stringify(status.message) : JSON.stringify(status);
+    logger.info(util.format("Response Data: %s", response));
+    res.writeHead(status.code, {'Content-Type': 'application/json'});
+    res.end(response);
+}
+
+
 exports.init = init;
 exports.getDBConnectionStatus = getDBConnectionStatus;
 exports.checkExistingStatusesAndRolesAndFiles = checkExistingStatusesAndRolesAndFiles;
@@ -104,3 +131,4 @@ exports.getAdminUser = getAdminUser;
 exports.addDefaultAdminUser = addDefaultAdminUser;
 exports.getUserLogInInfo = getUserLogInInfo;
 exports.getAllCollectionItems = getAllCollectionItems;
+exports.getItems = getItems;

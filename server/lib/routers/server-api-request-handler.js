@@ -16,7 +16,7 @@ async function getClientFile(req, res) {
     if (req.url.includes('CRM-Client')) {
         isOnlyClientRoot = true;
     }
-    utils.getFile(req, res, isOnlyClientRoot, mainPage);
+    utils.getFile(req, res, repo.getDBConnectionStatus, isOnlyClientRoot, mainPage);
 }
 
 async function getFirstSystemLoadStatus(req, res) {
@@ -117,7 +117,7 @@ async function logIn(req, res) {
 async function getStatusOptions(req, res) {
 
     logger.info('getStatusOptions');
-    await utils.getItems(req, res, repo.getAllCollectionItems, 'status', 'statusOptions');
+    await repo.getItems(req, res, 'status', 'statusOptions');
 }
 
 /*
@@ -126,7 +126,7 @@ async function getStatusOptions(req, res) {
 async function getRolesColors(req, res) {
 
     logger.info('getRolesColors');
-    await utils.getItems(req, res, repo.getAllCollectionItems, 'color', 'colors');
+    await repo.getItems(req, res, 'color', 'colors');
 }
 
 /*
@@ -134,7 +134,7 @@ async function getRolesColors(req, res) {
 */
 async function getFiles(req, res) {
     logger.info('getFiles');
-    await utils.getItems(req, res, repo.getAllCollectionItems, 'file', 'files');
+    await repo.getItems(req, res, 'file', 'files');
 }
 
 /*
@@ -142,7 +142,7 @@ async function getFiles(req, res) {
 */
 async function getContacts(req, res) {
     logger.info('getContacts');
-    await utils.getItems(req, res, repo.getAllCollectionItems, 'customer', 'contacts');
+    await repo.getItems(req, res, 'customer', 'contacts');
 }
 
 /*
@@ -150,7 +150,7 @@ async function getContacts(req, res) {
 */
 async function getRoles(req, res) {
     logger.info('getRoles');
-    await utils.getItems(req, res, repo.getAllCollectionItems, 'rolesWithStatus', 'roles');
+    await repo.getItems(req, res, 'rolesWithStatus', 'roles');
 }
 
 /*
@@ -158,16 +158,8 @@ async function getRoles(req, res) {
 */
 async function getUserEvents(req, res) {
     logger.info(util.format('/getUserEvents/%s', req.params.UserName));
-    await utils.getItems(req, res, repo.getAllCollectionItems, 'worker',
+    await repo.getItems(req, res, 'worker',
         'userEvents', {UserName: req.params.UserName}, 'Events');
-    /*workersCollection.find({UserName: req.params.UserName}).toArray((error, result) => {
-        if (error) {
-            return response.status(500).send(error);
-        }
-        //response with ok, and with the users list
-        response.writeHead(200, {'Content-Type': 'application/json'});
-        response.end(JSON.stringify({'userEvents': result[0].Events}));
-    });*/
 }
 
 

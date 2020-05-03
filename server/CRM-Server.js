@@ -44,7 +44,6 @@ app.listen(config.server.access.port, () => {
         statusesWithRolesCollection = statusesWithRoles;
         colorsCollection = colors;
     })();
-
 });
 
 /*

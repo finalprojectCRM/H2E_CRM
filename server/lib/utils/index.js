@@ -9,7 +9,7 @@ const logging = require('../utils/logging');
 const logger = logging.mainLogger;
 
 module.exports = {
-    obj2Props: function (obj,sep=" ",escapeAll=false) {
+    obj2Props: function (obj, sep = " ", escapeAll = false) {
         const escaped = {};
         const arr = [];
         Object.entries(obj).forEach(([key, value]) => {
@@ -97,57 +97,42 @@ module.exports = {
         logger.info('Response Data: ' + status.message);
         res.status(status.code).send(status.message);
     },
-    getFile: function (request, response, isOnlyClientRoot=false, mainPage = '') {
-        let filePath;
-        if (isOnlyClientRoot) {
-            filePath = util.format('%s%s', config.server.data.clientRoot, request.url);
-            if (mainPage) {
-                filePath += mainPage;
-            }
-        } else {
-            filePath = util.format('%s/%s%s', config.server.data.clientRoot, config.server.data.clientModulesRoot, request.url);
-        }
-        const ext = pathLib.extname(filePath);
-        let contentType = 'text/javascript';
-        if (ext === '.css') {
-            contentType = 'text/css';
-        }
-        if (ext === '.html') {
-            contentType = 'text/html';
-        }
-        console.log(util.format('rendering file: %s'), filePath);
-        fs.readFile(filePath, function (error, data) {
-            if (error) {
-                console.log(util.format('cannot get %s. Error: %s'), filePath, error);
-                const errorMessage = module.exports.getErrorStatus(util.format(config.server.errors.general.ERROR_NO_SUCH_FILE, filePath));
-                response.status(400).send({'error': errorMessage});
+    getFile: function (request, response, getDBConnectionStatus, isOnlyClientRoot = false, mainPage = '') {
+        (async function () {
+            const status = await getDBConnectionStatus();
+            if (status.code !== 200) {
+                logger.error(module.exports.getErrorStatus(util.format(config.server.errors.DB.ERROR_DB_CONNECTION_FAILED, config.storage, status.message)));
+                response.status(status.code).send({'error': status.message});
             } else {
-                response.writeHead(200, {'Content-Type': contentType});
-                response.end(data);
+                let filePath;
+                if (isOnlyClientRoot) {
+                    filePath = util.format('%s%s', config.server.data.clientRoot, request.url);
+                    if (mainPage) {
+                        filePath += mainPage;
+                    }
+                } else {
+                    filePath = util.format('%s/%s%s', config.server.data.clientRoot, config.server.data.clientModulesRoot, request.url);
+                }
+                const ext = pathLib.extname(filePath);
+                let contentType = 'text/javascript';
+                if (ext === '.css') {
+                    contentType = 'text/css';
+                }
+                if (ext === '.html') {
+                    contentType = 'text/html';
+                }
+                console.log(util.format('rendering file: %s'), filePath);
+                fs.readFile(filePath, function (error, data) {
+                    if (error) {
+                        console.log(util.format('cannot get %s. Error: %s'), filePath, error);
+                        const errorMessage = module.exports.getErrorStatus(util.format(config.server.errors.general.ERROR_NO_SUCH_FILE, filePath));
+                        response.status(400).send({'error': errorMessage});
+                    } else {
+                        response.writeHead(200, {'Content-Type': contentType});
+                        response.end(data);
+                    }
+                });
             }
-        });
-    },
-    getItems: async function(req, res, handler, collectionName, desc, condition = {}, arrayValue='') {
-        let status = {
-            code: 200,
-            message: 'OK'
-        };
-        try {
-            let itemArray = await handler(collectionName, condition);
-            //OK response with the list of all statuses
-            status.code = 200;
-            if (arrayValue) {
-                itemArray = itemArray[0][arrayValue];
-            }
-            const resJson = JSON.stringify({desc: itemArray}).replace('desc', desc);
-            status.message = JSON.parse(resJson);
-        } catch (err) {
-            logger.error(util.format('happened error[%s]', err));
-            status = module.exports.getErrorStatus(err);
-        }
-        const response = status.code === 200 ? JSON.stringify(status.message) : JSON.stringify(status);
-        logger.info(util.format("Response Data: %s", response));
-        res.writeHead(status.code, {'Content-Type': 'application/json'});
-        res.end(response);
+        })();
     }
 };

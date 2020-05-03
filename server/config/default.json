@@ -48,7 +48,6 @@
     "writeConcern": "journal=true",
     "assetCollection": "assets",
     "replicaSet": "",
-    "enableMongoMetrics": true,
     "uriPrefix": "mongodb",
     "clusterUrl": "localhost:27017",
     "authType": "none",

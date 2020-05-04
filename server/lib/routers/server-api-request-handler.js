@@ -354,7 +354,6 @@ module.exports = {
         await repo.deleteItemAndReturnUpdatedList(req, res, fileToDelete, 'file', {fileDeleted: fileDeleted});
         fs.unlinkSync(path);
     },
-
     deleteUser: async function (req, res) {
         logger.info('deleteUser');
         //the contact to delete with its details
@@ -362,33 +361,9 @@ module.exports = {
         logger.info('statusToDelete :' + userToDelete);
         await repo.deleteItemAndReturnUpdatedList(req, res, {'UserName': userToDelete}, 'worker',
             {'showUsers': true, 'users': {}}, 'users');
+    },
+    getContact: async function (req, res) {
+        await repo.getItems(req, res, 'customer',
+            'contacts', {'PhoneNumber': req.params.PhoneNumber});
     }
-    /*
-        app.post('/deleteUser', (request, response) => {
-    //add new contact
-            workersCollection.findOne({'UserName': userToDelete}).then(function (result) {
-                if (!result) {
-                    console.log('did not find user to delete ');
-                } else { //check if the contact already exists
-                    workersCollection.deleteOne({'UserName': result.UserName}, function (err, obj) {
-                        if (err) throw err;
-                        console.log('1 user deleted');
-                        workersCollection.find({}).toArray((error, result) => {
-                            if (error) {
-                                return response.status(500).send(error);
-                            }
-                            response.writeHead(200, {'Content-Type': 'application/json'});
-                            response.end(JSON.stringify({'showUsers': true, 'users': result}));
-                        });
-                    });
-
-                    console.log('User name that found ' + result.UserName);
-                }
-
-
-            }).catch(function (err) {
-                response.send({error: err});
-            });
-        });
-        */
 };

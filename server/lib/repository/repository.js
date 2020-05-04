@@ -8,6 +8,19 @@ const logging = require('../utils/logging');
 const logger = logging.mainLogger;
 let status = {};
 
+async function setDBConnectionStatus(connStatus, isLogMessage = true) {
+    status = connStatus;
+    if (isLogMessage) {
+        logger.info(status.message);
+    }
+}
+
+async function getDBConnectionStatus() {
+    logger.info(util.format('DB Connection Status Code: [%s]', status.code));
+    logger.info(util.format('DB Connection Status Message: [%s]', status.message));
+    return status;
+}
+
 async function init() {
     let connStatus = {};
     logger.info(util.format('connecting to %s DB ...', config.storage));
@@ -46,19 +59,6 @@ async function init() {
         logger.error(util.format('Error while trying to connect: %s', err));
         setTimeout(init, config.mongo.retryInterval);
     }
-}
-
-async function setDBConnectionStatus(connStatus, isLogMessage = true) {
-    status = connStatus;
-    if (isLogMessage) {
-        logger.info(status.message);
-    }
-}
-
-async function getDBConnectionStatus() {
-    logger.info(util.format('DB Connection Status Code: [%s]', status.code));
-    logger.info(util.format('DB Connection Status Message: [%s]', status.message));
-    return status;
 }
 
 /*
@@ -166,7 +166,6 @@ async function getCustomerEvents(req, res, collectionName) {
     res.writeHead(status.code, {'Content-Type': 'application/json'});
     res.end(response);*/
 }
-
 
 async function deleteItemAndReturnUpdatedList(req, res, item, collectionName, jsonObj, desc) {
     let status = {

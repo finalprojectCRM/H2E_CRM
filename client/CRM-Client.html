@@ -258,8 +258,8 @@
                     ng-style="{'background-color': contactsNavColor}"><a><i class="fa fa-fw fa-user"></i></p>
                     Customers</a></li>
                 <li ng-click="getSpecificEvents();spesificContactsNavColor='#ff0066';contactsNavColor='#004d99';usersNavColor='#004d99';calendarNavColor='#004d99';settingsNavColor='#004d99'"
-                    ng-style="{'background-color': spesificContactsNavColor}"><a><i class="fa fa-fw fa-user"></i></p>
-                    Handle customers</a></li>
+                    ng-style="{'background-color': spesificContactsNavColor}"><a><i class="glyphicon glyphicon-list-alt"></i></p>
+                    Events</a></li>
                 <li ng-click="calendarFunction() ;calendarNavColor='#ff0066';contactsNavColor='#004d99';spesificContactsNavColor='#004d99';usersNavColor='#004d99';settingsNavColor='#004d99'"
                     ng-style="{'background-color': calendarNavColor}" id="display_calendar"><a><i
                         class="fa fa-calendar"></i></p>Calendar</a></li>
@@ -660,7 +660,7 @@
 
 
                             <td><i class="fa fa-calendar" style="font-size:24px;color:#cc99ff" aria-hidden="true" ng-click="calendarContact(contactInfo);"></i></td>
-                            <td ng-if="event.id!=-1"><i class="fa fa-address-card-o" style="font-size:24px;color:#00b3b3" aria-hidden="true" ng-click="sendMailModal(contactInfo.eMail)"></i></td>
+                            <td ng-if="event.id!=-1"><i class="fa fa-address-card-o" style="font-size:24px;color:#00b3b3" aria-hidden="true" ng-click="getContactEventByPhone(event.id)"></i></td>
 
                             <!--<td ng-show="contactIsEdit==false"><i class="fa fa-edit"
                                                                   style="font-size:25px;color:#008fb3"

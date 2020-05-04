@@ -278,6 +278,41 @@
                     return emailsListStr;
                 }
 
+                function getPhoneNumberEventId(eventId){
+                    let splitedStr = eventId.split(' ');
+                    return splitedStr[splitedStr.length-1];
+
+                }
+
+                $scope.getContactEventByPhone = function (eventId)
+                {
+                    $log.log('eventId : '+eventId);
+                    const phoneContact = getPhoneNumberEventId(eventId);
+                    $log.log('phoneContact : '+phoneContact);
+
+                    $http.get(SERVER_URI + '/getContact/' + phoneContact).then(
+                        function (response) {
+                            if(response.data.contacts) {
+                                if(response.data.contacts.length == 0) {
+                                    $scope.message = 'This Contact does not exist';
+                                    $scope.messageType = 'ERROR';
+                                    angular.element(document.querySelector('#msgModal')).modal('show');
+                                    return;
+                                }
+                                $scope.contactsInfo = response.data.contacts;
+                                $scope.getContactsFunction('contactEvent');
+
+                            }
+                            $log.log('contactsInfo '+ $scope.contactsInfo);
+                        },
+                        function (response) { //failure callback
+                        }
+                    );
+
+
+                }
+
+
                 /*
                     a modal that pops up when press on delete file,
                     delete file by running over file list
@@ -551,13 +586,7 @@
                 $scope.goToContact = function () {
 
                     //get contacts phone number as an ID
-                    const contactPhoneNumber = $scope.contactEvent.split(' ');
-
-                    //get contacts list
-                    $scope.getContactsFunction();
-
-                    //put contacts phone number in search bar
-                    $scope.searchContacts = contactPhoneNumber[contactPhoneNumber.length - 1];
+                    $scope.getContactEventByPhone( $scope.contactEvent);
 
                     //hide the 'document.querySelector('#editOrDeleteEvent')' modal
                     angular.element(document.querySelector('#editOrDeleteEvent')).modal('hide');
@@ -1446,7 +1475,7 @@
                 /*
                     a function for showing the list of contacts
                 */
-                $scope.getContactsFunction = function () {
+                $scope.getContactsFunction = function (flag) {
                     /*
                     $scope.showUpdateExpression = true;
                     $scope.showUpdateInput = false;
@@ -1461,8 +1490,11 @@
                     $scope.showWorkersEvents = false;
 
 
+                    if(!flag)
+                    {
+                        $scope.getContactsList();
 
-                    $scope.getContactsList();
+                    }
                     $scope.getOptionsList();
                     $scope.getRolesList();
                 };

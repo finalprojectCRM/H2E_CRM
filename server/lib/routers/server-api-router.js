@@ -136,6 +136,9 @@ router.route('/deleteFile')
 router.route('/deleteUser')
     .post(serverApiRequestHandler.deleteUser);
 
+router.route('/getContact/:PhoneNumber')
+    .get(serverApiRequestHandler.getContact);
+
 
 router.route('*')
     .get(utils.handleInvalidRequest);

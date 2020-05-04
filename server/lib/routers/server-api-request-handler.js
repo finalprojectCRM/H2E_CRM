@@ -180,18 +180,14 @@ module.exports = {
             const newTempPassword = req.body.newTempPassword;
             //update in workersCollection the the password of user with a new password
             logger.info(util.format('newTempPassword=%s', newTempPassword));
-            const cursor = await repo.updateUserPassword({'UserName': 'Admin'}, {TempPassword: newTempPassword.TempPassword});
-            if (cursor.modifiedCount === 0) {
-                // noinspection ExceptionCaughtLocallyJS
-                throw new Error('The Password change is failed');
-            }
+            await repo.updateUserPassword({'UserName': 'Admin'}, {TempPassword: newTempPassword.TempPassword});
             status.code = 200;
-            status.message = {'success': 'The temp password has been changed successfully'};
+            status.message = {'success': 'The temporary password has been changed successfully'};
         } catch (err) {
             logger.error(util.format('happened error[%s]', err));
-            status = utils.getErrorStatus(err);
+            status = utils.getErrorStatus('Error happened during the temporary password change');
         }
-        const response = status.code === 200 ? JSON.stringify(status.message) : JSON.stringify(status);
+        const response = JSON.stringify(status.message);
         logger.info(util.format("Response Data: %s", response));
         res.writeHead(status.code, {'Content-Type': 'application/json'});
         res.end(response);
@@ -300,28 +296,28 @@ module.exports = {
         logger.info(util.format('/getCustomerEvents/%s/%s', req.params.UserName, req.params.eventId));
         await repo.getCustomerEvents(req, res, 'worker');
     },
-/*
-    app.get('/getCustomerEvents/:UserName/:eventId', (request, response) => {
-        console.log('/getCustomerEvents/' + request.params.UserName + '/' + request.params.eventId);
-        workersCollection.find(
-            {
-                'UserName': request.params.UserName,
-                'Events.id': request.params.eventId}).forEach(function (doc) {
-            doc.Events = doc.Events.filter(function (event) {
-                if (event.id === request.params.eventId) {
-                    return event;
+    /*
+        app.get('/getCustomerEvents/:UserName/:eventId', (request, response) => {
+            console.log('/getCustomerEvents/' + request.params.UserName + '/' + request.params.eventId);
+            workersCollection.find(
+                {
+                    'UserName': request.params.UserName,
+                    'Events.id': request.params.eventId}).forEach(function (doc) {
+                doc.Events = doc.Events.filter(function (event) {
+                    if (event.id === request.params.eventId) {
+                        return event;
+                    }
+                });
+                console.dir(doc.Events);
+                if (doc.Events) {
+                    response.writeHead(200, {'Content-Type': 'application/json'});
+                    response.end(JSON.stringify({ 'customerEvents': doc.Events}));
+                } else {
+                    response.end(JSON.stringify({ 'customerEvents': {}}));
                 }
             });
-            console.dir(doc.Events);
-            if (doc.Events) {
-                response.writeHead(200, {'Content-Type': 'application/json'});
-                response.end(JSON.stringify({ 'customerEvents': doc.Events}));
-            } else {
-                response.end(JSON.stringify({ 'customerEvents': {}}));
-            }
         });
-    });
-*/
+    */
 
     uploadFile: async function (req, res) {
         logger.info('/uploadFile');
@@ -333,7 +329,7 @@ module.exports = {
         utils.sendMail(req.body.emailData, res);
     },
 
-    deleteContact: async function(req, res) {
+    deleteContact: async function (req, res) {
         logger.info('deleteContact');
         //the contact to delete with its details
         const contactToDelete = req.body.contact;
@@ -348,7 +344,7 @@ module.exports = {
         await repo.deleteItemAndReturnUpdatedList(req, res, itemToDelete, 'customer', {'contacts': {}}, 'contacts');
     },
 
-    deleteFile: async function(req, res) {
+    deleteFile: async function (req, res) {
         logger.info('deleteFile');
         //the contact to delete with its details
         const fileToDelete = req.body.file;
@@ -359,7 +355,7 @@ module.exports = {
         fs.unlinkSync(path);
     },
 
-    deleteUser: async function(req, res) {
+    deleteUser: async function (req, res) {
         logger.info('deleteUser');
         //the contact to delete with its details
         const userToDelete = req.body.username;
@@ -367,32 +363,32 @@ module.exports = {
         await repo.deleteItemAndReturnUpdatedList(req, res, {'UserName': userToDelete}, 'worker',
             {'showUsers': true, 'users': {}}, 'users');
     }
-/*
-    app.post('/deleteUser', (request, response) => {
-//add new contact
-        workersCollection.findOne({'UserName': userToDelete}).then(function (result) {
-            if (!result) {
-                console.log('did not find user to delete ');
-            } else { //check if the contact already exists
-                workersCollection.deleteOne({'UserName': result.UserName}, function (err, obj) {
-                    if (err) throw err;
-                    console.log('1 user deleted');
-                    workersCollection.find({}).toArray((error, result) => {
-                        if (error) {
-                            return response.status(500).send(error);
-                        }
-                        response.writeHead(200, {'Content-Type': 'application/json'});
-                        response.end(JSON.stringify({'showUsers': true, 'users': result}));
+    /*
+        app.post('/deleteUser', (request, response) => {
+    //add new contact
+            workersCollection.findOne({'UserName': userToDelete}).then(function (result) {
+                if (!result) {
+                    console.log('did not find user to delete ');
+                } else { //check if the contact already exists
+                    workersCollection.deleteOne({'UserName': result.UserName}, function (err, obj) {
+                        if (err) throw err;
+                        console.log('1 user deleted');
+                        workersCollection.find({}).toArray((error, result) => {
+                            if (error) {
+                                return response.status(500).send(error);
+                            }
+                            response.writeHead(200, {'Content-Type': 'application/json'});
+                            response.end(JSON.stringify({'showUsers': true, 'users': result}));
+                        });
                     });
-                });
 
-                console.log('User name that found ' + result.UserName);
-            }
+                    console.log('User name that found ' + result.UserName);
+                }
 
 
-        }).catch(function (err) {
-            response.send({error: err});
+            }).catch(function (err) {
+                response.send({error: err});
+            });
         });
-    });
-    */
+        */
 };

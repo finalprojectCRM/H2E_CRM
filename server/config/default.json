@@ -9,7 +9,7 @@
     "name": "CRM",
     "access" : {
       "firstTempPassword": "12345678",
-      "port": 3000
+      "port": 5000
     },
     "api": {
       "base": "crm",

@@ -17,6 +17,7 @@
                 let statusRole;
                 let loggedInUser;
                 let incorectPassword = false;
+                let incorectNewTempPassword = false;
                 let incorectCurrentPassword = false;
                 let missingStatusSystemFiled = false;
                 let missingDeleteStatusSystemField = false;
@@ -35,6 +36,7 @@
                 let missingDetailsOutsideAddEvent = false;
                 let missingDetailsEditEvent = false;
                 let missingUserToDelete = false;
+                let invalidTempPassword = false;
                 let selectedItemPart1;
                 let selectedItemPart2;
                 let deletedStatus;
@@ -45,7 +47,7 @@
                 let evenBeforeUpdate;
                 let userToDelete;
                 let contactsPhone = [];
-                const SERVER_URI = 'http://localhost:3000';
+                const SERVER_URI = 'http://localhost:5000';
 
                 $scope.account = false;
                 $scope.click = false;
@@ -1098,13 +1100,20 @@
                     angular.element(document.querySelector('#addFileModal')).modal('show');
                 };
 
+
+
+                $scope.showModalCurTempPassword = function (){
+                    angular.element(document.querySelector('#validationCurrentTempPasswordModal')).modal('show');
+
+                };
+
                 /*
-                    a validation function with http.post request to server for temporary password
-                    checks if the temp password from client side
-                    is equal to the temp password in server side
-                */
+                   a validation function with http.post request to server for temporary password
+                   checks if the temp password from client side
+                   is equal to the temp password in server side
+               */
                 $scope.validationOfTempPassword = function (tempPasswordFromClient) {
-                    //$log.log('validationOfTempPassword :' + tempPasswordFromClient);
+                    $log.log('validationOfTempPassword :' + tempPasswordFromClient);
                     $http.post(SERVER_URI + '/verifyTemporaryPassword', {
                         tempPassword: tempPasswordFromClient
                     }).then(
@@ -1115,6 +1124,11 @@
                             //verified passwords (not for Admin user)
                             if (response.data.verified) {
                                 console.log('is verified');
+                                if(loggedInUser!==undefined && loggedInUser.adminUser) {
+                                    angular.element(document.querySelector('#changeTemporaryPasswordModal')).modal('show');
+                                    return;
+
+                                }
                                 $scope.newTempPasswordPage = false;
                                 $scope.tempPasswordPage = false;
                                 $scope.registerPage = true;
@@ -1133,7 +1147,15 @@
                                 $scope.Admin = true;
                             } else { //not correct temprorary password
                                 console.log('validationOfTempPassword: response.data.notVerified=' + response.data.notVerified);
-                                $scope.message = response.data.notVerified;
+                                // eslint-disable-next-line no-undef
+                                if(loggedInUser!==undefined && loggedInUser.adminUser) {
+                                    $scope.message = 'Invalid temporary password , please try again.';
+                                    invalidTempPassword = true;
+                                }
+                                else {
+                                    $scope.message = response.data.notVerified;
+
+                                }
                                 $scope.messageType = 'ERROR';
                                 angular.element(document.querySelector('#msgModal')).modal('show');
                             }
@@ -1149,35 +1171,52 @@
                 /*
                     a function for administrator for changing the temp password
                 */
-                $scope.changeTempPassword = function () {
+                $scope.changeTempPassword = function (newTemporaryPassword,newTemporaryValidationPassword) {
                     //a regular expression for a valid password
                     const rePassword = /^((?!.*[\s])(?=.*[A-Z])(?=.*\d))(?=.*?[#?!@$%^&*-]).{8,15}$/;
 
                     //check the length of the password and if it fits the regular expression pattern
-                    if ($scope.newTemporaryPassword === undefined || !rePassword.test($scope.newTemporaryPassword)) {
+                    if (newTemporaryPassword === undefined || !rePassword.test(newTemporaryPassword)) {
                         $scope.message = 'The password must contain at least 8 to 15 characters , at least : one capital letter or one small letter, one number, and one of the following special characters: #?! @ $% ^ & * -';
                         $scope.messageType = 'ERROR';
+                        $scope.newTempPasswordSettings = undefined;
+                        $scope.verifyNewTempPasswordSettings = undefined;
                         angular.element(document.querySelector('#msgModal')).modal('show');
+                        incorectNewTempPassword = true;
                         return;
                     }
 
-                    //check if the two password equals
-                    if ($scope.newTemporaryPassword !== $scope.newTemporaryValidationPassword) {
+                    //check if the two password are equal
+                    if (newTemporaryPassword !== newTemporaryValidationPassword) {
                         $scope.message = 'The two passwords do not match';
                         $scope.messageType = 'ERROR';
                         angular.element(document.querySelector('#msgModal')).modal('show');
                         $scope.newTemporaryValidationPassword = undefined;
+                        incorectNewTempPassword = true;
+
                         return;
                     }
 
                     //an http request to server to update the temporary password
-                    const newTempPassword = {TempPassword: $scope.newTemporaryPassword};
+                    const newTempPassword = {TempPassword: newTemporaryPassword};
                     $http.post(SERVER_URI + '/changeTemporaryPassword', {
                         newTempPassword: newTempPassword
                     }).then(
                         function (response) { //success callback
-
-                            $scope.newTemporaryPassword = $scope.newTemporaryValidationPassword = undefined;
+                            $log.log("response.data=" + JSON.stringify(response.data));
+                            if(response.data.error) {
+                                toaster.pop('error', response.data.error, '');
+                                return;
+                            }
+                            $scope.newTemporaryPassword = $scope.newTemporaryValidationPassword = $scope.newTempPasswordSettings =$scope.verifyNewTempPasswordSettings = undefined;
+                            $log.log('loggedInUser ;'+loggedInUser);
+                            $log.log('loggedInUser.isAdmin ;'+loggedInUser.isAdmin);
+                            if(loggedInUser!==undefined && loggedInUser.adminUser){
+                                if(response.data.success) {
+                                    toaster.pop('success', response.data.success, '');
+                                    return;
+                                }
+                            }
                             $scope.registerPage = true;
                             $scope.registrationUserName = 'Admin';
                             $scope.Admin = true;
@@ -1928,6 +1967,7 @@
                     and sending it to server
                 */
                 $scope.updateRoleWithStatuses = function () {
+                    $log.log('Hiii');
                     //if there was no role chosen show an error modal
                     if (category === undefined) {
                         $scope.message = 'You must choose a role';
@@ -2482,6 +2522,11 @@
                         angular.element(document.querySelector('#changePasswordModal')).modal('show');
                         incorectPassword = false;
                     }
+                    //modal for incorect password
+                    if (incorectNewTempPassword) {
+                        angular.element(document.querySelector('#changeTemporaryPasswordModal')).modal('show');
+                        incorectNewTempPassword = false;
+                    }
 
                     //modal for incorect current password
                     if (incorectCurrentPassword) {
@@ -2547,6 +2592,10 @@
                     if (missingFileToDelete) {
                         angular.element(document.querySelector('#deleteFileModal')).modal('show');
                         missingFileToDelete = false;
+                    }
+                    if (invalidTempPassword) {
+                        angular.element(document.querySelector('#validationCurrentTempPasswordModal')).modal('show');
+                        invalidTempPassword = false;
                     }
                 };
 

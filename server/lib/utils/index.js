@@ -85,7 +85,7 @@ module.exports = {
     getErrorStatus: function (errorMessage, errorCode) {
         const status = {};
         status.code = errorCode ? errorCode : 400;
-        status.message = util.format("ERROR: %s", _.replace(errorMessage, /Error: /gi, ""));
+        status.message = {"error": util.format("%s", _.replace(errorMessage, /Error: /gi, ""))};
         return status;
     },
     handleInvalidRequest: async function (req, res) {

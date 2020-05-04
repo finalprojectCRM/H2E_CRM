@@ -1,7 +1,0 @@
-{
-  "mongo": {
-      "clusterUrl": "localhost:27017",
-      "connectTimeoutMS": 1000,
-      "dbName": "CRM_DB_1"
-  }
-}

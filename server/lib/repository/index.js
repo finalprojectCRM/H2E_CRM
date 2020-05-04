@@ -9,5 +9,8 @@ module.exports = {
     getUserLogInInfo: repo.getUserLogInInfo,
     getAllCollectionItems: repo.getAllCollectionItems,
     getItems: repo.getItems,
-    updateFileCollection: repo.updateFileCollection
+    updateFileCollection: repo.updateFileCollection,
+    updateUserPassword: repo.updateUserPassword,
+    deleteItemAndReturnUpdatedList: repo.deleteItemAndReturnUpdatedList,
+    getCustomerEvents: repo.getCustomerEvents
 };

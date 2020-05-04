@@ -10,5 +10,6 @@ module.exports = {
     addItems: storage.addItems,
     getItem: storage.getItem,
     deleteItem: storage.deleteItem,
-    getAllItems: storage.getAllItems
+    getAllItems: storage.getAllItems,
+    getCollection: storage.getCollection
 };

@@ -105,6 +105,10 @@ router.route('/getRoles')
 router.route('/getUserEvents/:UserName')
     .get(serverApiRequestHandler.getUserEvents);
 
+router.route('/getCustomerEvents/:UserName/:eventId')
+    .get(serverApiRequestHandler.getCustomerEvents);
+
+
 router.route('/uploadFile')
     .post(serverApiRequestHandler.uploadFile);
 
@@ -113,6 +117,25 @@ router.route('/sendEmail')
 
 router.route('/verifyTemporaryPassword')
     .post(serverApiRequestHandler.verifyTemporaryPassword);
+
+router.route('/changeTemporaryPassword')
+    .post(serverApiRequestHandler.changeTemporaryPassword);
+
+router.route('/verifyCurrentPassword')
+    .post(serverApiRequestHandler.verifyCurrentPassword);
+
+router.route('/changeCurrentPassword')
+    .post(serverApiRequestHandler.changeCurrentPassword);
+
+router.route('/deleteContact')
+    .post(serverApiRequestHandler.deleteContact);
+
+router.route('/deleteFile')
+    .post(serverApiRequestHandler.deleteFile);
+
+router.route('/deleteUser')
+    .post(serverApiRequestHandler.deleteUser);
+
 
 router.route('*')
     .get(utils.handleInvalidRequest);

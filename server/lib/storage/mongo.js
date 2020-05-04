@@ -78,12 +78,20 @@ module.exports = {
         };
     },
 
+    getCollection: function (type) {
+        return dbHandle.collection(collections[type]);
+    },
+
     addItem: async function (item, type) {
         return await dbHandle.collection(collections[type]).insertOne(item);
     },
 
-    updateItem: async function (item, type) {
-        await dbHandle.collection(collections[type]).updateOne(item, {$set : item}, {upsert: true});
+    updateItem: async function (item, type, changedItem = undefined) {
+        if (changedItem) {
+            return dbHandle.collection(collections[type]).updateOne(item, {$set: changedItem});
+        } else {
+            return dbHandle.collection(collections[type]).updateOne(item, {$set: item}, {upsert: true});
+        }
     },
 
     addItems: async function (items, type) {
@@ -95,20 +103,16 @@ module.exports = {
     },
 
     populateEmptyCollectionByDefaultValue: async function (item, type, logger) {
-        try {
-            const count = await module.exports.countItems(type);
-            logger.info('found %s documents in %s collection', count, collections[type]);
-            if (count === 0) {
-                logger.info('collection %s is empty, so adding default item[%s]', collections[type], JSON.stringify(item));
-                await module.exports.addItems(item, type);
-            }
-        } catch (err) {
-            logger.error(util.format('happened error[%s]', err));
+        const count = await module.exports.countItems(type);
+        logger.info('found %s documents in %s collection', count, collections[type]);
+        if (count === 0) {
+            logger.info('collection %s is empty, so adding default item[%s]', collections[type], JSON.stringify(item));
+            await module.exports.addItems(item, type);
         }
     },
 
-    deleteItem: async function (id, type) {
-        await dbHandle.collection(collections[type]).deleteOne({_id: id});
+    deleteItem: async function (item, type) {
+        return dbHandle.collection(collections[type]).deleteOne(item);
     },
 
     getItem: async function (item, type) {

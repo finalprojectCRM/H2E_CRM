@@ -25,7 +25,6 @@ app.use(morgan('dev'));
 app.use(helmet());
 app.use(config.server.api.root, serverApiRouter);
 
-
 //start server
 app.listen(config.server.access.port, () => {
     logger.info(util.format('%s server is listening on port %s', config.server.name, config.server.access.port));
@@ -46,82 +45,9 @@ app.listen(config.server.access.port, () => {
 
 
 /*
-    This request is to change the temporary password that the admin handle
-*/
-app.post('/changeTemporaryPassword', (request, response) => {
-
-    console.log('entered changeTemporaryPassword function');
-
-    const newTempPassword = request.body.newTempPassword;
-    console.log('NewTempPassword: ' + newTempPassword);
-    //update in workersCollection the filed TempPassword that exists in admin with a new password
-    workersCollection.update({'UserName': 'Admin'}, {$set: {TempPassword: newTempPassword.TempPassword}}, function (err, obj) {
-        if (err) throw err;
-        console.log('succeeded changing temp password');
-
-    });
-    //response with ok
-    response.writeHead(200, {'Content-Type': 'application/json'});
-    response.end(JSON.stringify({'success': 'The temp password has been changed successfully'}));
-
-});
-
-/*
-  	This request is to verify the match between the current password of user to the given password
-*/
-app.post('/verificationCurrentPassword', (request, response) => {
-
-    console.log('entered verificationCurrentPassword function');
-
-    const loggedInCurrentPassword = request.body.loggedInCurrentPassword;
-    //try to find in user collection a user with a given username and password
-    workersCollection.findOne({
-        'UserName': loggedInCurrentPassword.username,
-        'Password': loggedInCurrentPassword.currentPassword
-    }).then(function (mongoUser) {
-
-        if (mongoUser == null) { //no such username with this current password
-            console.log('entered if ');
-            response.writeHead(200, {'Content-Type': 'application/json'});
-            response.end(JSON.stringify({'notVerified': 'The current password is incorrect, please try again.'}));
-        } else { //found the user that the username and the current password match
-            console.log('entered else');
-            response.writeHead(200, {'Content-Type': 'application/json'});
-            response.end(JSON.stringify({'verified': true}));
-        }
-    });
-
-
-});
-
-/*
-	This request is to change the current password that of user
-*/
-
-app.post('/changeCurrentPassword', (request, response) => {
-
-    console.log('entered changeCurrentPassword function');
-
-    const loggedInNewPassword = request.body.loggedInNewPassword;
-
-    //update in workersCollection the the password of user with a new password
-    workersCollection.update({'UserName': loggedInNewPassword.username},
-        {$set: {'Password': loggedInNewPassword.newPassword}}, function (err, obj) {
-            if (err) throw err;
-            //return ok
-            response.writeHead(200, {'Content-Type': 'application/json'});
-            response.end(JSON.stringify({'success': 'The Password has been changed successfully'}));
-
-
-        });
-});
-
-/*
 	This request is to add a new user to system
 */
-
 app.post('/addUser', (request, response) => {
-
     console.log('entered addUser function');
     let user = request.body.user;
     const userEvents = [];
@@ -169,8 +95,6 @@ app.post('/addUser', (request, response) => {
                         }
                     }));
                     console.log('admin register');
-
-
                 });
             } else {
                 //if the username already exists and he is not the Admin
@@ -178,7 +102,6 @@ app.post('/addUser', (request, response) => {
                 response.end(JSON.stringify({userExists: 'This user name already exists.'}));
             }
         }
-
     }).catch(function (err) {
         response.send({error: err});
     });
@@ -196,7 +119,6 @@ app.post('/addContact', (request, response) => {
 
     //check if the contact is already exist by the key - the PhoneNumber
     customersCollection.findOne({'PhoneNumber': contact.PhoneNumber}).then(function (result) {
-
         if (!result) {
             //if this contact does not exist in the system - add a new contact with his details
             customersCollection.insertOne(
@@ -211,41 +133,14 @@ app.post('/addContact', (request, response) => {
                 }, function (err, res) {
                     if (err) throw err;
                 });
-
-
             response.end();
         } else { //check if the contact already exists
             response.writeHead(200, {'Content-Type': 'application/json'});
             //response with error massage
             response.end(JSON.stringify({'phoneExists': 'ERROR : this phone number already exists, change it or search for this user.'}));
         }
-
-
     }).catch(function (err) {
         response.send({error: err});
-    });
-
-
-});
-
-app.get('/getCustomerEvents/:UserName/:eventId', (request, response) => {
-    console.log('/getUserEvents/' + request.params.UserName + '/' + request.params.eventId);
-    workersCollection.find(
-        {
-            'UserName': request.params.UserName,
-            'Events.id': request.params.eventId}).forEach(function (doc) {
-        doc.Events = doc.Events.filter(function (event) {
-            if (event.id === request.params.eventId) {
-                return event;
-            }
-        });
-        console.dir(doc.Events);
-        if (doc.Events) {
-            response.writeHead(200, {'Content-Type': 'application/json'});
-            response.end(JSON.stringify({ 'customerEvents': doc.Events}));
-        } else {
-            response.end(JSON.stringify({ 'customerEvents': {}}));
-        }
     });
 });
 
@@ -285,75 +180,6 @@ app.post('/getUsers', (request, response) => {
 
 
 });
-/*
-	This request is to delete contact
-*/
-app.post('/deleteContact', (request, response) => {
-    console.log('entered deleteContact function');
-    //the contact to delete with his details
-    const contactToDelete = request.body.contact;
-    console.log('contactToDelete :' + contactToDelete);
-    //delete the contact from contacts collection by his all details
-    customersCollection.deleteOne({
-        'Name': contactToDelete.Name,
-        'Status': contactToDelete.Status,
-        'PhoneNumber': contactToDelete.PhoneNumber,
-        'eMail': contactToDelete.eMail,
-        'Address': contactToDelete.Address
-    }, function (err, obj) {
-        if (err) throw err;
-        console.log('1 document deleted');
-
-    });
-    response.writeHead(200, {'Content-Type': 'application/json'});
-    //response with ok
-    response.end();
-});
-
-/*
-	This request is to delete file
-*/
-app.post('/deleteFile', (request, response) => {
-    console.log('entered deleteContact function');
-    const fileToDelete = request.body.file;
-    const path = config.server.data.uploadFolder + fileToDelete.FileName;
-    try {
-        fs.unlinkSync(path);
-        filesCollection.deleteOne({'FileName': fileToDelete.FileName}, function (err, obj) {
-            if (err) throw err;
-            console.log('1 document deleted');
-            if (obj) {
-                const fileDeleted = 'The file ' + fileToDelete.FileName + ' has been deleted.';
-                response.writeHead(200, {'Content-Type': 'application/json'});
-                response.end(JSON.stringify({fileDeleted: fileDeleted}));
-            }
-
-
-        });
-        //file removed
-    } catch (err) {
-        console.error(err);
-    }
-
-
-});
-
-/*
-	This request is to get the roles (every role with his statuses) list
-*/
-app.get('/ggetContactsetRoles', (request, response) => {
-    //enter all members of rolesWithStatusesCollection to array
-    rolesWithStatusesCollection.find({}).toArray((error, result) => {
-        if (error) {
-            return response.status(500).send(error);
-        }
-        //response with ok, and with the roles list
-        response.writeHead(200, {'Content-Type': 'application/json'});
-        response.end(JSON.stringify({'roles': result}));
-    });
-
-});
-
 
 /*
 	This request is add a new status with an appropriate roles
@@ -546,20 +372,6 @@ app.post('/updateEvent', (request, response) => {
             }
             response.end();
         });
-
-    /*{
-    $addToSet: {
-        Events: [{
-            title: eventAfterUpdate.title,
-            start: eventAfterUpdate.start,
-            end: eventAfterUpdate.end,
-            color: eventAfterUpdate.color,
-            id: eventAfterUpdate.id,
-            editable: eventAfterUpdate.editable,
-            allDay: eventAfterUpdate.allDay
-        }]
-    }
-}*/
 });
 
 
@@ -639,7 +451,9 @@ app.post('/updateContact', (request, response) => {
 
         });
     }
-});//update contact details only with phone number that does not exist in the system
+});
+
+//update contact details only with phone number that does not exist in the system
 app.post('/updateUser', (request, response) => {
 //update contact
     console.log('update users FUNCTION');
@@ -765,36 +579,6 @@ app.post('/deleteStatusFromSystem', (request, response) => {
 
 });
 
-app.post('/deleteUser', (request, response) => {
-//add new contact
-    console.log('entered deleteUser function');
-    const userToDelete = request.body.username;
-
-    console.log('userToDelete:' + userToDelete + 'check');
-    workersCollection.findOne({'UserName': userToDelete}).then(function (result) {
-        if (!result) {
-            console.log('did not find user to delete ');
-        } else { //check if the contact already exists
-            workersCollection.deleteOne({'UserName': result.UserName}, function (err, obj) {
-                if (err) throw err;
-                console.log('1 user deleted');
-                workersCollection.find({}).toArray((error, result) => {
-                    if (error) {
-                        return response.status(500).send(error);
-                    }
-                    response.writeHead(200, {'Content-Type': 'application/json'});
-                    response.end(JSON.stringify({'showUsers': true, 'users': result}));
-                });
-            });
-
-            console.log('User name that found ' + result.UserName);
-        }
-
-
-    }).catch(function (err) {
-        response.send({error: err});
-    });
-});
 app.post('/deleteRole', (request, response) => {
 //add new contact
     console.log('entered deleteRole function');
@@ -829,19 +613,6 @@ app.post('/deleteRole', (request, response) => {
     });
 });
 
-app.post('/deleteStatus', (request, response) => {
-//add new contact
-    console.log('entered deleteStatus function');
-    const statusToDelete = request.body.Status;
-    statusesCollection.deleteOne({'Status': statusToDelete}, function (err, obj) {
-        if (err) throw err;
-        console.log('1 status deleted');
-
-    });
-    response.writeHead(200, {'Content-Type': 'application/json'});
-    response.end();
-});
-
 //add a new status
 app.post('/addOption', (request, response) => {
 //add new option
@@ -852,6 +623,23 @@ app.post('/addOption', (request, response) => {
         {$setOnInsert: {'Status': statusToAdd.Status}},
         {upsert: true}
     );
+    response.writeHead(200, {'Content-Type': 'application/json'});
+    response.end();
+});
+
+app.post('/updateContactHistory', (request, response) => {
+//add new option
+    console.log('/updateContactHistory');
+
+    const contactPhoneToUpdateHistory = request.body.updateHistory.contactPhoneNumber;
+    const History = request.body.updateHistory.contactHistory;
+    console.log('contactPhoneToUpdateHistory : '+contactPhoneToUpdateHistory);
+    console.log('History : '+History);
+
+    customersCollection.updateMany({PhoneNumber: { "$in" : contactPhoneToUpdateHistory}}, {$addToSet: {History: {$each: History}}},
+        function (err, res) {
+            console.log('after updateOne');
+        });
     response.writeHead(200, {'Content-Type': 'application/json'});
     response.end();
 });

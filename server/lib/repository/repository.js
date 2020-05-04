@@ -68,12 +68,16 @@ async function checkExistingStatusesAndRolesAndFiles() {
     logger.info('checkExistingStatusesAndRolesAndFiles');
     await storage.populateEmptyCollectionByDefaultValue([{'Status': 'בעיה טכנית'}], 'status', logger);
     await storage.populateEmptyCollectionByDefaultValue([{Role: 'new in the system'},
-        {Role: 'תמיכה טכנית',
+        {
+            Role: 'תמיכה טכנית',
             Color: '#66ffff',
             Statuses: ['בעיה טכנית']
         }], 'rolesWithStatus', logger);
     await storage.populateEmptyCollectionByDefaultValue([{Color: '#66ffff'}], 'color', logger);
-    await storage.populateEmptyCollectionByDefaultValue([{Status: 'בעיה טכנית', Roles: ['תמיכה טכנית']}], 'statusesWithRole', logger);
+    await storage.populateEmptyCollectionByDefaultValue([{
+        Status: 'בעיה טכנית',
+        Roles: ['תמיכה טכנית']
+    }], 'statusesWithRole', logger);
 }
 
 async function getAdminUser() {
@@ -95,11 +99,11 @@ async function addDefaultAdminUser() {
     }, 'worker');
 }
 
-async function getUserLogInInfo(user) {
-    return await storage.getItem({'UserName': user.UserName, 'Password': user.Password}, 'worker');
+async function getUserLogInInfo(userName, password) {
+    return await storage.getItem({'UserName': userName, 'Password': password}, 'worker');
 }
 
-async function getItems(req, res, collectionName, desc, condition = {}, arrayValue='') {
+async function getItems(req, res, collectionName, desc, condition = {}, arrayValue = '') {
     let status = {
         code: 200,
         message: 'OK'
@@ -123,8 +127,80 @@ async function getItems(req, res, collectionName, desc, condition = {}, arrayVal
     res.end(response);
 }
 
-async function updateFileCollection(fileName){
-    await storage.updateItem({FileName: fileName}, 'file');
+async function getCustomerEvents(req, res, collectionName) {
+    let status = {
+        code: 200,
+        message: {}
+    };
+    try {
+        storage.getCollection(collectionName).find(
+            {
+                'UserName': req.params.UserName,
+                'Events.id': req.params.eventId
+            }).forEach(function (doc) {
+            doc.Events = doc.Events.filter(function (event) {
+                if (event.id === req.params.eventId) {
+                    return event;
+                }
+            });
+            console.dir(doc.Events);
+            if (doc.Events) {
+                status.message = {'customerEvents': doc.Events};
+                res.writeHead(200, {'Content-Type': 'application/json'});
+                res.end(JSON.stringify({ 'customerEvents': doc.Events}));
+            } else {
+                status.message = {'customerEvents': {}};
+                res.writeHead(200, {'Content-Type': 'application/json'});
+                res.end(JSON.stringify({ 'customerEvents': doc.Events}));
+            }
+        });
+    } catch (err) {
+        logger.error(util.format('happened error[%s]', err));
+        status = module.exports.getErrorStatus(err);
+        const response = status.code === 200 ? JSON.stringify(status.message) : JSON.stringify(status);
+        res.writeHead(status.code, {'Content-Type': 'application/json'});
+        res.end(response);
+    }
+    /*const response = status.code === 200 ? JSON.stringify(status.message) : JSON.stringify(status);
+    logger.info(util.format("Response Data: %s", response));
+    res.writeHead(status.code, {'Content-Type': 'application/json'});
+    res.end(response);*/
+}
+
+
+async function deleteItemAndReturnUpdatedList(req, res, item, collectionName, jsonObj, desc) {
+    let status = {
+        code: 200,
+        message: 'OK'
+    };
+    try {
+        logger.info(util.format('deleteItemAndReturnUpdatedList: item=%s collectionName=%s',
+            JSON.stringify(item), collectionName));
+
+        const cursor = await storage.deleteItem(item, collectionName);
+        logger.info(util.format('deleted %s %s', cursor.deletedCount, collectionName));
+        const itemArray = await getAllCollectionItems(collectionName, {});
+        status.code = 200;
+        if (desc) {
+            jsonObj[desc] = itemArray;
+        }
+        status.message = jsonObj;
+    } catch (err) {
+        logger.error(util.format('happened error[%s]', err));
+        status = module.exports.getErrorStatus(err);
+    }
+    const response = status.code === 200 ? JSON.stringify(status.message) : JSON.stringify(status);
+    logger.info(util.format("Response Data: %s", response));
+    res.writeHead(status.code, {'Content-Type': 'application/json'});
+    res.end(response);
+}
+
+async function updateFileCollection(fileName) {
+    return await storage.updateItem({FileName: fileName}, 'file');
+}
+
+async function updateUserPassword(userNameItem, newPasswordItem) {
+    return await storage.updateItem(userNameItem, 'worker', newPasswordItem);
 }
 
 exports.init = init;
@@ -136,3 +212,6 @@ exports.getUserLogInInfo = getUserLogInInfo;
 exports.getAllCollectionItems = getAllCollectionItems;
 exports.getItems = getItems;
 exports.updateFileCollection = updateFileCollection;
+exports.updateUserPassword = updateUserPassword;
+exports.deleteItemAndReturnUpdatedList = deleteItemAndReturnUpdatedList;
+exports.getCustomerEvents = getCustomerEvents;

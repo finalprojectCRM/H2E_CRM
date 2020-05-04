@@ -2,11 +2,12 @@ const repo = require('../repository');
 const utils = require('../utils');
 const util = require('util');
 const config = require('config');
+const fs = require('fs');
 const logging = require('../utils/logging');
 const logger = logging.mainLogger;
 
 module.exports = {
-    getClientFile: async function(req, res) {
+    getClientFile: async function (req, res) {
         let isOnlyClientRoot = false;
         let mainPage = '';
         logger.info(util.format('req.url[%s]', req.url));
@@ -20,15 +21,12 @@ module.exports = {
         utils.getFile(req, res, repo.getDBConnectionStatus, isOnlyClientRoot, mainPage);
     },
 
-    getFirstSystemLoadStatus: async function(req, res) {
+    getFirstSystemLoadStatus: async function (req, res) {
+        let status = {code: 200, message: 'OK'};
         logger.info('getFirstSystemLoadStatus');
         //check if data exists in statuses & roles & files collection
-        await repo.checkExistingStatusesAndRolesAndFiles();
-        let status = {
-            code: 200,
-            message: 'OK'
-        };
         try {
+            await repo.checkExistingStatusesAndRolesAndFiles();
             status = await repo.getDBConnectionStatus();
             if (status.code !== 200) {
                 // noinspection ExceptionCaughtLocallyJS
@@ -66,11 +64,8 @@ module.exports = {
     /*
     verify a temporary password that user received from the admin to perform the first user registration to the system
 */
-    verifyTemporaryPassword: async function(req, res) {
-        let status = {
-            code: 200,
-            message: 'OK'
-        };
+    verifyTemporaryPassword: async function (req, res) {
+        let status = {code: 200, message: 'OK'};
         try {
             logger.info('/verifyTemporaryPassword');
             status = await repo.getDBConnectionStatus();
@@ -108,7 +103,101 @@ module.exports = {
         res.end(response);//Admin has been loaded first time to mongodb
     },
 
-    logIn: async function(req, res) {
+    verifyCurrentPassword: async function (req, res) {
+        let status = {code: 200, message: 'OK'};
+        try {
+            logger.info('/verifyCurrentPassword');
+            status = await repo.getDBConnectionStatus();
+            if (status.code !== 200) {
+                // noinspection ExceptionCaughtLocallyJS
+                throw new Error(status.message);
+            }
+            const loggedInCurrentPassword = req.body.loggedInCurrentPassword;
+            logger.info(util.format('curUsername=%s', loggedInCurrentPassword.username));
+            logger.info(util.format('curPassword=%s', loggedInCurrentPassword.currentPassword));
+            //try to find in user collection a user with a given username and password
+            const logInInfo = await repo.getUserLogInInfo(loggedInCurrentPassword.username,
+                loggedInCurrentPassword.currentPassword);
+            if (!logInInfo) { //no such username and password in the system
+                logger.info('notVerified');
+                status.code = 200;
+                status.message = {'notVerified': 'The current password is incorrect, please try again.'};
+            } else { //found the user with correct username and password
+                logger.info('verified');
+                status.code = 200;
+                status.message = {'verified': true};
+            }
+        } catch (err) {
+            logger.error(util.format('happened error[%s]', err));
+            status = utils.getErrorStatus(err);
+        }
+        const response = status.code === 200 ? JSON.stringify(status.message) : JSON.stringify(status);
+        logger.info(util.format("Response Data: %s", response));
+        res.writeHead(status.code, {'Content-Type': 'application/json'});
+        res.end(response);
+    },
+
+    changeCurrentPassword: async function (req, res) {
+        let status = {code: 200, message: 'OK'};
+        try {
+            logger.info('/changeCurrentPassword');
+            status = await repo.getDBConnectionStatus();
+            if (status.code !== 200) {
+                // noinspection ExceptionCaughtLocallyJS
+                throw new Error(status.message);
+            }
+            const loggedInNewPassword = req.body.loggedInNewPassword;
+            //update in workersCollection the the password of user with a new password
+            logger.info(util.format('username=%s', loggedInNewPassword.username));
+            logger.info(util.format('newPassword=%s', loggedInNewPassword.newPassword));
+            const cursor = await repo.updateUserPassword({'UserName': loggedInNewPassword.username},
+                {'Password': loggedInNewPassword.newPassword});
+            if (cursor.modifiedCount === 0) {
+                // noinspection ExceptionCaughtLocallyJS
+                throw new Error('The Password change is failed');
+            }
+            status.code = 200;
+            status.message = {'success': 'The Password has been changed successfully'};
+        } catch (err) {
+            logger.error(util.format('happened error[%s]', err));
+            status = utils.getErrorStatus(err);
+        }
+        const response = status.code === 200 ? JSON.stringify(status.message) : JSON.stringify(status);
+        logger.info(util.format("Response Data: %s", response));
+        res.writeHead(status.code, {'Content-Type': 'application/json'});
+        res.end(response);
+    },
+
+    changeTemporaryPassword: async function (req, res) {
+        let status = {code: 200, message: 'OK'};
+        try {
+            logger.info('/changeTemporaryPassword');
+            status = await repo.getDBConnectionStatus();
+            if (status.code !== 200) {
+                // noinspection ExceptionCaughtLocallyJS
+                throw new Error(status.message);
+            }
+            const newTempPassword = req.body.newTempPassword;
+            //update in workersCollection the the password of user with a new password
+            logger.info(util.format('newTempPassword=%s', newTempPassword));
+            const cursor = await repo.updateUserPassword({'UserName': 'Admin'}, {TempPassword: newTempPassword.TempPassword});
+            if (cursor.modifiedCount === 0) {
+                // noinspection ExceptionCaughtLocallyJS
+                throw new Error('The Password change is failed');
+            }
+            status.code = 200;
+            status.message = {'success': 'The temp password has been changed successfully'};
+        } catch (err) {
+            logger.error(util.format('happened error[%s]', err));
+            status = utils.getErrorStatus(err);
+        }
+        const response = status.code === 200 ? JSON.stringify(status.message) : JSON.stringify(status);
+        logger.info(util.format("Response Data: %s", response));
+        res.writeHead(status.code, {'Content-Type': 'application/json'});
+        res.end(response);
+    },
+
+    logIn: async function (req, res) {
         logger.info('logIn');
         let status = {
             code: 200,
@@ -118,7 +207,7 @@ module.exports = {
             const user = req.body.LoginUser;
             logger.info(util.format('userName=%s', user.UserName));
             //check if the username and the password exist
-            const logInInfo = await repo.getUserLogInInfo(user);
+            const logInInfo = await repo.getUserLogInInfo(user.UserName, user.Password);
             //if no match
             if (!logInInfo) {
                 logger.info('no match!');
@@ -159,7 +248,7 @@ module.exports = {
     /*
         get list of all statuses
     */
-    getStatusOptions: async function(req, res) {
+    getStatusOptions: async function (req, res) {
 
         logger.info('getStatusOptions');
         await repo.getItems(req, res, 'status', 'statusOptions');
@@ -168,7 +257,7 @@ module.exports = {
     /*
         get list of all colors for roles
     */
-    getRolesColors: async function(req, res) {
+    getRolesColors: async function (req, res) {
 
         logger.info('getRolesColors');
         await repo.getItems(req, res, 'color', 'colors');
@@ -177,7 +266,7 @@ module.exports = {
     /*
         get list of all files
     */
-    getFiles: async function(req, res) {
+    getFiles: async function (req, res) {
         logger.info('getFiles');
         await repo.getItems(req, res, 'file', 'files');
     },
@@ -185,7 +274,7 @@ module.exports = {
     /*
         get list of all contacts
     */
-    getContacts: async function(req, res) {
+    getContacts: async function (req, res) {
         logger.info('getContacts');
         await repo.getItems(req, res, 'customer', 'contacts');
     },
@@ -193,27 +282,117 @@ module.exports = {
     /*
         get list of all roles with their statuses
     */
-    getRoles: async function(req, res) {
+    getRoles: async function (req, res) {
         logger.info('getRoles');
         await repo.getItems(req, res, 'rolesWithStatus', 'roles');
     },
 
     /*
-        get list of all roles with their statuses
+        get list of all events for specific user
     */
-    getUserEvents: async function(req, res) {
+    getUserEvents: async function (req, res) {
         logger.info(util.format('/getUserEvents/%s', req.params.UserName));
         await repo.getItems(req, res, 'worker',
             'userEvents', {UserName: req.params.UserName}, 'Events');
     },
 
-    uploadFile: async function(req, res) {
+    getCustomerEvents: async function (req, res) {
+        logger.info(util.format('/getCustomerEvents/%s/%s', req.params.UserName, req.params.eventId));
+        await repo.getCustomerEvents(req, res, 'worker');
+    },
+/*
+    app.get('/getCustomerEvents/:UserName/:eventId', (request, response) => {
+        console.log('/getCustomerEvents/' + request.params.UserName + '/' + request.params.eventId);
+        workersCollection.find(
+            {
+                'UserName': request.params.UserName,
+                'Events.id': request.params.eventId}).forEach(function (doc) {
+            doc.Events = doc.Events.filter(function (event) {
+                if (event.id === request.params.eventId) {
+                    return event;
+                }
+            });
+            console.dir(doc.Events);
+            if (doc.Events) {
+                response.writeHead(200, {'Content-Type': 'application/json'});
+                response.end(JSON.stringify({ 'customerEvents': doc.Events}));
+            } else {
+                response.end(JSON.stringify({ 'customerEvents': {}}));
+            }
+        });
+    });
+*/
+
+    uploadFile: async function (req, res) {
         logger.info('/uploadFile');
         utils.uploadFile(req, res, repo.updateFileCollection);
     },
 
-    sendEmail: async function(req, res) {
+    sendEmail: async function (req, res) {
         logger.info('/sendEmail');
         utils.sendMail(req.body.emailData, res);
+    },
+
+    deleteContact: async function(req, res) {
+        logger.info('deleteContact');
+        //the contact to delete with its details
+        const contactToDelete = req.body.contact;
+        logger.info('contactToDelete :' + JSON.stringify(contactToDelete));
+        const itemToDelete = {
+            'Name': contactToDelete.Name,
+            'Status': contactToDelete.Status,
+            'PhoneNumber': contactToDelete.PhoneNumber,
+            'eMail': contactToDelete.eMail,
+            'Address': contactToDelete.Address
+        };
+        await repo.deleteItemAndReturnUpdatedList(req, res, itemToDelete, 'customer', {'contacts': {}}, 'contacts');
+    },
+
+    deleteFile: async function(req, res) {
+        logger.info('deleteFile');
+        //the contact to delete with its details
+        const fileToDelete = req.body.file;
+        logger.info('fileToDelete :' + JSON.stringify(fileToDelete));
+        const path = config.server.data.uploadFolder + fileToDelete.FileName;
+        const fileDeleted = 'The file ' + fileToDelete.FileName + ' has been deleted.';
+        await repo.deleteItemAndReturnUpdatedList(req, res, fileToDelete, 'file', {fileDeleted: fileDeleted});
+        fs.unlinkSync(path);
+    },
+
+    deleteUser: async function(req, res) {
+        logger.info('deleteUser');
+        //the contact to delete with its details
+        const userToDelete = req.body.username;
+        logger.info('statusToDelete :' + userToDelete);
+        await repo.deleteItemAndReturnUpdatedList(req, res, {'UserName': userToDelete}, 'worker',
+            {'showUsers': true, 'users': {}}, 'users');
     }
+/*
+    app.post('/deleteUser', (request, response) => {
+//add new contact
+        workersCollection.findOne({'UserName': userToDelete}).then(function (result) {
+            if (!result) {
+                console.log('did not find user to delete ');
+            } else { //check if the contact already exists
+                workersCollection.deleteOne({'UserName': result.UserName}, function (err, obj) {
+                    if (err) throw err;
+                    console.log('1 user deleted');
+                    workersCollection.find({}).toArray((error, result) => {
+                        if (error) {
+                            return response.status(500).send(error);
+                        }
+                        response.writeHead(200, {'Content-Type': 'application/json'});
+                        response.end(JSON.stringify({'showUsers': true, 'users': result}));
+                    });
+                });
+
+                console.log('User name that found ' + result.UserName);
+            }
+
+
+        }).catch(function (err) {
+            response.send({error: err});
+        });
+    });
+    */
 };

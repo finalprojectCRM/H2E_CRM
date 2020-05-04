@@ -13,7 +13,7 @@
                 let userBeforeUpdate;
                 const MAX_LETTERS_IN_NAME = 25;
                 const MAX_LETTERS_IN_ADDRESS = 35;
-                let category;
+                let category = undefined;
                 let statusRole;
                 let loggedInUser;
                 let incorectPassword = false;
@@ -44,6 +44,7 @@
                 let editEventDetails = {};
                 let evenBeforeUpdate;
                 let userToDelete;
+                let contactsPhone = [];
                 const SERVER_URI = 'http://localhost:3000';
 
                 $scope.account = false;
@@ -122,6 +123,20 @@
                     }
                     $log.log('dbDate=' + dbDate);
                     return dbDate;
+                }
+                function updateContactHistory(history ,contactPhoneNumber){
+                    const updateHistory = {contactPhoneNumber: contactPhoneNumber, contactHistory: history};
+                    $http.post(SERVER_URI + '/updateContactHistory', {
+                        updateHistory: updateHistory
+                    }).then(
+                        function (response){
+                            historyArray = [];
+                            contactsPhone = [];
+                            $scope.getContactsList();
+                        }, function (response) { //failure callback
+                        }
+                    );
+
                 }
 
                 function getIndexOfSelectedItem(item, flag, status) {
@@ -666,6 +681,7 @@
 
                         } else {
                             if ($scope.selected[arrInfo.PhoneNumber]) {
+                                contactsPhone.push(arrInfo.PhoneNumber);
                                 emailsListStr = getStringofAllEmails(emailsListStr, arrInfo, i);
 
                             }
@@ -684,20 +700,7 @@
                     angular.element(document.querySelector('#emailModal')).modal('show');
                 };
 
-                function updateContactHistory(history ,contactPhoneNumber){
-                    const updateHistory = {contactPhoneNumber: contactPhoneNumber, contactHistory: history};
-                    $http.post(SERVER_URI + '/updateContactHistory', {
-                        updateHistory: updateHistory
-                    }).then(
-                        function (response){
-                            historyArray = [];
 
-
-                        }, function (response) { //failure callback
-                        }
-                    );
-
-                }
 
                 function addEventToDataBase(event, user) {
                     const newEvent = {event: event, user: user};
@@ -708,7 +711,8 @@
                             //retreivedCalendarEvents = response.data.Events;
                             //$log.log('retreivedCalendarEvents=' + retreivedCalendarEvents);
                             $log.log('selectedItemPart2: '+ selectedItemPart2)
-                            updateContactHistory(historyArray ,selectedItemPart2);
+                            contactsPhone.push(selectedItemPart2);
+                            updateContactHistory(historyArray ,contactsPhone);
 
                             $scope.role = '';
                             $scope.contactTask = false;
@@ -717,7 +721,7 @@
                             $scope.eventStart = '';
                             $scope.eventEnd = '';
                             $scope.date = '';
-                            category = '';
+                            category = undefined;
                             selectedItemPart1 = undefined;
                             selectedItemPart2 = undefined;
                             $scope.selectedContact = '';
@@ -730,7 +734,7 @@
                 }
                 function addHistoryToContactEvent(description,startDate,endDate,color,contact){
                     let history='';
-                    history = 'New Task\n'+'Start Date : '+ startDate+' End Date : '+endDate+'\n';
+                    history = 'New Task\n\n'+'Start Date : '+ startDate+'\n' +'End Date : '+endDate+'\n';
                     history = history+'Category : '+$scope.roles[getIndexOfSelectedItem(color,'color_of_role')].Role+'\n';
                     history = history+description+'\n';
                     $log.log(history);
@@ -904,21 +908,28 @@
                     selectedItemPart1 = undefined;
                     selectedItemPart2 = undefined;
                     $scope.selectedContact = '';
-                    category = '';
+                    category = undefined;
                 };
+
+                function updateContactHistoryEmail(){
+                    const history = 'Date : '+moment().format('DD/MM/YYYY HH:mm')+'\n\nMail has been sended\n';
+                    historyArray.push(history);
+                    updateContactHistory(historyArray, contactsPhone);
+                }
 
                 //modal for sending mail to a contact
                 $scope.sendMailModal = function (contactEmail) {
-                    $log.log('contactEmail :' + contactEmail);
+                    $log.log('contactEmail :' + contactEmail.eMail);
+                    contactsPhone.push(contactEmail.PhoneNumber);
                     //check if the contact that was pressed on has an email address
-                    if (contactEmail === undefined || contactEmail === '') {
+                    if (contactEmail.eMail === undefined || contactEmail.eMail === '') {
                         toaster.pop('error', 'No email for this contact');
                         return;
                     }
 
                     $scope.getFilesList();
                     //save the chosen contacts email
-                    $scope.contactEmail = contactEmail;
+                    $scope.contactEmail = contactEmail.eMail;
                     angular.element(document.querySelector('#emailModal')).modal('show');
                 };
                 /*
@@ -954,12 +965,14 @@
                             $scope.emailBody = '';
                             $scope.emailFile = false;
                             $scope.fileToMail = false;
-                            category = '';
+                            category = undefined;
                             $scope.selections = [];
+
 
 
                             if (response.data.ok) {
                                 toaster.pop('success', response.data.ok);
+                                updateContactHistoryEmail();
                                 return;
                             }
 
@@ -2148,21 +2161,7 @@
                     $scope.addNewContact();
                 };
 
-                /*
-                    a function that return the current date in format 'mm/dd/yyyy HH:MM'
-                */
-                $scope.getCurrentDate = function () {
-                    let date = new Date();
-                    const MM = String(date.getMinutes()).padStart(2, '0');
-                    const HH = String(date.getHours()).padStart(2, '0');
-                    const dd = String(date.getDate()).padStart(2, '0');
-                    const mm = String(date.getMonth() + 1).padStart(2, '0'); //January is 0!
-                    const yyyy = date.getFullYear();
 
-                    date = mm + '/' + dd + '/' + yyyy + ' ' + HH + ':' + MM;
-
-                    return date;
-                };
 
                 /*
                     a function for adding a new contact to system
@@ -2170,7 +2169,7 @@
                 */
                 $scope.addNewContact = function () {
                     //save the current date
-                    const contactHistory = 'Date : ' + $scope.getCurrentDate() + '\n\nContact Addition\n ';
+                    const contactHistory = 'Date : ' + moment().format('MM/DD/YYYY HH:mm') + '\n\nContact Addition\n ';
 
                     //add to history the action
                     historyArray.push(contactHistory);
@@ -2248,32 +2247,32 @@
                     let change = -1;
                     let contactHistory = '';
                     if (category.Role !== contactBeforeUpdate.Category.Role) {
-                        updatedContactHistory = 'Role changed : ' + contactBeforeUpdate.Category.Role + ' <- : ' + category.Role + '\n';
+                        updatedContactHistory = 'Role changed from : ' + contactBeforeUpdate.Category.Role + ' to : ' + category.Role + '\n';
                         change = 0;
                     }
                     if (statusRole !== contactBeforeUpdate.Status) {
-                        updatedContactHistory += 'Status changed : ' + contactBeforeUpdate.Status + ' -> : ' + statusRole + '\n';
+                        updatedContactHistory += 'Status changed from : ' + contactBeforeUpdate.Status + ' to : ' + statusRole + '\n';
                         change = 0;
                     }
                     if (contactInfoToUpdate.Name !== contactBeforeUpdate.Name) {
-                        updatedContactHistory += 'Name changed : ' + contactBeforeUpdate.Name + ' -> : ' + contactInfoToUpdate.Name + '\n';
+                        updatedContactHistory += 'Name changed from : ' + contactBeforeUpdate.Name + ' to : ' + contactInfoToUpdate.Name + '\n';
                         change = 0;
                     }
                     if (contactInfoToUpdate.PhoneNumber !== contactBeforeUpdate.PhoneNumber) {
-                        updatedContactHistory += 'Phone number changed : ' + contactBeforeUpdate.PhoneNumber + ' -> : ' + contactInfoToUpdate.PhoneNumber + '\n';
+                        updatedContactHistory += 'Phone number changed from : ' + contactBeforeUpdate.PhoneNumber + ' to : ' + contactInfoToUpdate.PhoneNumber + '\n';
                         change = 0;
                     }
                     if (contactInfoToUpdate.eMail !== contactBeforeUpdate.eMail) {
-                        updatedContactHistory += 'Email changed : ' + contactBeforeUpdate.eMail + ' -> : ' + contactInfoToUpdate.eMail + '\n';
+                        updatedContactHistory += 'Email changed from : ' + contactBeforeUpdate.eMail + 'to : ' + contactInfoToUpdate.eMail + '\n';
                         change = 0;
                     }
                     if (contactInfoToUpdate.Address !== contactBeforeUpdate.Address) {
-                        updatedContactHistory += 'Address changed : ' + contactBeforeUpdate.Address + ' -> : ' + contactInfoToUpdate.Address + '\n';
+                        updatedContactHistory += 'Address changed from : ' + contactBeforeUpdate.Address + 'to : ' + contactInfoToUpdate.Address + '\n';
                         change = 0;
                     }
 
                     if (change === 0) {
-                        contactHistory = 'Date: ' + $scope.getCurrentDate() + '\n\nContact Edit\n\n' + updatedContactHistory + '\n';
+                        contactHistory = 'Date: ' + moment().format('MM/DD/YYYY HH:mm') + '\n\nContact Edit\n\n' + updatedContactHistory + '\n';
 
                     }
                     return contactHistory;
@@ -2606,7 +2605,7 @@
                 */
                 $scope.verifyPassword = function (currenPassword) {
                     const loggedInCurrentPassword = {username: loggedInUser.UserName, currentPassword: currenPassword};
-                    $http.post(SERVER_URI + '/verificationCurrentPassword', {
+                    $http.post(SERVER_URI + '/verifyCurrentPassword', {
                         loggedInCurrentPassword: loggedInCurrentPassword
                     }).then(
                         function (response) { //success callback

@@ -926,6 +926,35 @@
 
                     //  console.log($scope.pendingRequests);
                 };
+                $scope.getCalendarEvent = function (event) {
+                    $log.log('event '+  JSON.stringify(event));
+                    $scope.retreivedCalendarEvents = [];
+                    $scope.retreivedCalendarEvents.push(event);
+                    $log.log('$scope.retreivedCalendarEvents : '+ $scope.retreivedCalendarEvents);
+                    uiCalendarConfig.calendars.myCalendar.fullCalendar('removeEvents');
+                    uiCalendarConfig.calendars.myCalendar.fullCalendar('addEventSource', $scope.retreivedCalendarEvents);
+                    uiCalendarConfig.calendars.myCalendar.fullCalendar('rerenderEvents');
+                    $log.log('after $scope.retreivedCalendarEvents')
+                    $scope.calendarFunction();
+                   /* $http.get(SERVER_URI + '/getEvent/' + loggedInUser.UserName + '/' + event).then(
+                        function (response) {//success callback
+                            $scope.retreivedCalendarEvents = response.data.customerEvents;
+                            $log.log('retreivedCalendarEvents=' + JSON.stringify($scope.retreivedCalendarEvents));
+                            uiCalendarConfig.calendars.myCalendar.fullCalendar('removeEvents');
+                            uiCalendarConfig.calendars.myCalendar.fullCalendar('addEventSource', $scope.retreivedCalendarEvents);
+                            uiCalendarConfig.calendars.myCalendar.fullCalendar('rerenderEvents');
+                            $scope.calendarFunction();
+                        },
+                        function (response) {//failure callback
+                            //if failed show error modal
+                            $scope.message = response.data.error;
+                            $scope.messageType = 'ERROR';
+                            angular.element(document.querySelector('#msgModal')).modal('show');
+                        }
+                    );*/
+                }
+
+
                 //cancel function from modal in calendar
                 $scope.cancelEvent = function () {
 
@@ -1340,33 +1369,13 @@
                                 $scope.registrationValidationPassword = undefined;
 
                                 //show menu system components and user profile of account
-                                $scope.menu = true;
-                                $scope.allSystem = true;
-                                $scope.account = true;
-                                $scope.nameOfUser = userFromServer.Name;
-                                $scope.roleOfUser = userFromServer.Role;
-                                $scope.registerPage = false;
+                                $scope.message = 'Thanks for signing up, you must wait for the administrator to assign you a role so you can sign in.';
+                                $scope.messageType = 'MESSAGE';
+                                angular.element(document.querySelector('#msgModal')).modal('show');
+                                setTimeout(function () {
+                                    $window.location.reload();
+                                }, 8000); // Set enough time to wait until animation finishes;*/
 
-                                //get lists of : optiont, roles, roles colors, contacts and files
-                                $scope.getOptionsList();
-                                $scope.getRolesList();
-                                $scope.getRolesColorsList();
-                                $scope.getContactsList();
-                                $scope.getFilesList();
-
-                                $scope.getUsersList('showUsers');
-
-                                //if user logged in is administrator show admin page and update that admin is logged in -> $scope.isAdmin = true
-                                if (userFromServer.isAdmin) {
-                                    $scope.adminPage = true;
-                                    $scope.isAdmin = true;
-
-                                } else { //if not admin logged in hide admin page and update that not admin logged in -> $scope.isAdmin = false
-                                    $scope.adminPage = false;
-                                    $scope.isAdmin = false;
-                                }
-
-                                $log.log(userFromServer.UserName);
 
                             } else { //if this user name already exists in system -> show error modal
                                 $scope.message = response.data.userExists;
@@ -1426,8 +1435,16 @@
                             if (!response.data.noMatch) {
                                 // $scope.events = LoginUser.Events;
                                 //$scope.retreivedCalendarEvents = LoginUser.Events;
-                                refreshCalendarEvents();
                                 //$log.log('Events : ' + $scope.events);
+                                if(LoginUser.Role==='new in the system')
+                                {
+                                    $scope.message = 'The administrator has not yet assigned you a role in the system, therefore can not sign in yet';
+                                    $scope.messageType = 'ERROR';
+                                    angular.element(document.querySelector('#msgModal')).modal('show');
+                                    return;
+
+                                }
+                                refreshCalendarEvents();
 
                                 //if admin show admin page and update that admin is logged in
                                 if (LoginUser.adminUser) {

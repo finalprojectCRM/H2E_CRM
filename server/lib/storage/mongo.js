@@ -151,8 +151,12 @@ module.exports = {
         }
     },
 
-    deleteItem: async function (item, type) {
-        return dbHandle.collection(collections[type]).deleteOne(item);
+    deleteItem: async function (item, type, deleteItem = false, isPullItem = false) {
+        if (isPullItem) {
+            return dbHandle.collection(collections[type]).updateMany(item, {$pull : deleteItem});
+        } else {
+            return dbHandle.collection(collections[type]).deleteOne(item);
+        }
     },
 
     deleteAllItems: async function (type, condition = {}) {

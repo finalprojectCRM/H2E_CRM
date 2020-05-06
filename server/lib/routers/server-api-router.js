@@ -174,6 +174,15 @@ router.route('/updateRole')
 router.route('/updateCustomerHistory')
     .post(serverApiRequestHandler.updateCustomerHistory);
 
+router.route('/deleteStatusFromRole')
+    .post(serverApiRequestHandler.deleteStatusFromRole);
+
+router.route('/deleteStatusFromSystem')
+    .post(serverApiRequestHandler.deleteStatusFromSystem);
+
+router.route('/deleteRole')
+    .post(serverApiRequestHandler.deleteRole);
+
 router.route('*')
     .get(utils.handleInvalidRequest);
 

@@ -29,7 +29,8 @@ app.use(config.server.api.root, serverApiRouter);
 app.listen(config.server.access.port, () => {
     logger.info(util.format('%s server is listening on port %s', config.server.name, config.server.access.port));
     (async function() {
-        const {status, customers, statuses, workers, files, rolesWithStatuses, statusesWithRoles, colors} = await repo.init();
+        const {status, customers, statuses, workers, files, rolesWithStatuses,
+            statusesWithRoles, colors} = await repo.init();
         if (status.code !== 200){
             logger.error(utils.getErrorStatus(util.format(config.server.errors.DB.ERROR_DB_CONNECTION_FAILED, config.storage, status.message)));
         }
@@ -222,97 +223,6 @@ app.post('/updateWorker', (request, response) => {
             }
             response.writeHead(200, {'Content-Type': 'application/json'});
             response.end(JSON.stringify({'showWorkers': true, 'workers': result}));
-        });
-    });
-});
-
-app.post('/deleteStatusFromRole', (request, response) => {
-//add new customer
-    console.log('entered deleteStatusFromRole function');
-    const statusToDelete = request.body.statusToDelete;
-    console.log('statusToDelete.Role ' + statusToDelete.Role);
-    console.log('statusToDelete.Status ' + statusToDelete.Status);
-    const Status = statusToDelete.Status;
-
-    rolesWithStatusesCollection.updateOne({Role: statusToDelete.Role}, {$pull: {Statuses: Status}}, function (err, obj) {
-        if (err) throw err;
-        console.log('1 status was deleted from role ');
-        rolesWithStatusesCollection.find({}).toArray((error, result) => {
-            if (error) {
-                return response.status(500).send(error);
-            }
-            response.writeHead(200, {'Content-Type': 'application/json'});
-            response.end(JSON.stringify({'roles': result}));
-        });
-    });
-});
-
-app.post('/deleteStatusFromSystem', (request, response) => {
-//add new customer
-    console.log('entered deleteStatusFromSystem function');
-    const statusToDelete = request.body.statusToDelete;
-    let statuses, rolesStatuses, statusesRoles;
-
-    console.log('statusToDelete:' + statusToDelete);
-    statusesCollection.deleteOne({'Status': statusToDelete}, function (err, obj) {
-        if (err) throw err;
-        console.log('1 status deleted');
-        statusesCollection.find({}).toArray((error, result) => {
-            if (error) {
-                return response.status(500).send(error);
-            }
-            statuses = result;
-        });
-        statusesWithRolesCollection.deleteOne({'Status': statusToDelete}, function (err, obj) {
-            if (err) throw err;
-            console.log('1 status deleted');
-            statusesWithRolesCollection.find({}).toArray((error, result) => {
-                if (error) {
-                    return response.status(500).send(error);
-                }
-                statusesRoles = result;
-            });
-        });
-        rolesWithStatusesCollection.updateMany({}, {$pull: {Statuses: {$in: [statusToDelete]}}}, function (err, obj) {
-            if (err) throw err;
-            console.log('1 status was deleted from role ');
-            rolesWithStatusesCollection.find({}).toArray((error, rolesStatuses) => {
-                if (error) {
-                    return response.status(500).send(error);
-                }
-                //rolesStatuses = rolesStatuses;
-            });
-        });
-    });
-    response.writeHead(200, {'Content-Type': 'application/json'});
-    response.end(JSON.stringify({'statuses': statuses, 'roles': rolesStatuses}));
-
-});
-
-app.post('/deleteRole', (request, response) => {
-//add new customer
-    console.log('entered deleteRole function');
-    const roleToDelete = request.body.role;
-    console.log('roleToDelete:' + roleToDelete);
-    rolesWithStatusesCollection.deleteOne({Role: roleToDelete}, function (err, obj) {
-        if (err) throw err;
-        console.log('1 worker deleted');
-        rolesWithStatusesCollection.find({}).toArray((error, result) => {
-            if (error) {
-                return response.status(500).send(error);
-            }
-            response.writeHead(200, {'Content-Type': 'application/json'});
-            response.end(JSON.stringify({'roles': result}));
-        });
-    });
-    statusesWithRolesCollection.updateMany({}, {$pull: {Roles: {$in: [roleToDelete]}}}, function (err, obj) {
-        if (err) throw err;
-        console.log('1 status was deleted from role ');
-        statusesWithRolesCollection.find({}).toArray((error, rolesStatuses) => {
-            if (error) {
-                return response.status(500).send(error);
-            }
-            //rolesStatuses = rolesStatuses;
         });
     });
 });

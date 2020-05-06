@@ -157,17 +157,23 @@ module.exports = {
             res.end(response);
         }
     },
-    deleteItemAndReturnUpdatedList: async function (req, res, item, collectionName, jsonObj, desc) {
+    deleteItemAndReturnUpdatedList: async function (req, res, item, collectionName, jsonObj, desc = undefined, deleteItem = undefined, isPullItems = false, isResponse = true) {
         let status = {
             code: 200,
             message: 'OK'
         };
         try {
+            let cursor;
             logger.info(util.format('deleteItemAndReturnUpdatedList: item=%s collectionName=%s',
                 JSON.stringify(item), collectionName));
+            if (isPullItems) {
+                cursor = await storage.deleteItem(item, collectionName, deleteItem, isPullItems);
+                logger.info(util.format('deleted %s %s', cursor.modifiedCount, collectionName));
+            } else {
+                cursor = await storage.deleteItem(item, collectionName);
+                logger.info(util.format('deleted %s %s', cursor.deletedCount, collectionName));
+            }
 
-            const cursor = await storage.deleteItem(item, collectionName);
-            logger.info(util.format('deleted %s %s', cursor.deletedCount, collectionName));
             const itemArray = await module.exports.getAllCollectionItems(collectionName, {});
             status.code = 200;
             if (desc) {
@@ -178,10 +184,14 @@ module.exports = {
             logger.error(util.format('happened error[%s]', err));
             status = module.exports.getErrorStatus(err);
         }
-        const response = status.code === 200 ? JSON.stringify(status.message) : JSON.stringify(status);
-        logger.info(util.format("Response Data: %s", response));
-        res.writeHead(status.code, {'Content-Type': 'application/json'});
-        res.end(response);
+        if (isResponse) {
+            const response = status.code === 200 ? JSON.stringify(status.message) : JSON.stringify(status);
+            logger.info(util.format("Response Data: %s", response));
+            res.writeHead(status.code, {'Content-Type': 'application/json'});
+            res.end(response);
+        } else {
+            return jsonObj;
+        }
     },
     updateFileCollection: async function (fileName) {
         return await storage.updateItem({FileName: fileName}, 'file');

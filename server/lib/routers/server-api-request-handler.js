@@ -65,6 +65,7 @@ module.exports = {
     verify a temporary password that worker received from the admin to perform the first worker registration to the system
 */
     verifyTemporaryPassword: async function (req, res) {
+        logger.info('verifyTemporaryPassword');
         let status = {code: 200, message: 'OK'};
         try {
             logger.info('/verifyTemporaryPassword');
@@ -104,6 +105,7 @@ module.exports = {
     },
 
     verifyCurrentPassword: async function (req, res) {
+        logger.info('verifyCurrentPassword');
         let status = {code: 200, message: 'OK'};
         try {
             logger.info('/verifyCurrentPassword');
@@ -138,6 +140,7 @@ module.exports = {
     },
 
     changeCurrentPassword: async function (req, res) {
+        logger.info('changeCurrentPassword');
         let status = {code: 200, message: 'OK'};
         try {
             logger.info('/changeCurrentPassword');
@@ -169,6 +172,7 @@ module.exports = {
     },
 
     changeTemporaryPassword: async function (req, res) {
+        logger.info('changeTemporaryPassword');
         let status = {code: 200, message: 'OK'};
         try {
             logger.info('/changeTemporaryPassword');
@@ -194,6 +198,7 @@ module.exports = {
     },
 
     logIn: async function (req, res) {
+        logger.info('logIn');
         logger.info('logIn');
         let status = {code: 200, message: 'OK'};
         try {
@@ -286,7 +291,7 @@ module.exports = {
         get list of all roles with their statuses
     */
     getAssignedRoles: async function (req, res) {
-        logger.info('getRoles');
+        logger.info('getAssignedRoles');
         await repo.getAssignedRoles(req, res);
     },
     /*
@@ -354,9 +359,9 @@ module.exports = {
             {'phoneExists': 'ERROR : this phone number already exists, change it or search for this worker.'}, 'customer');
     },
     updateCustomer: async function (req, res) {
+        logger.info('updateCustomer');
         let status = {code: 200, message: 'OK'};
         try {
-            logger.info('updateCustomer');
             const customerBeforeUpdate = req.body.customerBeforeUpdate;
             const customerAfterUpdate = req.body.updatedCustomer;
             const history = customerAfterUpdate.History;
@@ -384,6 +389,7 @@ module.exports = {
         res.end(response);
     },
     getWorkers: async function (req, res) {
+        logger.info('getWorkers');
         let status = {code: 200, message: 'OK'};
         try {
             const statusFlag = req.body.statusFlag;
@@ -415,6 +421,7 @@ module.exports = {
         await repo.deleteAllItems(req, res, 'worker', {'message': 'All workers have been deleted from the system'}, {WorkerName: {$ne: 'Admin'}});
     },
     addStatus: async function (req, res) {
+        logger.info('addStatus');
         const statusToAdd = req.body.newSatus;
         logger.info(util.format('statusToAdd=%s', statusToAdd));
         return await repo.addOrUpdateItem(req, res, {'Status': statusToAdd.Status}, 'status', false, true, false, false);
@@ -423,6 +430,7 @@ module.exports = {
 	    Add new status to the correspondent roles
     */
     addStatusWithRoles: async function (req, res) {
+        logger.info('addStatusWithRoles');
         const statusWithRoles = req.body.statusWithRoles;
         //add a new add a new status with an appropriate roles only if the status does not exist
         await repo.addOrUpdateItem(req, res, {Status: statusWithRoles.Status}, 'statusesWithRole',
@@ -440,6 +448,7 @@ module.exports = {
 	    Add a new role with the correspondent statuses
     */
     addRoleWithStatuses: async function (req, res) {
+        logger.info('addRoleWithStatuses');
         const roleWithStatuses = req.body.roleWithStatuses;
         // insert the role color to the colors list
         await repo.addOrUpdateItem(req, res, {Color: roleWithStatuses.Color}, 'color',
@@ -461,6 +470,7 @@ module.exports = {
 	    Update a role with new statuses
     */
     updateRole: async function (req, res) {
+        logger.info('updateRole');
         //the role to update
         const roleToUpdate = req.body.roleToUpdate;
         //the role's statuses
@@ -479,11 +489,49 @@ module.exports = {
     },
 
     updateCustomerHistory: async function (req, res) {
+        logger.info('updateCustomerHistory');
         const customerPhoneToUpdateHistory = req.body.updateHistory.customerPhoneNumber;
         const customerHistory = req.body.updateHistory.customerHistory;
         logger.info(util.format('customerPhoneToUpdateHistory: %s', customerPhoneToUpdateHistory));
         logger.info(util.format('customerHistory: %s', customerHistory));
         await repo.addOrUpdateItem(req, res, {PhoneNumber: { $in : customerPhoneToUpdateHistory} },
             'customer', {History: {$each: customerHistory}}, false, true, true, true);
+    },
+    deleteStatusFromRole: async function (req, res) {
+        logger.info('deleteStatusFromRole');
+        const statusToDelete = req.body.statusToDelete;
+        logger.info(util.format('statusToDelete: %s', JSON.stringify(statusToDelete)));
+        await repo.deleteItemAndReturnUpdatedList(req, res,
+            {Status: statusToDelete.Status}, 'statusesWithRole',
+            {statuses: {}}, 'statuses', {Roles: statusToDelete.Role}, true, false);
+        await repo.deleteItemAndReturnUpdatedList(req, res,
+            {Role: statusToDelete.Role}, 'rolesWithStatus',
+            {roles: {}}, 'roles', {Statuses: statusToDelete.Status}, true, true);
+    },
+    deleteStatusFromSystem: async function (req, res) {
+        logger.info('deleteStatusFromRole');
+        const statusToDelete = req.body.statusToDelete;
+        logger.info(util.format('statusToDelete: %s', JSON.stringify(statusToDelete)));
+        const statuses = await repo.deleteItemAndReturnUpdatedList(req, res,
+            {'Status': statusToDelete}, 'status',
+            {statuses: {}}, 'statuses', undefined, false, false);
+        const statusesWithRoles = await repo.deleteItemAndReturnUpdatedList(req, res,
+            {'Status': statusToDelete}, 'statusesWithRole',
+            {statusesWithRoles: {}}, 'statusesWithRole', undefined, false, false);
+        await repo.deleteItemAndReturnUpdatedList(req, res, {}, 'rolesWithStatus',
+            {'statuses': statuses, 'statusesWithRoles': statusesWithRoles, roles: {}},
+            'roles', {Statuses: {$in: [statusToDelete]}}, true, true);
+    },
+    deleteRole: async function (req, res) {
+        logger.info('deleteRole');
+        const roleToDelete = req.body.role;
+        logger.info(util.format('roleToDelete: %s', JSON.stringify(roleToDelete)));
+        const roles = await repo.deleteItemAndReturnUpdatedList(req, res,
+            {Role: roleToDelete}, 'rolesWithStatus',
+            {roles: {}}, 'roles', undefined, false, false);
+        await repo.deleteItemAndReturnUpdatedList(req, res,
+            {}, 'statusesWithRole',
+            {roles: roles, statusesWithRoles: {}}, 'statusesWithRoles',
+            {Roles: {$in: [roleToDelete]}}, true, true);
     }
 };

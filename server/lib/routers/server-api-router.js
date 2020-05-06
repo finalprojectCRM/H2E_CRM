@@ -162,6 +162,18 @@ router.route('/getWorkers')
 router.route('/addStatus')
     .post(serverApiRequestHandler.addStatus);
 
+router.route('/addStatusWithRoles')
+    .post(serverApiRequestHandler.addStatusWithRoles);
+
+router.route('/addRoleWithStatuses')
+    .post(serverApiRequestHandler.addRoleWithStatuses);
+
+router.route('/updateRole')
+    .post(serverApiRequestHandler.updateRole);
+
+router.route('/updateCustomerHistory')
+    .post(serverApiRequestHandler.updateCustomerHistory);
+
 router.route('*')
     .get(utils.handleInvalidRequest);
 

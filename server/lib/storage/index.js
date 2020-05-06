@@ -7,6 +7,7 @@ module.exports = {
     populateEmptyCollectionByDefaultValue: storage.populateEmptyCollectionByDefaultValue,
     addItem: storage.addItem,
     updateItem: storage.updateItem,
+    updateItems: storage.updateItems,
     addItems: storage.addItems,
     getItem: storage.getItem,
     deleteItem: storage.deleteItem,

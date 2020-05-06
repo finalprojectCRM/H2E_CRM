@@ -86,15 +86,47 @@ module.exports = {
         return await dbHandle.collection(collections[type]).insertOne(item);
     },
 
-    updateItem: async function (findItem, type, updatedItem = undefined, insertIfNotFound = false) {
+    updateItem: async function (findItem, type, updatedItem = undefined, insertIfNotFound = false, useAddToSet = false) {
         if (updatedItem) {
             if (insertIfNotFound) {
-                return dbHandle.collection(collections[type]).updateOne(findItem, {$set: updatedItem}, {upsert: true});
+                if (useAddToSet) {
+                    return dbHandle.collection(collections[type]).updateOne(findItem, {$addToSet: updatedItem}, {upsert: true});
+                } else {
+                    return dbHandle.collection(collections[type]).updateOne(findItem, {$set: updatedItem}, {upsert: true});
+                }
+            }
+            if (useAddToSet) {
+                return dbHandle.collection(collections[type]).updateOne(findItem, {$addToSet: updatedItem});
             } else {
                 return dbHandle.collection(collections[type]).updateOne(findItem, {$set: updatedItem});
             }
+        }
+        if (useAddToSet) {
+            return dbHandle.collection(collections[type]).updateOne(findItem, {$addToSet: findItem}, {upsert: true});
         } else {
             return dbHandle.collection(collections[type]).updateOne(findItem, {$set: findItem}, {upsert: true});
+        }
+    },
+
+    updateItems: async function (findItem, type, updatedItem = undefined, insertIfNotFound = false, useAddToSet = false) {
+        if (updatedItem) {
+            if (insertIfNotFound) {
+                if (useAddToSet) {
+                    return dbHandle.collection(collections[type]).updateMany(findItem, {$addToSet: updatedItem}, {upsert: true});
+                } else {
+                    return dbHandle.collection(collections[type]).updateMany(findItem, {$set: updatedItem}, {upsert: true});
+                }
+            }
+            if (useAddToSet) {
+                return dbHandle.collection(collections[type]).updateMany(findItem, {$addToSet: updatedItem});
+            } else {
+                return dbHandle.collection(collections[type]).updateMany(findItem, {$set: updatedItem});
+            }
+        }
+        if (useAddToSet) {
+            return dbHandle.collection(collections[type]).updateMany(findItem, {$addToSet: findItem}, {upsert: true});
+        } else {
+            return dbHandle.collection(collections[type]).updateMany(findItem, {$set: findItem}, {upsert: true});
         }
     },
 

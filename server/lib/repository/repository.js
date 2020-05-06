@@ -229,19 +229,25 @@ module.exports = {
         res.writeHead(status.code, {'Content-Type': 'application/json'});
         res.end(response);
     },
-    addOrUpdateItem: async function (req, res, findItem, type, updatedItem = undefined, insertIfNotFound = false) {
+    addOrUpdateItem: async function (req, res, findItem, type, updatedItem = undefined, insertIfNotFound = false, sendResponse = true, useAddToSet = false, updateMany = false) {
         let status = {code: 200, message: 'OK'};
         try {
-            await storage.updateItem(findItem, type, updatedItem, insertIfNotFound);
+            if (updateMany) {
+                await storage.updateItems(findItem, type, updatedItem, insertIfNotFound, useAddToSet);
+            } else {
+                await storage.updateItem(findItem, type, updatedItem, insertIfNotFound, useAddToSet);
+            }
             status.message = {'success': findItem};
         } catch (err) {
             logger.error(util.format('happened error[%s]', err));
             status = module.exports.getErrorStatus(err);
         }
-        const response = status.code === 200 ? JSON.stringify(status.message) : JSON.stringify(status);
-        logger.info(util.format('Response Data: %s', response));
-        res.writeHead(status.code, {'Content-Type': 'application/json'});
-        res.end(response);
+        if (sendResponse) {
+            const response = status.code === 200 ? JSON.stringify(status.message) : JSON.stringify(status);
+            logger.info(util.format('Response Data: %s', response));
+            res.writeHead(status.code, {'Content-Type': 'application/json'});
+            res.end(response);
+        }
     },
     deleteAllItems: async function (req, res, type, jsonObj, condition = {}) {
         let status = {code: 200, message: 'OK'};

@@ -272,10 +272,9 @@ module.exports = {
         let condition = {};
         if (req.params.WorkerName !== 'Admin') {
             condition = {WorkerName: req.params.WorkerName};
-         }
+        }
         await repo.getItems(req, res, 'customer', 'customers', condition);
     },
-
     /*
         get list of all roles with their statuses
     */
@@ -290,7 +289,6 @@ module.exports = {
         logger.info('getRoles');
         await repo.getAssignedRoles(req, res);
     },
-
     /*
         get list of all events for specific worker
     */
@@ -299,44 +297,18 @@ module.exports = {
         await repo.getItems(req, res, 'worker',
             'workerEvents', {WorkerName: req.params.WorkerName}, 'Events');
     },
-
     getCustomerEvents: async function (req, res) {
         logger.info(util.format('/getCustomerEvents/%s/%s', req.params.WorkerName, req.params.eventId));
         await repo.getCustomerEvents(req, res, 'worker');
     },
-    /*
-        app.get('/getCustomerEvents/:WorkerName/:eventId', (request, response) => {
-            console.log('/getCustomerEvents/' + request.params.WorkerName + '/' + request.params.eventId);
-            workersCollection.find(
-                {
-                    'WorkerName': request.params.WorkerName,
-                    'Events.id': request.params.eventId}).forEach(function (doc) {
-                doc.Events = doc.Events.filter(function (event) {
-                    if (event.id === request.params.eventId) {
-                        return event;
-                    }
-                });
-                console.dir(doc.Events);
-                if (doc.Events) {
-                    response.writeHead(200, {'Content-Type': 'application/json'});
-                    response.end(JSON.stringify({ 'customerEvents': doc.Events}));
-                } else {
-                    response.end(JSON.stringify({ 'customerEvents': {}}));
-                }
-            });
-        });
-    */
-
     uploadFile: async function (req, res) {
         logger.info('/uploadFile');
         utils.uploadFile(req, res, repo.updateFileCollection);
     },
-
     sendEmail: async function (req, res) {
         logger.info('/sendEmail');
         utils.sendMail(req.body.emailData, res);
     },
-
     deleteCustomer: async function (req, res) {
         logger.info('deleteCustomer');
         //the customer to delete with its details
@@ -351,7 +323,6 @@ module.exports = {
         };
         await repo.deleteItemAndReturnUpdatedList(req, res, itemToDelete, 'customer', {'customers': {}}, 'customers');
     },
-
     deleteFile: async function (req, res) {
         logger.info('deleteFile');
         //the customer to delete with its details
@@ -394,15 +365,15 @@ module.exports = {
                 customerAfterUpdate.WorkerName = await repo.assignWorker({Role: customerAfterUpdate.Category.Role}, 'customer');
             }
             const foundItems = await repo.getAllCollectionItems('customer', {PhoneNumber: customerAfterUpdate.PhoneNumber});
-            if (foundItems.length === 0 || (foundItems.length === 1 && foundItems[0].PhoneNumber === customerBeforeUpdate.PhoneNumber)) {
+            if (foundItems.length === 0 || foundItems.length === 1 && foundItems[0].PhoneNumber === customerBeforeUpdate.PhoneNumber) {
                 await repo.updateItem(req, res, {PhoneNumber: customerBeforeUpdate.PhoneNumber}, {
                     $addToSet: {History: history},
                     $set: customerAfterUpdate
                 }, 'customer');
                 return;
-            } else {
-                status.message = {'phoneExists': 'This phone number already exists, change it or search for this worker.'};
             }
+            status.message = {'phoneExists': 'This phone number already exists, change it or search for this worker.'};
+
         } catch (err) {
             logger.error(util.format('happened error[%s]', err));
             status = module.exports.getErrorStatus(err);
@@ -419,7 +390,10 @@ module.exports = {
             logger.info(util.format('statusFlag: %s', statusFlag));
             //if request is to get the workers for the delete worker
             if (statusFlag === 'deleteWorker') {
-                await repo.getItems(req, res, 'worker', 'workers', {WorkerName: {$ne: 'Admin'}}, '', {'showWorkers': true, 'workers': {}});
+                await repo.getItems(req, res, 'worker', 'workers', {WorkerName: {$ne: 'Admin'}}, '', {
+                    'showWorkers': true,
+                    'workers': {}
+                });
             } else if (statusFlag === 'showWorkers') {
                 await repo.getItems(req, res, 'worker', 'workers', {}, '', {'showWorkers': true, 'workers': {}});
             }
@@ -441,8 +415,75 @@ module.exports = {
         await repo.deleteAllItems(req, res, 'worker', {'message': 'All workers have been deleted from the system'}, {WorkerName: {$ne: 'Admin'}});
     },
     addStatus: async function (req, res) {
-        const statusToAdd = req .body.newSatus;
+        const statusToAdd = req.body.newSatus;
         logger.info(util.format('statusToAdd=%s', statusToAdd));
-        return await repo.addOrUpdateItem(req, res, {'Status': statusToAdd.Status}, 'status');
+        return await repo.addOrUpdateItem(req, res, {'Status': statusToAdd.Status}, 'status', false, true, false, false);
+    },
+    /*
+	    Add new status to the correspondent roles
+    */
+    addStatusWithRoles: async function (req, res) {
+        const statusWithRoles = req.body.statusWithRoles;
+        //add a new add a new status with an appropriate roles only if the status does not exist
+        await repo.addOrUpdateItem(req, res, {Status: statusWithRoles.Status}, 'statusesWithRole',
+            {Status: statusWithRoles.Status, Roles: statusWithRoles.Roles}, true, false, false, false);
+        //go through of all roles
+        for (const role of statusWithRoles.Roles) {
+            //add to role a new status
+            await repo.addOrUpdateItem(req, res, {Role: role}, 'rolesWithStatus',
+                {Statuses: statusWithRoles.Status}, false, false, true, false);
+        }
+        await repo.addOrUpdateItem(req, res, {'Status': statusWithRoles.Status}, 'status',
+            {'Status': statusWithRoles.Status}, true, true, false, false);
+    },
+    /*
+	    Add a new role with the correspondent statuses
+    */
+    addRoleWithStatuses: async function (req, res) {
+        const roleWithStatuses = req.body.roleWithStatuses;
+        // insert the role color to the colors list
+        await repo.addOrUpdateItem(req, res, {Color: roleWithStatuses.Color}, 'color',
+            {Color: roleWithStatuses.Color}, true, false, false, false);
+        //add a new role with the correspondent statuses only if the role does not exist
+        await repo.addOrUpdateItem(req, res, {Role: roleWithStatuses.Role}, 'rolesWithStatus',
+            {
+                Role: roleWithStatuses.Role,
+                Color: roleWithStatuses.Color,
+                Statuses: roleWithStatuses.Statuses
+            }, true, false, false, false);
+        //go through of all statuses and add a new role
+        for (const status of roleWithStatuses.Statuses) {
+            await repo.addOrUpdateItem(req, res, {Status: status}, 'statusesWithRole',
+                {Roles: roleWithStatuses.Role}, false, true, true, false);
+        }
+    },
+    /*
+	    Update a role with new statuses
+    */
+    updateRole: async function (req, res) {
+        //the role to update
+        const roleToUpdate = req.body.roleToUpdate;
+        //the role's statuses
+        const statuses = roleToUpdate.Statuses;
+        //go through statuses
+        for (const status of roleToUpdate.Statuses) {
+            console.log('status: ' + status);
+            console.log('type of status: ' + typeof status);
+            //update the status with new role
+            await repo.addOrUpdateItem(req, res, {Status: status}, 'statusesWithRole',
+                {Roles: roleToUpdate.Role}, false, false, true, false);
+        }
+        //update the role with new statuses
+        await repo.addOrUpdateItem(req, res, {Role: roleToUpdate.Role}, 'rolesWithStatus',
+            {Statuses: {$each: statuses}}, false, true, true, false);
+    },
+
+    updateCustomerHistory: async function (req, res) {
+        const customerPhoneToUpdateHistory = req.body.updateHistory.customerPhoneNumber;
+        const customerHistory = req.body.updateHistory.customerHistory;
+        logger.info(util.format('customerPhoneToUpdateHistory: %s', customerPhoneToUpdateHistory));
+        logger.info(util.format('customerHistory: %s', customerHistory));
+        await repo.addOrUpdateItem(req, res, {PhoneNumber: { $in : customerPhoneToUpdateHistory} },
+            'customer', {History: {$each: customerHistory}}, false, true, true, true);
     }
 };

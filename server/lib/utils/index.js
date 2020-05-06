@@ -25,7 +25,7 @@ module.exports = {
     sendMail: function (emailData, response) {
 
         const mailOptions = {
-            from: config.server.mail.worker,
+            from: config.server.mail.user,
             to: emailData.mailRecipient,
             subject: emailData.mailSubject,
             text: emailData.mailText
@@ -35,7 +35,7 @@ module.exports = {
         const transporter = nodeMailer.createTransport({
             service: 'gmail',
             auth: {
-                worker: config.server.mail.worker,
+                user: config.server.mail.user,
                 pass: config.server.mail.password
             }
         });

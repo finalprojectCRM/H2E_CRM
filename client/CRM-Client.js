@@ -985,7 +985,7 @@
                 };
 
                 function updateCustomerHistoryEmail(){
-                    const history = 'Date : '+moment().format('DD/MM/YYYY HH:mm')+'\n\nMail has been sended\n';
+                    const history = 'Date : '+moment().format('DD/MM/YYYY HH:mm')+'\n\nMail has sent\n';
                     historyArray.push(history);
                     updateCustomerHistory(historyArray, customersPhone);
                 }
@@ -1639,7 +1639,7 @@
 
                     //save details in json object : status and roles list and call server with http request
                     const statusWithRoles = {Status: $scope.statusFromModal, Roles: selectedItems};
-                    $http.post(SERVER_URI + '/addStatutsWithRoles', {
+                    $http.post(SERVER_URI + '/addStatusWithRoles', {
                         statusWithRoles: statusWithRoles
                     }).then(
                         function (response) { //success callback

@@ -105,107 +105,10 @@ app.post('/addWorker', (request, response) => {
         response.send({error: err});
     });
 });
-/*
-	This request is add a new status with an appropriate roles
-*/
-app.post('/addStatutsWithRoles', (request, response) => {
-
-    const statusWithRoles = request.body.statusWithRoles;
-    console.log('before updateOne');
-    //add a new add a new status with an appropriate roles only if the status does not exist
-    statusesWithRolesCollection.updateOne({Status: statusWithRoles.Status},
-        {$setOnInsert: {Status: statusWithRoles.Status, Roles: statusWithRoles.Roles}},
-        {upsert: true}, function (err, res) {
-            console.log('after updateOne');
-        });
-
-    console.log('statusWithRoles.Roles: ' + statusWithRoles.Roles);
-
-    //go through of all roles
-    for (const role of statusWithRoles.Roles) {
-        console.log('role: ' + role);
-        //add to role a new status
-        rolesWithStatusesCollection.updateOne({Role: role}, {$addToSet: {Statuses: statusWithRoles.Status}},
-            function (err, res) {
-                console.log('after updateOne');
-            });
-
-    }
-    //add to the statuses list a new status
-    statusesCollection.updateOne(
-        {'Status': statusWithRoles.Status},
-        {$setOnInsert: {'Status': statusWithRoles.Status}},
-        {upsert: true}
-    );
-    //response with ok
-    response.writeHead(200, {'Content-Type': 'application/json'});
-    response.end();
-});
-
-/*
-	This request is add a new role with an appropriate statuses
-*/
-app.post('/addRoleWithStatuses', (request, response) => {
-    const roleWithStatuses = request.body.roleWithStatuses;
-    console.log('before updateOne');
-    //insert to the colors list the role color
-    colorsCollection.insertOne({Color: roleWithStatuses.Color});
-    //add a new add a new role with an appropriate statuses only if the role does not exist
-    rolesWithStatusesCollection.updateOne({Role: roleWithStatuses.Role}, {
-        $setOnInsert: {
-            Role: roleWithStatuses.Role,
-            Color: roleWithStatuses.Color,
-            Statuses: roleWithStatuses.Statuses
-        }
-    },
-    {upsert: true},
-    function (err, res) {
-        console.log('after updateOne');
-    });
-
-    //go through of all statuses
-    for (const status of roleWithStatuses.Statuses) {
-        console.log('status: ' + status);
-        //add the to status a new role
-        statusesWithRolesCollection.updateOne({Status: status}, {$addToSet: {Roles: roleWithStatuses.Role}}, {upsert: true},
-            function (err, res) {
-                console.log('after updateOne');
-            });
-    }
-    //response with ok
-    response.writeHead(200, {'Content-Type': 'application/json'});
-    response.end();
-});
-/*
-	This request is to update role with new statuses
-*/
-app.post('/updateRole', (request, response) => {
-    //the role to update
-    const roleToUpdate = request.body.roleToUpdate;
-    //the appropriate statuses to role
-    const statuses = roleToUpdate.Statuses;
-    console.log('before updateOne');
-    //update the role with new statuses
-    rolesWithStatusesCollection.updateOne({Role: roleToUpdate.Role}, {$addToSet: {Statuses: {$each: statuses}}},
-        function (err, res) {
-            console.log('after updateOne');
-        });
-    //go through statuses
-    for (const status of roleToUpdate.Statuses) {
-        console.log('status: ' + status);
-        console.log('type of status: ' + typeof status);
-        //update the status with new role
-        statusesWithRolesCollection.updateOne({Status: status}, {$addToSet: {Roles: roleToUpdate.Role}},
-            function (err, res) {
-                console.log('after updateOne');
-            });
-    }
-});
 
 /*
 	update customer details only with phone number that does not exist in the system
 */
-
 app.post('/addEvent', (request, response) => {
     console.log('/addEvent');
     const workerForEvent = request.body.newEvent.worker;
@@ -412,20 +315,5 @@ app.post('/deleteRole', (request, response) => {
             //rolesStatuses = rolesStatuses;
         });
     });
-});
-
-app.post('/updateCustomerHistory', (request, response) => {
-//add new option
-    console.log('/updateCustomerHistory');
-    const customerPhoneToUpdateHistory = request.body.updateHistory.customerPhoneNumber;
-    const History = request.body.updateHistory.customerHistory;
-    console.log('customerPhoneToUpdateHistory : '+customerPhoneToUpdateHistory);
-    console.log('History : '+History);
-    customersCollection.updateMany({PhoneNumber: { "$in" : customerPhoneToUpdateHistory}}, {$addToSet: {History: {$each: History}}},
-        function (err, res) {
-            console.log('after updateOne');
-        });
-    response.writeHead(200, {'Content-Type': 'application/json'});
-    response.end();
 });
 

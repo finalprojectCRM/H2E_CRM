@@ -96,7 +96,7 @@ router.route('/getRolesColors')
 router.route('/getFiles')
     .get(serverApiRequestHandler.getFiles);
 
-router.route('/getCustomers')
+router.route('/getCustomers/:WorkerName')
     .get(serverApiRequestHandler.getCustomers);
 
 router.route('/getRoles')

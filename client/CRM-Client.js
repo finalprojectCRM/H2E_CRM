@@ -2069,7 +2069,7 @@
                     get the customers list from server with http request
                 */
                 $scope.getCustomersList = function () {
-                    $http.get(SERVER_URI + '/getCustomers').then(
+                    $http.get(SERVER_URI + '/getCustomers/' + loggedInWorker.WorkerName).then(
                         function (response) {//success callback
 
                             //return the list of the customers

@@ -195,10 +195,7 @@ module.exports = {
 
     logIn: async function (req, res) {
         logger.info('logIn');
-        let status = {
-            code: 200,
-            message: 'OK'
-        };
+        let status = {code: 200, message: 'OK'};
         try {
             const worker = req.body.LoginWorker;
             logger.info(util.format('workerName=%s', worker.WorkerName));
@@ -272,7 +269,11 @@ module.exports = {
     */
     getCustomers: async function (req, res) {
         logger.info('getCustomers');
-        await repo.getItems(req, res, 'customer', 'customers');
+        let condition = {};
+        if (req.params.WorkerName !== 'Admin') {
+            condition = {WorkerName: req.params.WorkerName};
+         }
+        await repo.getItems(req, res, 'customer', 'customers', condition);
     },
 
     /*
@@ -389,6 +390,9 @@ module.exports = {
             const customerAfterUpdate = req.body.updatedCustomer;
             const history = customerAfterUpdate.History;
             delete customerAfterUpdate.History;
+            if (customerBeforeUpdate.Category.Role !== customerAfterUpdate.Category.Role) {
+                customerAfterUpdate.WorkerName = await repo.assignWorker({Role: customerAfterUpdate.Category.Role}, 'customer');
+            }
             const foundItems = await repo.getAllCollectionItems('customer', {PhoneNumber: customerAfterUpdate.PhoneNumber});
             if (foundItems.length === 0 || (foundItems.length === 1 && foundItems[0].PhoneNumber === customerBeforeUpdate.PhoneNumber)) {
                 await repo.updateItem(req, res, {PhoneNumber: customerBeforeUpdate.PhoneNumber}, {

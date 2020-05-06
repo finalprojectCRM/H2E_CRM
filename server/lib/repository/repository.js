@@ -115,7 +115,7 @@ module.exports = {
             }
         } catch (err) {
             logger.error(util.format('happened error[%s]', err));
-            status = module.exports.getErrorStatus(err);
+            status = utils.getErrorStatus(err);
         }
         const response = status.code === 200 ? JSON.stringify(status.message) : JSON.stringify(status);
         logger.info(util.format('Response Data: %s', response));
@@ -151,7 +151,7 @@ module.exports = {
             });
         } catch (err) {
             logger.error(util.format('happened error[%s]', err));
-            status = module.exports.getErrorStatus(err);
+            status = utils.getErrorStatus(err);
             const response = status.code === 200 ? JSON.stringify(status.message) : JSON.stringify(status);
             res.writeHead(status.code, {'Content-Type': 'application/json'});
             res.end(response);
@@ -182,7 +182,7 @@ module.exports = {
             status.message = jsonObj;
         } catch (err) {
             logger.error(util.format('happened error[%s]', err));
-            status = module.exports.getErrorStatus(err);
+            status = utils.getErrorStatus(err);
         }
         if (isResponse) {
             const response = status.code === 200 ? JSON.stringify(status.message) : JSON.stringify(status);
@@ -199,29 +199,33 @@ module.exports = {
     updateWorkerPassword: async function (workerNameItem, newPasswordItem) {
         return await storage.updateItem(workerNameItem, 'worker', newPasswordItem);
     },
-    insertItemByCondition: async function (req, res, condition, item, descJson, type) {
-        let status = {
-            code: 200,
-            message: 'OK'
-        };
+    insertItemByCondition: async function (req, res, condition, item, descJson, type, isResponse = true, resJson = undefined) {
+        let status = {code: 200, message: 'OK'};
         try {
             const foundItem = await storage.getItem(condition, type);
             if (!foundItem) {
                 await storage.addItem(item, type);
                 status.message = {'success': item};
+                if (resJson) {
+                    status.message = resJson;
+                }
             } else {
                 status.message = descJson;
             }
         } catch (err) {
             logger.error(util.format('happened error[%s]', err));
-            status = module.exports.getErrorStatus(err);
+            status = utils.getErrorStatus(err);
         }
-        const response = status.code === 200 ? JSON.stringify(status.message) : JSON.stringify(status);
-        logger.info(util.format('Response Data: %s', response));
-        res.writeHead(status.code, {'Content-Type': 'application/json'});
-        res.end(response);
+        if (isResponse) {
+            const response = status.code === 200 ? JSON.stringify(status.message) : JSON.stringify(status);
+            logger.info(util.format('Response Data: %s', response));
+            res.writeHead(status.code, {'Content-Type': 'application/json'});
+            res.end(response);
+        } else {
+            return status.message;
+        }
     },
-    updateItem: async function (req, res, condition, item, type, descJson = undefined) {
+    updateItem: async function (req, res, condition, item, type, descJson = undefined, jsonObj = undefined, desc = undefined) {
         let status = {code: 200, message: 'OK'};
         try {
             await storage.updateItemByCondition(condition, item, type);
@@ -230,16 +234,21 @@ module.exports = {
             } else {
                 status.message = {'success': item};
             }
+            if (jsonObj) {
+                const itemArray = await module.exports.getAllCollectionItems(type, {});
+                jsonObj[desc] = itemArray;
+                status.message = jsonObj;
+            }
         } catch (err) {
             logger.error(util.format('happened error[%s]', err));
-            status = module.exports.getErrorStatus(err);
+            status = utils.getErrorStatus(err);
         }
         const response = status.code === 200 ? JSON.stringify(status.message) : JSON.stringify(status);
         logger.info(util.format('Response Data: %s', response));
         res.writeHead(status.code, {'Content-Type': 'application/json'});
         res.end(response);
     },
-    addOrUpdateItem: async function (req, res, findItem, type, updatedItem = undefined, insertIfNotFound = false, sendResponse = true, useAddToSet = false, updateMany = false) {
+    addOrUpdateItem: async function (req, res, findItem, type, updatedItem = undefined, insertIfNotFound = false, sendResponse = true, useAddToSet = false, updateMany = false, resJson = undefined) {
         let status = {code: 200, message: 'OK'};
         try {
             if (updateMany) {
@@ -248,15 +257,20 @@ module.exports = {
                 await storage.updateItem(findItem, type, updatedItem, insertIfNotFound, useAddToSet);
             }
             status.message = {'success': findItem};
+            if (resJson) {
+                status.message = resJson;
+            }
         } catch (err) {
             logger.error(util.format('happened error[%s]', err));
-            status = module.exports.getErrorStatus(err);
+            status = utils.getErrorStatus(err);
         }
         if (sendResponse) {
             const response = status.code === 200 ? JSON.stringify(status.message) : JSON.stringify(status);
             logger.info(util.format('Response Data: %s', response));
             res.writeHead(status.code, {'Content-Type': 'application/json'});
             res.end(response);
+        } else {
+            return status.message;
         }
     },
     deleteAllItems: async function (req, res, type, jsonObj, condition = {}) {
@@ -266,7 +280,7 @@ module.exports = {
             status.message = jsonObj;
         } catch (err) {
             logger.error(util.format('happened error[%s]', err));
-            status = module.exports.getErrorStatus(err);
+            status = utils.getErrorStatus(err);
         }
         const response = status.code === 200 ? JSON.stringify(status.message) : JSON.stringify(status);
         logger.info(util.format('Response Data: %s', response));
@@ -301,7 +315,7 @@ module.exports = {
             status.message = {'assignedRoles': _.sortedUniq(assignedRoles)};
         } catch (err) {
             logger.error(util.format('happened error[%s]', err));
-            status = module.exports.getErrorStatus(err);
+            status = utils.getErrorStatus(err);
         }
         const response = status.code === 200 ? JSON.stringify(status.message) : JSON.stringify(status);
         logger.info(util.format('Response Data: %s', response));

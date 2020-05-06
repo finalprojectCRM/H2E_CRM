@@ -378,7 +378,6 @@ module.exports = {
                 return;
             }
             status.message = {'phoneExists': 'This phone number already exists, change it or search for this worker.'};
-
         } catch (err) {
             logger.error(util.format('happened error[%s]', err));
             status = module.exports.getErrorStatus(err);
@@ -494,7 +493,7 @@ module.exports = {
         const customerHistory = req.body.updateHistory.customerHistory;
         logger.info(util.format('customerPhoneToUpdateHistory: %s', customerPhoneToUpdateHistory));
         logger.info(util.format('customerHistory: %s', customerHistory));
-        await repo.addOrUpdateItem(req, res, {PhoneNumber: { $in : customerPhoneToUpdateHistory} },
+        await repo.addOrUpdateItem(req, res, {PhoneNumber: {$in: customerPhoneToUpdateHistory}},
             'customer', {History: {$each: customerHistory}}, false, true, true, true);
     },
     deleteStatusFromRole: async function (req, res) {
@@ -533,5 +532,42 @@ module.exports = {
             {}, 'statusesWithRole',
             {roles: roles, statusesWithRoles: {}}, 'statusesWithRoles',
             {Roles: {$in: [roleToDelete]}}, true, true);
+    },
+
+    /*
+	    Add a new Worker to the system
+    */
+    addWorker: async function (req, res) {
+        logger.info('addWorker');
+        const worker = req.body.worker;
+        //worker with his details : Role , WorkerName ,Name ,eMail,Password
+        if (worker.WorkerName === 'Admin') {
+            //worker.isAdmin = true;
+            worker.Role = 'Administrator';
+            const adminWorker = await repo.getAdminWorker();
+            if (adminWorker.WorkerName === 'Admin' && adminWorker.Name === '' &&
+                adminWorker.eMail === '' && adminWorker.Password === '') {
+                await repo.addOrUpdateItem(req, res, {'WorkerName': 'Admin'},
+                    'worker', worker, false, true, false, false, {"worker": worker});
+            } else {
+                res.writeHead(200, {'Content-Type': 'application/json'});
+                res.end(JSON.stringify({workerExists: 'This worker name already exists.'}));
+            }
+        } else {
+            //check whether such worker name exists in the system and if not, so add it
+            worker.Role = 'new in the system';
+            await repo.insertItemByCondition(req, res, {'WorkerName': worker.WorkerName}, worker,
+                {workerExists: 'This worker name already exists.'}, 'worker', true, {"worker": worker});
+        }
+    },
+    /*
+        Update a Worker in the system
+    */
+    updateWorker: async function (req, res) {
+        logger.info('updateWorker');
+        const workerBeforeUpdate = req.body.workerBeforeUpdate;
+        const workerAfterUpdate = req.body.updatedWorker;
+        await repo.updateItem(req, res, workerBeforeUpdate, {$set: workerAfterUpdate}, 'worker', undefined,
+            {'showWorkers': true, 'workers': {}}, 'workers');
     }
 };

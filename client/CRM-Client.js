@@ -77,6 +77,7 @@
 
                 function refreshCalendarEvents() {
                     $log.log('refreshCalendarEvents');
+                    return;
                     $http.get(SERVER_URI + '/getWorkerEvents/' + loggedInWorker.WorkerName).then(
                         function (response) {//success callback
                             $scope.retreivedCalendarEvents = response.data.workerEvents;
@@ -97,6 +98,7 @@
 
                 function refreshCustomerCalendarEvents(eventId) {
                     $log.log('refreshCustomerCalendarEvents');
+                    return;
                     $http.get(SERVER_URI + '/getCustomerEvents/' + loggedInWorker.WorkerName + '/' + eventId).then(
                         function (response) {//success callback
                             $scope.retreivedCalendarEvents = response.data.customerEvents;
@@ -248,7 +250,7 @@
                     $log.log('after update :' + eventAfterUpdate.title + ' ' +
                         eventAfterUpdate.start + ' ' + eventAfterUpdate.end + ' ' + eventAfterUpdate.color + ' ' +
                         eventAfterUpdate.id + ' ' + eventAfterUpdate.editable + ' ' + eventAfterUpdate.allDay);
-
+                    $log.log('after: workerName=' + eventAfterUpdate.workerName);
                     startDate = changeDateFormat(eventBeforeUpdate.start);
                     endDate = changeDateFormat(eventBeforeUpdate.end);
 
@@ -405,6 +407,30 @@
                     editable: true,
                     eventLimit: true,
                     renderCalender: $scope.renderCalender(),
+                    events:  [
+                        {
+                            id: 'event1 0545664349',
+                            title  : 'event1',
+                            start  : '2020-05-06T12:30:00',
+                            end    : '2020-05-06T15:30:00',
+                            workerName: 'aaa'
+                        },
+                        {
+                            id: 'event2 0545664349',
+                            title  : 'event2',
+                            start  : '2020-05-08T11:30:00',
+                            end    : '2020-05-08T19:30:00',
+                            workerName: 'bbb'
+                        },
+                        {
+                            id: 'event3 0545664349',
+                            title  : 'event3',
+                            start  : '2020-05-11T16:00:00',
+                            end    : '2020-05-11T23:00:00',
+                            allDay : false, // will make the time show
+                            workerName: 'ccc'
+                        }
+                    ],
 
                     /*events: function (start, end, timezone, callback) { // Fetch your events here
                         $log.log('retreivedCalendarEvents=' + $scope.retreivedCalendarEvents);
@@ -453,6 +479,7 @@
                             id: event.id,
                             editable: event.editable, allDay: event.allDay
                         };
+                        $log.log('workerName=' + event.workerName);
                         const indexRole = getIndexOfSelectedItem(event.color, 'color_of_role');
                         $log.log('indexRole : ' + indexRole);
                         $scope.role = $scope.roles[indexRole];
@@ -1393,8 +1420,6 @@
                                 $scope.registrationWorkerName = undefined;
 
                             }
-
-
                         },
                         function (response) { //failure callback
 
@@ -1852,7 +1877,11 @@
                 $scope.updateWorkerFunction = function (worker) {
                     //get all details of worker in json format
                     workerBeforeUpdate = {Role: worker.Role, Name: worker.Name, WorkerName: worker.WorkerName, eMail: worker.eMail};
-                    $scope.role = $scope.roles[getIndexOfSelectedItem(workerBeforeUpdate.Role, 'role_list')];
+                    $scope.role = undefined;
+                    if (worker.Role !== 'new in the system') {
+                        $scope.role = $scope.roles[getIndexOfSelectedItem(workerBeforeUpdate.Role, 'role_list')];
+                        $log.log('$scope.role=' + $scope.role);
+                    }
                 };
 
                 /*
@@ -1868,7 +1897,7 @@
                     a function for saving the role that was chosen
                 */
                 $scope.onChangeCategory = function (option, flag) {
-
+                    $log.log('option=' + JSON.stringify(option));
                     category = option;
                     if (flag === 'update role') {
                         category = option.Role;
@@ -2516,14 +2545,11 @@
                     //regular expression for a valid name
                     const reName = /^[a-zA-Z\s\u0590-\u05fe]{2,20}$/;
 
-                    $log.log('category : ' + category);
+                    $log.log('category: ' + category);
                     //if no role was selected show an error modal
                     if (category === undefined) {
                         $log.log('entered if : ' + workerBeforeUpdate.Role);
                         category = workerBeforeUpdate.Role;
-                    } else {
-                        $log.log('entered else : ' + category.Role);
-                        category = category.Role;
                     }
 
                     //if a worker name was not entered or was invalid show an error modal
@@ -2559,7 +2585,7 @@
                         Name: workerToUpdate.Name,
                         eMail: workerToUpdate.eMail
                     };
-
+                    $log.log('updatedWorker=' + JSON.stringify(updatedWorker));
                     //call server with http request
                     $http.post(SERVER_URI + '/updateWorker', {
                         workerBeforeUpdate: workerBeforeUpdate, updatedWorker: updatedWorker

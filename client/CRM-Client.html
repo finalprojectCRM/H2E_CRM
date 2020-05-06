@@ -351,7 +351,7 @@
                                     <div class="form-group"><!-- ng-if="roles.indexOf(role)>0"-->
                                         <select class="form-control" ng-model="role"
                                                 ng-options="objRole as objRole.Role disable when objRole.Role  === '-- Choose category for role --' for objRole in roles | filter: ({Role : '!new in the system'})"
-                                                ng-change="onChangeCategory(role)">
+                                                ng-change="onChangeCategory(role,'update role')">
                                             <option value='' disabled="disabled">-- Choose category for role --</option>
 
 

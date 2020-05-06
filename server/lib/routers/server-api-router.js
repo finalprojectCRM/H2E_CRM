@@ -183,6 +183,12 @@ router.route('/deleteStatusFromSystem')
 router.route('/deleteRole')
     .post(serverApiRequestHandler.deleteRole);
 
+router.route('/addWorker')
+    .post(serverApiRequestHandler.addWorker);
+
+router.route('/updateWorker')
+    .post(serverApiRequestHandler.updateWorker);
+
 router.route('*')
     .get(utils.handleInvalidRequest);
 

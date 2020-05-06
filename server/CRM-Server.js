@@ -45,69 +45,6 @@ app.listen(config.server.access.port, () => {
 });
 
 /*
-	This request is to add a new worker to system
-*/
-app.post('/addWorker', (request, response) => {
-    console.log('entered addWorker function');
-    let worker = request.body.worker;
-    const workerEvents = [];
-    //worker with his details : Role , WorkerName ,Name ,eMail,Password
-    worker = {
-        'Role': 'new in the system',
-        'WorkerName': worker.WorkerName,
-        'Name': worker.Name,
-        'eMail': worker.eMail,
-        'Password': worker.Password,
-        'Events': workerEvents
-    };
-    //check if this workername does not exist in the system
-    workersCollection.findOne({'WorkerName': worker.WorkerName}).then(function (mongoWorker) {
-        if (!mongoWorker) {
-            //if this workername does not exist in the system - add a new worker with his details
-            workersCollection.insertOne(worker, function (err, res) {
-                if (err) throw err;
-                //return the worker details with isAdmin:false
-                response.writeHead(200, {'Content-Type': 'application/json'});
-                response.end(JSON.stringify({
-                    'worker': {
-                        'Role': worker.Role, 'WorkerName': worker.WorkerName, 'Name': worker.Name,
-                        'eMail': worker.eMail, 'Password': worker.Password, isAdmin: false
-                    }
-                }));
-            });
-        } else {
-            //when the workername already exists with admin and his fields did not fill
-            if (mongoWorker.WorkerName === 'Admin' && mongoWorker.Name === '' && mongoWorker.eMail === '' && mongoWorker.Password === '') {
-                //update the Admin empty details with a new details
-                workersCollection.update({'WorkerName': 'Admin'}, {
-                    $set: {
-                        'Role': 'Administrator', 'Name': worker.Name,
-                        'eMail': worker.eMail, 'Password': worker.Password
-                    }
-                }, function (err, obj) {
-                    if (err) throw err;
-
-                    response.writeHead(200, {'Content-Type': 'application/json'});
-                    response.end(JSON.stringify({
-                        'worker': {
-                            'Role': 'Administrator', 'WorkerName': worker.WorkerName, 'Name': worker.Name,
-                            'eMail': worker.eMail, 'Password': worker.Password, isAdmin: true
-                        }
-                    }));
-                    console.log('admin register');
-                });
-            } else {
-                //if the workername already exists and he is not the Admin
-                response.writeHead(200, {'Content-Type': 'application/json'});
-                response.end(JSON.stringify({workerExists: 'This worker name already exists.'}));
-            }
-        }
-    }).catch(function (err) {
-        response.send({error: err});
-    });
-});
-
-/*
 	update customer details only with phone number that does not exist in the system
 */
 app.post('/addEvent', (request, response) => {
@@ -193,37 +130,5 @@ app.post('/updateEvent', (request, response) => {
             }
             response.end();
         });
-});
-
-//update customer details only with phone number that does not exist in the system
-app.post('/updateWorker', (request, response) => {
-//update customer
-    console.log('update workers FUNCTION');
-    const workerBeforeUpdateBody = request.body.workerBeforeUpdate;
-    const workerAfterUpdateBody = request.body.updatedWorker;
-    const workerBeforeUpdate = {
-        Role: workerBeforeUpdateBody.Role,
-        WorkerName: workerBeforeUpdateBody.WorkerName,
-        Name: workerBeforeUpdateBody.Name,
-        eMail: workerBeforeUpdateBody.eMail
-    };
-    const workerAfterUpdate = {
-        $set: {
-            Role: workerAfterUpdateBody.Role,
-            WorkerName: workerAfterUpdateBody.WorkerName,
-            Name: workerAfterUpdateBody.Name,
-            eMail: workerAfterUpdateBody.eMail
-        }
-    };
-    workersCollection.updateOne(workerBeforeUpdate, workerAfterUpdate, function (err, res) {
-        if (err) throw err;
-        workersCollection.find({}).toArray((error, result) => {
-            if (error) {
-                return response.status(500).send(error);
-            }
-            response.writeHead(200, {'Content-Type': 'application/json'});
-            response.end(JSON.stringify({'showWorkers': true, 'workers': result}));
-        });
-    });
 });
 

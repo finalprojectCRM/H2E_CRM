@@ -25,7 +25,7 @@ module.exports = {
     sendMail: function (emailData, response) {
 
         const mailOptions = {
-            from: config.server.mail.user,
+            from: config.server.mail.worker,
             to: emailData.mailRecipient,
             subject: emailData.mailSubject,
             text: emailData.mailText
@@ -35,7 +35,7 @@ module.exports = {
         const transporter = nodeMailer.createTransport({
             service: 'gmail',
             auth: {
-                user: config.server.mail.user,
+                worker: config.server.mail.worker,
                 pass: config.server.mail.password
             }
         });
@@ -85,7 +85,7 @@ module.exports = {
     getErrorStatus: function (errorMessage, errorCode) {
         const status = {};
         status.code = errorCode ? errorCode : 400;
-        status.message = {"error": util.format("%s", _.replace(errorMessage, /Error: /gi, ""))};
+        status.message = {'error': util.format('%s', _.replace(errorMessage, /Error: /gi, ''))};
         return status;
     },
     handleInvalidRequest: async function (req, res) {

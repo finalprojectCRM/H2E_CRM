@@ -4,13 +4,18 @@ module.exports = {
     init: repo.init,
     getDBConnectionStatus: repo.getDBConnectionStatus,
     checkExistingStatusesAndRolesAndFiles: repo.checkExistingStatusesAndRolesAndFiles,
-    getAdminUser: repo.getAdminUser,
-    addDefaultAdminUser: repo.addDefaultAdminUser,
-    getUserLogInInfo: repo.getUserLogInInfo,
+    getAdminWorker: repo.getAdminWorker,
+    addDefaultAdminWorker: repo.addDefaultAdminWorker,
+    getWorkerLogInInfo: repo.getWorkerLogInInfo,
     getAllCollectionItems: repo.getAllCollectionItems,
     getItems: repo.getItems,
     updateFileCollection: repo.updateFileCollection,
-    updateUserPassword: repo.updateUserPassword,
+    updateWorkerPassword: repo.updateWorkerPassword,
     deleteItemAndReturnUpdatedList: repo.deleteItemAndReturnUpdatedList,
-    getCustomerEvents: repo.getCustomerEvents
+    getCustomerEvents: repo.getCustomerEvents,
+    insertItemByCondition: repo.insertItemByCondition,
+    updateItem: repo.updateItem,
+    assignWorker: repo.assignWorker,
+    deleteAllItems: repo.deleteAllItems,
+    addOrUpdateItem: repo.addOrUpdateItem
 };

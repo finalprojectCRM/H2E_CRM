@@ -9,13 +9,13 @@
     const app = angular.module('CRM', ['ngResource', 'ui.calendar', 'ui.bootstrap', 'ui.bootstrap.datetimepicker', 'ngSanitize', 'ui.select', 'ngAnimate', 'toaster', 'ngFileUpload'])
         .controller('CRM_controller', ['$scope','$compile', '$http', '$log', '$timeout', 'uiCalendarConfig', 'toaster', 'Upload', '$filter', '$window',
             function ($scope, $compile, $http, $log, $timeout, uiCalendarConfig, toaster, Upload, $filter, $window) {
-                let contactBeforeUpdate;
-                let userBeforeUpdate;
+                let customerBeforeUpdate;
+                let workerBeforeUpdate;
                 const MAX_LETTERS_IN_NAME = 25;
                 const MAX_LETTERS_IN_ADDRESS = 35;
                 let category = undefined;
                 let statusRole;
-                let loggedInUser;
+                let loggedInWorker;
                 let incorectPassword = false;
                 let incorectNewTempPassword = false;
                 let incorectCurrentPassword = false;
@@ -28,46 +28,46 @@
                 let missingFileToDelete = false;
                 let missingRoleField = false;
                 let missingStatusOrRoleField = false;
-                let deleteAllContactsFlag = false;
-                let deleteContactFlag = false;
-                let deleteUserFlag = false;
-                let deleteAllUsersFlag = false;
+                let deleteAllCustomersFlag = false;
+                let deleteCustomerFlag = false;
+                let deleteWorkerFlag = false;
+                let deleteAllWorkersFlag = false;
                 let missingDetailInsideAddEvent = false;
                 let missingDetailsOutsideAddEvent = false;
                 let missingDetailsEditEvent = false;
-                let missingUserToDelete = false;
+                let missingWorkerToDelete = false;
                 let invalidTempPassword = false;
                 let selectedItemPart1;
                 let selectedItemPart2;
                 let deletedStatus;
-                let contactToDelete = '';
+                let customerToDelete = '';
                 let selectedItems = [];
                 let historyArray = [];
                 let editEventDetails = {};
                 let evenBeforeUpdate;
-                let userToDelete;
-                let contactsPhone = [];
+                let workerToDelete;
+                let customersPhone = [];
                 const SERVER_URI = 'http://localhost:5000';
 
                 $scope.account = false;
                 $scope.click = false;
                 $scope.menu = false;
                 $scope.showCalendar = false;
-                $scope.showContacts = false;
+                $scope.showCustomers = false;
                 $scope.showWorkersEvents = false;
-                $scope.getNewContactDetails = false;
+                $scope.getNewCustomerDetails = false;
                 $scope.showSettings = false;
                 $scope.loginPage = false;
                 $scope.registerPage = false;
                 $scope.adminPage = false;
                 $scope.firstLoad = false;
                 $scope.Admin = false;
-                $scope.showUsers = false;
+                $scope.showWorkers = false;
                 $scope.addEvent = false;
                 $scope.taskIsEdit = false;
-                $scope.chooseContactToEmail = false;
-                $scope.contactsInfo = [];
-                $scope.users = [];
+                $scope.chooseCustomerToEmail = false;
+                $scope.customersInfo = [];
+                $scope.workers = [];
                 $scope.options = [];
                 $scope.roles = [];
                 $scope.files = [];
@@ -76,10 +76,10 @@
 
                 function refreshCalendarEvents() {
                     $log.log('refreshCalendarEvents');
-                    $http.get(SERVER_URI + '/getUserEvents/' + loggedInUser.UserName).then(
+                    $http.get(SERVER_URI + '/getWorkerEvents/' + loggedInWorker.WorkerName).then(
                         function (response) {//success callback
-                            $scope.retreivedCalendarEvents = response.data.userEvents;
-                            //$scope.retreivedCalendarEvents = Object.assign({}, response.data.userEvents);
+                            $scope.retreivedCalendarEvents = response.data.workerEvents;
+                            //$scope.retreivedCalendarEvents = Object.assign({}, response.data.workerEvents);
                             $log.log('retreivedCalendarEvents=' + JSON.stringify($scope.retreivedCalendarEvents));
                             uiCalendarConfig.calendars.myCalendar.fullCalendar('removeEvents');
                             uiCalendarConfig.calendars.myCalendar.fullCalendar('addEventSource', $scope.retreivedCalendarEvents);
@@ -96,7 +96,7 @@
 
                 function refreshCustomerCalendarEvents(eventId) {
                     $log.log('refreshCustomerCalendarEvents');
-                    $http.get(SERVER_URI + '/getCustomerEvents/' + loggedInUser.UserName + '/' + eventId).then(
+                    $http.get(SERVER_URI + '/getCustomerEvents/' + loggedInWorker.WorkerName + '/' + eventId).then(
                         function (response) {//success callback
                             $scope.retreivedCalendarEvents = response.data.customerEvents;
                             $log.log('retreivedCalendarEvents=' + JSON.stringify($scope.retreivedCalendarEvents));
@@ -126,15 +126,15 @@
                     $log.log('dbDate=' + dbDate);
                     return dbDate;
                 }
-                function updateContactHistory(history ,contactPhoneNumber){
-                    const updateHistory = {contactPhoneNumber: contactPhoneNumber, contactHistory: history};
-                    $http.post(SERVER_URI + '/updateContactHistory', {
+                function updateCustomerHistory(history ,customerPhoneNumber){
+                    const updateHistory = {customerPhoneNumber: customerPhoneNumber, customerHistory: history};
+                    $http.post(SERVER_URI + '/updateCustomerHistory', {
                         updateHistory: updateHistory
                     }).then(
                         function (response){
                             historyArray = [];
-                            contactsPhone = [];
-                            $scope.getContactsList();
+                            customersPhone = [];
+                            $scope.getCustomersList();
                         }, function (response) { //failure callback
                         }
                     );
@@ -166,11 +166,11 @@
                                 return i;
                             }
                         }
-                    } else if (flag === 'contact_list') {
-                        $log.log('item of contact list : ' + item);
-                        for (let i = 0; i < $scope.contactsInfo.length; i++) {
+                    } else if (flag === 'customer_list') {
+                        $log.log('item of customer list : ' + item);
+                        for (let i = 0; i < $scope.customersInfo.length; i++) {
 
-                            if (item === $scope.contactsInfo[i].PhoneNumber) {
+                            if (item === $scope.customersInfo[i].PhoneNumber) {
                                 $log.log('index ' + i);
                                 return i;
                             }
@@ -220,7 +220,7 @@
                 }
 
 
-                function updateEventInDataBase(eventAfterUpdate, eventBeforeUpdate, user) {
+                function updateEventInDataBase(eventAfterUpdate, eventBeforeUpdate, worker) {
                     let startDate = changeDateFormat($scope.eventStart);
                     let endDate = changeDateFormat($scope.eventEnd);
 
@@ -253,7 +253,7 @@
                     const updatEvent = {
                         eventBeforeUpdate: eventBeforeUpdateDB,
                         eventAfterUpdate: eventAfterUpdateDB,
-                        user: user
+                        worker: worker
                     };
                     $http.post(SERVER_URI + '/updateEvent', {
                         updatEvent: updatEvent
@@ -284,26 +284,26 @@
 
                 }
 
-                $scope.getContactEventByPhone = function (eventId)
+                $scope.getCustomerEventByPhone = function (eventId)
                 {
                     $log.log('eventId : '+eventId);
-                    const phoneContact = getPhoneNumberEventId(eventId);
-                    $log.log('phoneContact : '+phoneContact);
+                    const phoneCustomer = getPhoneNumberEventId(eventId);
+                    $log.log('phoneCustomer : '+phoneCustomer);
 
-                    $http.get(SERVER_URI + '/getContact/' + phoneContact).then(
+                    $http.get(SERVER_URI + '/getCustomer/' + phoneCustomer).then(
                         function (response) {
-                            if(response.data.contacts) {
-                                if(response.data.contacts.length == 0) {
-                                    $scope.message = 'This Contact does not exist';
+                            if(response.data.customers) {
+                                if(response.data.customers.length == 0) {
+                                    $scope.message = 'This Customer does not exist';
                                     $scope.messageType = 'ERROR';
                                     angular.element(document.querySelector('#msgModal')).modal('show');
                                     return;
                                 }
-                                $scope.contactsInfo = response.data.contacts;
-                                $scope.getContactsFunction('contactEvent');
+                                $scope.customersInfo = response.data.customers;
+                                $scope.getCustomersFunction('customerEvent');
 
                             }
-                            $log.log('contactsInfo '+ $scope.contactsInfo);
+                            $log.log('customersInfo '+ $scope.customersInfo);
                         },
                         function (response) { //failure callback
                         }
@@ -331,8 +331,8 @@
                 $scope.getSpecificEvents = function () {
                     $log.log('$scope.getSpecificEvents');
                     $scope.loginPage = false;
-                    $scope.showContacts = false;
-                    $scope.showUsers = false;
+                    $scope.showCustomers = false;
+                    $scope.showWorkers = false;
                     $scope.showSettings = false;
                     $scope.showWorkersEvents = true;
                     $scope.click = true;
@@ -340,13 +340,13 @@
                     $scope.account = true;
 
                     refreshCalendarEvents();
-                    $scope.userEvents = Object.assign({}, $scope.retreivedCalendarEvents);
+                    $scope.workerEvents = Object.assign({}, $scope.retreivedCalendarEvents);
                     $scope.retreivedCalendarEvents.forEach(function(event, index) {
                         let title = event.title;
                         if (event.id !== -1 && title.includes(':')) {
                             title = title.split(':')[1].trim();
                         }
-                        $scope.userEvents[index].title = title;
+                        $scope.workerEvents[index].title = title;
                         $log.log('index: ' + index + ' ,title=' + title);
                     });
                 };
@@ -414,7 +414,7 @@
                         $scope.date = moment(start).format('DD/MM/YYYY HH:mm') + ' - ' + moment(end).format('DD/MM/YYYY HH:mm');
                         //get roles list
                         $scope.getRolesList();
-                        $scope.contactTask = undefined;
+                        $scope.customerTask = undefined;
                         $scope.title = undefined;
 
                         //show modal of add event
@@ -444,29 +444,29 @@
                         $log.log('indexRole : ' + indexRole);
                         $scope.role = $scope.roles[indexRole];
 
-                        //if a contact was not selected for the event, the event id is = '-1'
+                        //if a customer was not selected for the event, the event id is = '-1'
                         if (editEventDetails.id !== -1) {
                             //split title by ':'
                             const title = event.title.split(':');
 
                             //save the event id
-                            $scope.contactEvent = event.id;
-                            $log.log('contact id: ' + event.id);
-                            const splitContactPhone = event.id.split(' ');
-                            const contactPhone = splitContactPhone[splitContactPhone.length - 1];
-                            $log.log('contactPhone: ' + contactPhone);
-                            const contact = $scope.contactsInfo[getIndexOfSelectedItem(contactPhone, 'contact_list')];
-                            $scope.selectedContact = event.id;
-                            $log.log('$scope.contact :' + $scope.contact);
+                            $scope.customerEvent = event.id;
+                            $log.log('customer id: ' + event.id);
+                            const splitCustomerPhone = event.id.split(' ');
+                            const customerPhone = splitCustomerPhone[splitCustomerPhone.length - 1];
+                            $log.log('customerPhone: ' + customerPhone);
+                            const customer = $scope.customersInfo[getIndexOfSelectedItem(customerPhone, 'customer_list')];
+                            $scope.selectedCustomer = event.id;
+                            $log.log('$scope.customer :' + $scope.customer);
                             //save the event title
                             $scope.eventTitle = title[1];
-                            //when contactSelected = true then there is a contact selected
-                            $scope.contactSelected = true;
+                            //when customerSelected = true then there is a customer selected
+                            $scope.customerSelected = true;
                             $scope.taskIsEdit = true;
-                            $scope.contactTask = true;
-                        } else { //if no contact was selected for the event then $scope.contactSelected = false;
+                            $scope.customerTask = true;
+                        } else { //if no customer was selected for the event then $scope.customerSelected = false;
                             $scope.eventTitle = event.title;
-                            $scope.contactSelected = false;
+                            $scope.customerSelected = false;
                         }
                         $scope.eventStart = event.start;
                         $scope.eventEnd = event.end;
@@ -482,9 +482,9 @@
                     ID, title, start and end date, color of event
 
                 */
-                $scope.saveEditEvent = function (taskWithContact) {
+                $scope.saveEditEvent = function (taskWithCustomer) {
                     let description;
-                    let contact;
+                    let customer;
                     let startDate;
                     let endDate;
 
@@ -534,15 +534,15 @@
                         }
                     }
                     /*
-                        check if the task was chosen for a spesific contact - optional
-                        then id = 'contact name' + ' contact phone number'
+                        check if the task was chosen for a spesific customer - optional
+                        then id = 'customer name' + ' customer phone number'
                     */
-                    $log.log('taskWithContact : ' + taskWithContact);
-                    if (taskWithContact) {
-                        $log.log('$scope.contact :' + $scope.contact);
+                    $log.log('taskWithCustomer : ' + taskWithCustomer);
+                    if (taskWithCustomer) {
+                        $log.log('$scope.customer :' + $scope.customer);
                         $log.log('selectedItemPart1 :' + selectedItemPart1);
                         $log.log('selectedItemPart2 :' + selectedItemPart2);
-                        if ($scope.contact === '' || selectedItemPart1 === undefined || selectedItemPart2 === undefined || selectedItemPart1 === '' || selectedItemPart2 === '') {
+                        if ($scope.customer === '' || selectedItemPart1 === undefined || selectedItemPart2 === undefined || selectedItemPart1 === '' || selectedItemPart2 === '') {
                             $scope.message = 'You have selected the option for a costumer task and therefore a costumer must be selected';
                             $scope.messageType = 'ERROR';
                             angular.element(document.querySelector('#msgModal')).modal('show');
@@ -552,15 +552,15 @@
                             selectedItemPart2 = undefined;
                             return;
                         } else {
-                            description = 'Task for contact ' + selectedItemPart1 + ' ' + selectedItemPart2 + ' : ' + $scope.eventTitle;
-                            contact = selectedItemPart1 + ' ' + selectedItemPart2;
+                            description = 'Task for customer ' + selectedItemPart1 + ' ' + selectedItemPart2 + ' : ' + $scope.eventTitle;
+                            customer = selectedItemPart1 + ' ' + selectedItemPart2;
                             selectedItemPart1 = undefined;
                             selectedItemPart2 = undefined;
                         }
-                    } else { //if the task is not for a spesific contact -> id of contact = '-1'
+                    } else { //if the task is not for a spesific customer -> id of customer = '-1'
                         description = $scope.eventTitle;
                         console.log('description=' + description);
-                        contact = -1;
+                        customer = -1;
                     }
                     console.log('description=' + description);
 
@@ -568,25 +568,25 @@
                     editEventDetails.start = $scope.eventStart;
                     editEventDetails.end = $scope.eventEnd;
                     editEventDetails.color = $scope.role.Color;
-                    editEventDetails.id = contact;
+                    editEventDetails.id = customer;
 
                     let eventForUpdate = {};
 
                     eventForUpdate = Object.assign({}, editEventDetails);
                     //update the event details in the calendar
                     //uiCalendarConfig.calendars.myCalendar.fullCalendar('updateEvent', editEventDetails);
-                    updateEventInDataBase(eventForUpdate, evenBeforeUpdate, loggedInUser);
+                    updateEventInDataBase(eventForUpdate, evenBeforeUpdate, loggedInWorker);
                     $scope.selections = [];
                 };
 
                 /*
-                    when click on task for contact
-                    go to the contact from contacts list
+                    when click on task for customer
+                    go to the customer from customers list
                 */
-                $scope.goToContact = function () {
+                $scope.goToCustomer = function () {
 
-                    //get contacts phone number as an ID
-                    $scope.getContactEventByPhone( $scope.contactEvent);
+                    //get customers phone number as an ID
+                    $scope.getCustomerEventByPhone( $scope.customerEvent);
 
                     //hide the 'document.querySelector('#editOrDeleteEvent')' modal
                     angular.element(document.querySelector('#editOrDeleteEvent')).modal('hide');
@@ -601,16 +601,16 @@
 
                 };
 
-                $scope.calendarContact = function (contact) {
-                    const eventId = String(contact.Name + ' ' + contact.PhoneNumber);
-                    //let contact_name = contact.Name;
-                    const contactPhone = contact.PhoneNumber;
+                $scope.calendarCustomer = function (customer) {
+                    const eventId = String(customer.Name + ' ' + customer.PhoneNumber);
+                    //let customer_name = customer.Name;
+                    const customerPhone = customer.PhoneNumber;
                     $log.log('eventId : ' + eventId);
                     $scope.retreivedCalendarEvents = refreshCustomerCalendarEvents(eventId);
                     $scope.calendarFunction();
                 };
 
-                function deleteEventFromDataBase(event, user) {
+                function deleteEventFromDataBase(event, worker) {
                     const date = $scope.eventDate.split('-');
                     $log.log('start date : ' + date[0]);
                     //$log.log('type '+typeof date[0]);
@@ -627,7 +627,7 @@
                         editable: event.editable, allDay: event.allDay
                     };
 
-                    const deleteEvent = {event: eventToDelete, user: user};
+                    const deleteEvent = {event: eventToDelete, worker: worker};
                     $http.post(SERVER_URI + '/deleteEvent', {
                         deletevent: deleteEvent
                     }).then(
@@ -641,7 +641,7 @@
                 $scope.deleteEvent = function (event, element, view) {
                     uiCalendarConfig.calendars['myCalendar'].fullCalendar('removeEvents', function (event) {
 
-                        deleteEventFromDataBase(event, loggedInUser);
+                        deleteEventFromDataBase(event, loggedInWorker);
 
                         /*
                             delete event from mongodb
@@ -661,58 +661,58 @@
                     });
                 };
 
-                //array of contacts
+                //array of customers
                 $scope.selections = [];
                 /*
-                    select contact from contacts list in the edit or delete modal
+                    select customer from customers list in the edit or delete modal
                 */
                 $scope.selected = {};
-                $scope.selectAll = function (flag, usersOrContacts) {
+                $scope.selectAll = function (flag, workersOrCustomers) {
                     let arr;
                     let id;
 
-                    if (usersOrContacts === 'users') {
-                        arr = $scope.users;
-                        id = 'UserName';
+                    if (workersOrCustomers === 'workers') {
+                        arr = $scope.workers;
+                        id = 'WorkerName';
                     } else {
-                        arr = $scope.contactsInfo;
+                        arr = $scope.customersInfo;
                         id = 'PhoneNumber';
                     }
 
                     for (let i = 0; i < arr.length; i++) {
                         const arrInfo = arr[i];
-                        if (id === 'UserName') {
-                            $scope.selected[arrInfo.UserName] = flag;
+                        if (id === 'WorkerName') {
+                            $scope.selected[arrInfo.WorkerName] = flag;
                         } else {
                             $scope.selected[arrInfo.PhoneNumber] = flag;
 
                         }
-                        //$log.log('id : ' +arrInfo.UserName);
+                        //$log.log('id : ' +arrInfo.WorkerName);
                     }
                 };
 
-                $scope.sendEmailToSelectedContacts = function (usersOrContacts) {
+                $scope.sendEmailToSelectedCustomers = function (workersOrCustomers) {
                     let emailsListStr = '';
                     let arr;
                     let id;
-                    if (usersOrContacts === 'users') {
-                        arr = $scope.users;
-                        id = 'UserName';
+                    if (workersOrCustomers === 'workers') {
+                        arr = $scope.workers;
+                        id = 'WorkerName';
                     } else {
-                        arr = $scope.contactsInfo;
+                        arr = $scope.customersInfo;
                         id = 'PhoneNumber';
                     }
 
                     for (let i = 0; i < arr.length; i++) {
                         const arrInfo = arr[i];
-                        if (id === 'UserName') {
-                            if ($scope.selected[arrInfo.UserName]) {
+                        if (id === 'WorkerName') {
+                            if ($scope.selected[arrInfo.WorkerName]) {
                                 emailsListStr = getStringofAllEmails(emailsListStr, arrInfo, i);
                             }
 
                         } else {
                             if ($scope.selected[arrInfo.PhoneNumber]) {
-                                contactsPhone.push(arrInfo.PhoneNumber);
+                                customersPhone.push(arrInfo.PhoneNumber);
                                 emailsListStr = getStringofAllEmails(emailsListStr, arrInfo, i);
 
                             }
@@ -724,17 +724,17 @@
                         angular.element(document.querySelector('#msgModal')).modal('show');
                         return;
                     }
-                    $scope.contactEmail = emailsListStr;
-                    $scope.chooseContactToEmail = false;
-                    $scope.chooseUserToEmail = false;
-                    $scope.showSendOrCancelMultipleButtonContacts = false;
+                    $scope.customerEmail = emailsListStr;
+                    $scope.chooseCustomerToEmail = false;
+                    $scope.chooseWorkerToEmail = false;
+                    $scope.showSendOrCancelMultipleButtonCustomers = false;
                     angular.element(document.querySelector('#emailModal')).modal('show');
                 };
 
 
 
-                function addEventToDataBase(event, user) {
-                    const newEvent = {event: event, user: user};
+                function addEventToDataBase(event, worker) {
+                    const newEvent = {event: event, worker: worker};
                     $http.post(SERVER_URI + '/addEvent', {
                         newEvent: newEvent
                     }).then(
@@ -742,12 +742,12 @@
                             //retreivedCalendarEvents = response.data.Events;
                             //$log.log('retreivedCalendarEvents=' + retreivedCalendarEvents);
                             $log.log('selectedItemPart2: '+ selectedItemPart2)
-                            contactsPhone.push(selectedItemPart2);
-                            updateContactHistory(historyArray ,contactsPhone);
+                            customersPhone.push(selectedItemPart2);
+                            updateCustomerHistory(historyArray ,customersPhone);
 
                             $scope.role = '';
-                            $scope.contactTask = false;
-                            $scope.contact = undefined;
+                            $scope.customerTask = false;
+                            $scope.customer = undefined;
                             $scope.title = '';
                             $scope.eventStart = '';
                             $scope.eventEnd = '';
@@ -755,7 +755,7 @@
                             category = undefined;
                             selectedItemPart1 = undefined;
                             selectedItemPart2 = undefined;
-                            $scope.selectedContact = '';
+                            $scope.selectedCustomer = '';
 
 
                         },
@@ -763,7 +763,7 @@
                         }
                     );
                 }
-                function addHistoryToContactEvent(description,startDate,endDate,color,contact){
+                function addHistoryToCustomerEvent(description,startDate,endDate,color,customer){
                     let history='';
                     history = 'New Task\n\n'+'Start Date : '+ startDate+'\n' +'End Date : '+endDate+'\n';
                     history = history+'Category : '+$scope.roles[getIndexOfSelectedItem(color,'color_of_role')].Role+'\n';
@@ -774,24 +774,24 @@
 
                 /*
                     a function for adding a task from calendar when press on a day in calendar,
-                    there is an option to add a the task for a spesific contact
+                    there is an option to add a the task for a spesific customer
                 */
-                $scope.addEventToCalendar = function (taskWithContact, outsideModal) {
+                $scope.addEventToCalendar = function (taskWithCustomer, outsideModal) {
                     /*
                         save the dates in a range of dates in the task in format 'startDate - endDate'
                         by splitting with '-'
                     */
                     let sameDate;
                     let description;
-                    let contact;
+                    let customer;
                     let startDate;
                     let endDate;
-                    let contactHistory;
+                    let customerHistory;
 
                     if (!outsideModal) {
                         const date = $scope.date.split('-');
                         $log.log('start date : ' + date[0]);
-                        $log.log('taskWithContact : ' + taskWithContact);
+                        $log.log('taskWithCustomer : ' + taskWithCustomer);
                         //$log.log('type '+typeof date[0]);
                         $log.log('end date : ' + date[1]);
                         startDate = moment(String(date[0]), 'DD/MM/YYYY HH:mm').format('MM/DD/YYYY HH:mm');
@@ -875,16 +875,16 @@
                         }
                     }
                     /*
-                        check if the task was chosen for a spesific contact - optional
-                        then id = 'contact name' + ' contact phone number'
+                        check if the task was chosen for a spesific customer - optional
+                        then id = 'customer name' + ' customer phone number'
                     */
-                    $log.log('taskWithContact : ' + taskWithContact);
-                    if (taskWithContact) {
+                    $log.log('taskWithCustomer : ' + taskWithCustomer);
+                    if (taskWithCustomer) {
 
-                        $log.log('$scope.contact :' + $scope.contact);
+                        $log.log('$scope.customer :' + $scope.customer);
                         $log.log('selectedItemPart1 :' + selectedItemPart1);
                         $log.log('selectedItemPart2 :' + selectedItemPart2);
-                        if ($scope.contact === '' || selectedItemPart1 === undefined || selectedItemPart2 === undefined || selectedItemPart1 === '' || selectedItemPart2 === '') {
+                        if ($scope.customer === '' || selectedItemPart1 === undefined || selectedItemPart2 === undefined || selectedItemPart1 === '' || selectedItemPart2 === '') {
                             $scope.message = 'You have selected the option for a costumer task and therefore a costumer must be selected';
                             $scope.messageType = 'ERROR';
                             angular.element(document.querySelector('#msgModal')).modal('show');
@@ -897,15 +897,15 @@
                             selectedItemPart2 = undefined;
                             return;
                         } else {
-                            description = 'Task for contact ' + selectedItemPart1 + ' ' + selectedItemPart2 + ' : ' + $scope.title;
-                            contact = selectedItemPart1 + ' ' + selectedItemPart2;
-                            contactHistory = addHistoryToContactEvent(description,startDate,endDate,$scope.role.Color,contact);
-                            historyArray.push(contactHistory);
+                            description = 'Task for customer ' + selectedItemPart1 + ' ' + selectedItemPart2 + ' : ' + $scope.title;
+                            customer = selectedItemPart1 + ' ' + selectedItemPart2;
+                            customerHistory = addHistoryToCustomerEvent(description,startDate,endDate,$scope.role.Color,customer);
+                            historyArray.push(customerHistory);
 
                         }
-                    } else { //if the task is not for a spesific contact -> id of contact = '-1'
+                    } else { //if the task is not for a spesific customer -> id of customer = '-1'
                         description = $scope.title;
-                        contact = -1;
+                        customer = -1;
                     }
 
                     $log.log('description: ' + description);
@@ -914,13 +914,13 @@
                         start: startDate,
                         end: endDate,
                         color: $scope.role.Color,
-                        id: contact,
+                        id: customer,
                         editable: true,
                         allDay: false
                     };
                     $scope.selections = [];
                     uiCalendarConfig.calendars['myCalendar'].fullCalendar('renderEvent', eventToAdd, true);
-                    addEventToDataBase(eventToAdd, loggedInUser);
+                    addEventToDataBase(eventToAdd, loggedInWorker);
                     //uiCalendarConfig.calendars['myCalendar'].fullCalendar('refetchEvents');
 
 
@@ -936,7 +936,7 @@
                     uiCalendarConfig.calendars.myCalendar.fullCalendar('rerenderEvents');
                     $log.log('after $scope.retreivedCalendarEvents')
                     $scope.calendarFunction();
-                   /* $http.get(SERVER_URI + '/getEvent/' + loggedInUser.UserName + '/' + event).then(
+                   /* $http.get(SERVER_URI + '/getEvent/' + loggedInWorker.WorkerName + '/' + event).then(
                         function (response) {//success callback
                             $scope.retreivedCalendarEvents = response.data.customerEvents;
                             $log.log('retreivedCalendarEvents=' + JSON.stringify($scope.retreivedCalendarEvents));
@@ -959,44 +959,44 @@
                 $scope.cancelEvent = function () {
 
                     $scope.role = '';
-                    $scope.contactTask = false;
-                    $scope.contact = undefined;
+                    $scope.customerTask = false;
+                    $scope.customer = undefined;
                     $scope.title = '';
                     $scope.eventStart = '';
                     $scope.eventEnd = '';
                     $scope.date = '';
                     selectedItemPart1 = undefined;
                     selectedItemPart2 = undefined;
-                    $scope.selectedContact = '';
+                    $scope.selectedCustomer = '';
                     category = undefined;
                 };
 
-                function updateContactHistoryEmail(){
+                function updateCustomerHistoryEmail(){
                     const history = 'Date : '+moment().format('DD/MM/YYYY HH:mm')+'\n\nMail has been sended\n';
                     historyArray.push(history);
-                    updateContactHistory(historyArray, contactsPhone);
+                    updateCustomerHistory(historyArray, customersPhone);
                 }
 
-                //modal for sending mail to a contact
-                $scope.sendMailModal = function (contactEmail) {
-                    $log.log('contactEmail :' + contactEmail.eMail);
-                    contactsPhone.push(contactEmail.PhoneNumber);
-                    //check if the contact that was pressed on has an email address
-                    if (contactEmail.eMail === undefined || contactEmail.eMail === '') {
-                        toaster.pop('error', 'No email for this contact');
+                //modal for sending mail to a customer
+                $scope.sendMailModal = function (customerEmail) {
+                    $log.log('customerEmail :' + customerEmail.eMail);
+                    customersPhone.push(customerEmail.PhoneNumber);
+                    //check if the customer that was pressed on has an email address
+                    if (customerEmail.eMail === undefined || customerEmail.eMail === '') {
+                        toaster.pop('error', 'No email for this customer');
                         return;
                     }
 
                     $scope.getFilesList();
-                    //save the chosen contacts email
-                    $scope.contactEmail = contactEmail.eMail;
+                    //save the chosen customers email
+                    $scope.customerEmail = customerEmail.eMail;
                     angular.element(document.querySelector('#emailModal')).modal('show');
                 };
                 /*
                     send email function and http post call to server
-                    with contact and email details
+                    with customer and email details
                 */
-                $scope.sendEmail = function (contactEmail, emailSubject, emailBody) {
+                $scope.sendEmail = function (customerEmail, emailSubject, emailBody) {
 
                     $log.log('file:' + category);
 
@@ -1011,7 +1011,7 @@
 
                     $log.log('attachmentFileName :' + attachmentFileName);
                     const emailData = {
-                        mailRecipient: contactEmail, mailSubject: emailSubject,
+                        mailRecipient: customerEmail, mailSubject: emailSubject,
                         mailText: emailBody, attachmentFileName: attachmentFileName
                     };
                     $http.post(SERVER_URI + '/sendEmail', {
@@ -1020,7 +1020,7 @@
                         function (response) {
                             console.log(response.data.error);
                             console.log(response.data.ok);
-                            $scope.contactEmail = '';
+                            $scope.customerEmail = '';
                             $scope.emailSubject = '';
                             $scope.emailBody = '';
                             $scope.emailFile = false;
@@ -1032,7 +1032,7 @@
 
                             if (response.data.ok) {
                                 toaster.pop('success', response.data.ok);
-                                updateContactHistoryEmail();
+                                updateCustomerHistoryEmail();
                                 return;
                             }
 
@@ -1128,7 +1128,7 @@
                 $scope.upload = function (file) {
                     Upload.upload({
                         url: SERVER_URI + '/uploadFile', //webAPI exposed to upload the file
-                        data: {file: file} //pass file as data, should be user ng-model
+                        data: {file: file} //pass file as data, should be worker ng-model
                     }).then(function (resp) { //upload function returns a promise
                         $scope.file = '';
                         if (resp.data.errorCode === 0) { //validate success
@@ -1179,10 +1179,10 @@
                             console.log('validationOfTempPassword: response.data.adminChangedTempPassword=' + response.data.adminChangedTempPassword);
                             console.log('validationOfTempPassword: response.data.verified=' + response.data.verified);
                             console.log('validationOfTempPassword: response.data.notVerified=' + response.data.notVerified);
-                            //verified passwords (not for Admin user)
+                            //verified passwords (not for Admin worker)
                             if (response.data.verified) {
                                 console.log('is verified');
-                                if(loggedInUser!==undefined && loggedInUser.adminUser) {
+                                if(loggedInWorker!==undefined && loggedInWorker.adminWorker) {
                                     angular.element(document.querySelector('#changeTemporaryPasswordModal')).modal('show');
                                     return;
 
@@ -1201,12 +1201,12 @@
                                 $scope.newTempPasswordPage = false;
                                 $scope.tempPasswordPage = false;
                                 $scope.registerPage = true;
-                                $scope.registrationUserName = 'Admin';
+                                $scope.registrationWorkerName = 'Admin';
                                 $scope.Admin = true;
                             } else { //not correct temprorary password
                                 console.log('validationOfTempPassword: response.data.notVerified=' + response.data.notVerified);
                                 // eslint-disable-next-line no-undef
-                                if(loggedInUser!==undefined && loggedInUser.adminUser) {
+                                if(loggedInWorker!==undefined && loggedInWorker.adminWorker) {
                                     $scope.message = 'Invalid temporary password , please try again.';
                                     invalidTempPassword = true;
                                 }
@@ -1267,16 +1267,15 @@
                                 return;
                             }
                             $scope.newTemporaryPassword = $scope.newTemporaryValidationPassword = $scope.newTempPasswordSettings =$scope.verifyNewTempPasswordSettings = undefined;
-                            $log.log('loggedInUser ;'+loggedInUser);
-                            $log.log('loggedInUser.isAdmin ;'+loggedInUser.isAdmin);
-                            if(loggedInUser!==undefined && loggedInUser.adminUser){
+                            $log.log('loggedInWorker ;'+loggedInWorker);
+                            if(loggedInWorker !== undefined && loggedInWorker.adminWorker){
                                 if(response.data.success) {
                                     toaster.pop('success', response.data.success, '');
                                     return;
                                 }
                             }
                             $scope.registerPage = true;
-                            $scope.registrationUserName = 'Admin';
+                            $scope.registrationWorkerName = 'Admin';
                             $scope.Admin = true;
                             $scope.newTempPasswordPage = false;
                             $scope.firstLoad = false;
@@ -1289,17 +1288,17 @@
                 };
 
                 /*
-                    when a user signes up / registers to the system
-                    this function checks validation of users details
+                    when a worker signes up / registers to the system
+                    this function checks validation of workers details
                     and send them when all are valid to server in an http post request
                 */
                 $scope.signUp = function () {
-                    const reUserName = /^[a-zA-Z]{3,10}$/;
+                    const reWorkerName = /^[a-zA-Z]{3,10}$/;
                     const reName = /^[a-zA-Z\s\u0590-\u05fe]{2,20}$/;
 
-                    //check if user name has been entered and if it is valid according to the matching regular expression pattern
-                    if ($scope.registrationUserName === undefined || !reUserName.test($scope.registrationUserName)) {
-                        $scope.message = 'User name must contain only English letters ,minimum 3 leterrs and maximum 10 letters and no whitespace';
+                    //check if worker name has been entered and if it is valid according to the matching regular expression pattern
+                    if ($scope.registrationWorkerName === undefined || !reWorkerName.test($scope.registrationWorkerName)) {
+                        $scope.message = 'Worker name must contain only English letters ,minimum 3 leterrs and maximum 10 letters and no whitespace';
                         $scope.messageType = 'ERROR';
                         angular.element(document.querySelector('#msgModal')).modal('show');
                         return;
@@ -1341,47 +1340,44 @@
                     }
 
 
-                    //save users valid details as a json object
-                    const user = {
-                        UserName: $scope.registrationUserName, Name: $scope.registrationName,
+                    //save workers valid details as a json object
+                    const worker = {
+                        WorkerName: $scope.registrationWorkerName, Name: $scope.registrationName,
                         eMail: $scope.registrationEmail, Password: $scope.registrationPassword
                     };
                     $log.log('before call server');
                     //call server with http request
-                    $http.post(SERVER_URI + '/addUser', {
-                        user: user
+                    $http.post(SERVER_URI + '/addWorker', {
+                        worker: worker
                     }).then(
                         function (response) { //success callback
 
                             //get response from server
-                            const userFromServer = response.data.user;
-                            loggedInUser = userFromServer;
+                            const workerFromServer = response.data.worker;
+                            loggedInWorker = workerFromServer;
 
-                            //check if this user name does not exist already
-                            if (!response.data.userExists) {
-                                $log.log(userFromServer.Name);
+                            //check if this worker name does not exist already
+                            if (!response.data.workerExists) {
+                                $log.log(workerFromServer.Name);
 
                                 //clear all fields in registration page
-                                $scope.registrationUserName = undefined;
-                                $scope.registrationName = undefined;
-                                $scope.registrationEmail = undefined;
-                                $scope.registrationPassword = undefined;
-                                $scope.registrationValidationPassword = undefined;
 
-                                //show menu system components and user profile of account
-                                $scope.message = 'Thanks for signing up, you must wait for the administrator to assign you a role so you can sign in.';
-                                $scope.messageType = 'MESSAGE';
-                                angular.element(document.querySelector('#msgModal')).modal('show');
-                                setTimeout(function () {
-                                    $window.location.reload();
-                                }, 8000); // Set enough time to wait until animation finishes;*/
-
-
-                            } else { //if this user name already exists in system -> show error modal
-                                $scope.message = response.data.userExists;
+                                if (workerFromServer.WorkerName !== 'Admin') {
+                                    //show menu system components and worker profile of account
+                                    $scope.message = 'Thanks for signing up, you must wait for the administrator to assign you a role so you can sign in.';
+                                    $scope.messageType = 'MESSAGE';
+                                    angular.element(document.querySelector('#msgModal')).modal('show');
+                                    setTimeout(function () {
+                                        $window.location.reload();
+                                    }, 7000); // Set enough time to wait until animation finishes;*/
+                                    return;
+                                }
+                                $window.location.reload();
+                            } else { //if this worker name already exists in system -> show error modal
+                                $scope.message = response.data.workerExists;
                                 $scope.messageType = 'ERROR';
                                 angular.element(document.querySelector('#msgModal')).modal('show');
-                                $scope.registrationUserName = undefined;
+                                $scope.registrationWorkerName = undefined;
 
                             }
 
@@ -1394,16 +1390,16 @@
                 };
 
                 /*
-                    a function for login to system after the user is registed already
-                    login with user name and password
+                    a function for login to system after the worker is registed already
+                    login with worker name and password
                     and verify details with thoes at server by sending the data in http request
                 */
                 $scope.login = function () {
-                    $log.log('UserNameLogin ' + $scope.UserNameLogin);
+                    $log.log('WorkerNameLogin ' + $scope.WorkerNameLogin);
 
-                    //check if user name has been entered -> requierd
-                    if ($scope.UserNameLogin === undefined || $scope.UserNameLogin === '') {
-                        $scope.message = 'User name is required';
+                    //check if worker name has been entered -> requierd
+                    if ($scope.WorkerNameLogin === undefined || $scope.WorkerNameLogin === '') {
+                        $scope.message = 'Worker name is required';
                         $scope.messageType = 'ERROR';
                         angular.element(document.querySelector('#msgModal')).modal('show');
                         return;
@@ -1419,24 +1415,24 @@
                     }
 
                     /*
-                        a function for saving the user that is logged in details
+                        a function for saving the worker that is logged in details
                     */
-                    let LoginUser = {UserName: $scope.UserNameLogin, Password: $scope.PasswordLogin};
+                    let LoginWorker = {WorkerName: $scope.WorkerNameLogin, Password: $scope.PasswordLogin};
                     $http.post(SERVER_URI + '/login', {
-                        LoginUser: LoginUser
+                        LoginWorker: LoginWorker
                     }).then(
                         function (response) { //success callback
 
                             //get data from server response
-                            LoginUser = response.data.userLogin;
-                            loggedInUser = LoginUser;
+                            LoginWorker = response.data.workerLogin;
+                            loggedInWorker = LoginWorker;
 
-                            //if there is a match between user name and password at server side
+                            //if there is a match between worker name and password at server side
                             if (!response.data.noMatch) {
-                                // $scope.events = LoginUser.Events;
-                                //$scope.retreivedCalendarEvents = LoginUser.Events;
+                                // $scope.events = LoginWorker.Events;
+                                //$scope.retreivedCalendarEvents = LoginWorker.Events;
                                 //$log.log('Events : ' + $scope.events);
-                                if(LoginUser.Role==='new in the system')
+                                if(LoginWorker.Role==='new in the system')
                                 {
                                     $scope.message = 'The administrator has not yet assigned you a role in the system, therefore can not sign in yet';
                                     $scope.messageType = 'ERROR';
@@ -1447,7 +1443,7 @@
                                 refreshCalendarEvents();
 
                                 //if admin show admin page and update that admin is logged in
-                                if (LoginUser.adminUser) {
+                                if (LoginWorker.adminWorker) {
                                     $scope.adminPage = true;
                                     $scope.isAdmin = true;
                                 } else { //if not admin hide admin page and update that not admin is logged in
@@ -1456,26 +1452,26 @@
                                 }
 
                                 //clear fields in login page
-                                $scope.UserNameLogin = undefined;
+                                $scope.WorkerNameLogin = undefined;
                                 $scope.PasswordLogin = undefined;
 
-                                //show menu and user profile in account and hide the login page
+                                //show menu and worker profile in account and hide the login page
                                 $scope.menu = true;
                                 $scope.account = true;
                                 $scope.loginPage = false;
 
-                                $scope.nameOfUser = LoginUser.Name;
-                                $log.log('roleOfUser: ' + LoginUser.Role);
-                                $scope.roleOfUser = LoginUser.Role;
+                                $scope.nameOfWorker = LoginWorker.Name;
+                                $log.log('roleOfWorker: ' + LoginWorker.Role);
+                                $scope.roleOfWorker = LoginWorker.Role;
                                 $scope.allSystem = true;
 
-                                //get lists of : optiont, roles, roles colors, contacts files and users
+                                //get lists of : optiont, roles, roles colors, customers files and workers
                                 $scope.getOptionsList();
                                 $scope.getRolesList();
                                 $scope.getRolesColorsList();
-                                $scope.getContactsList();
+                                $scope.getCustomersList();
                                 $scope.getFilesList();
-                                $scope.getUsersList('showUsers');
+                                $scope.getWorkersList('showWorkers');
                             } else { //if there is no match show error modal
                                 $scope.message = response.data.noMatch;
                                 $scope.messageType = 'ERROR';
@@ -1490,16 +1486,16 @@
                 };
 
                 /*
-                    a function for showing the list of contacts
+                    a function for showing the list of customers
                 */
-                $scope.getContactsFunction = function (flag) {
+                $scope.getCustomersFunction = function (flag) {
                     /*
                     $scope.showUpdateExpression = true;
                     $scope.showUpdateInput = false;
                      */
                     $scope.loginPage = false;
-                    $scope.showContacts = true;
-                    $scope.showUsers = false;
+                    $scope.showCustomers = true;
+                    $scope.showWorkers = false;
                     $scope.showSettings = false;
                     $scope.click = true;
                     $scope.showCalendar = false;
@@ -1509,7 +1505,7 @@
 
                     if(!flag)
                     {
-                        $scope.getContactsList();
+                        $scope.getCustomersList();
 
                     }
                     $scope.getOptionsList();
@@ -1540,7 +1536,7 @@
                 $scope.saveNewRoleStatus = function () {
                     $log.log(document.getElementById('roleColor').value);
 
-                    //get a color from user
+                    //get a color from worker
                     const roleColor = document.getElementById('roleColor').value;
                     const color = roleColor.toString();
                     $log.log('color: ' + color);
@@ -1682,14 +1678,14 @@
                 */
                 $scope.calendarFunction = function () {
                     $scope.loginPage = false;
-                    $scope.showContacts = false;
+                    $scope.showCustomers = false;
                     $scope.showCalendar = true;
-                    $scope.showUsers = false;
+                    $scope.showWorkers = false;
                     $scope.showSettings = false;
                     $scope.showWorkersEvents = false;
                     $scope.account = false;
                     $scope.calendarNavColor = '#ff0066';
-                    $scope.contactsNavColor = '#004d99';
+                    $scope.customersNavColor = '#004d99';
                     $scope.getRolesList();
 
                     //clearing the search field
@@ -1709,8 +1705,8 @@
                     //$log.log('entered settings function');
                     $scope.showSettings = true;
                     $scope.loginPage = false;
-                    $scope.showContacts = false;
-                    $scope.showUsers = false;
+                    $scope.showCustomers = false;
+                    $scope.showWorkers = false;
                     $scope.showCalendar = false;
                     $scope.showWorkersEvents = false;
 
@@ -1720,21 +1716,21 @@
                 };
 
                 /*
-                    a function for adding a new contact to system
+                    a function for adding a new customer to system
                     shows the matching 'div' in html page
                 */
-                $scope.addContactFunction = function () {
-                    //update the parameter 'getNewContactDetails' to true for shoing the div
-                    $scope.getNewContactDetails = true;
+                $scope.addCustomerFunction = function () {
+                    //update the parameter 'getNewCustomerDetails' to true for shoing the div
+                    $scope.getNewCustomerDetails = true;
                     $scope.click = false;
                 };
 
                 /*
-                    a function for closeing the option of contact addition
+                    a function for closeing the option of customer addition
                     and clearing fields to be undefined
                 */
                 $scope.cancelFunction = function () {
-                    $scope.getNewContactDetails = false;
+                    $scope.getNewCustomerDetails = false;
                     $scope.click = true;
                     $scope.newName = '';
                     $scope.newStatus = '';
@@ -1814,36 +1810,36 @@
                 };
 
                 /*
-                    a function for saving the deatailes of contact before update
+                    a function for saving the deatailes of customer before update
                 */
-                $scope.updateContactFunction = function (contact) {
-                    //get all details of contact in json format
-                    contactBeforeUpdate = {
-                        Category: contact.Category,
-                        Name: contact.Name,
-                        Status: contact.Status,
-                        PhoneNumber: contact.PhoneNumber,
-                        eMail: contact.eMail,
-                        Address: contact.Address
+                $scope.updateCustomerFunction = function (customer) {
+                    //get all details of customer in json format
+                    customerBeforeUpdate = {
+                        Category: customer.Category,
+                        Name: customer.Name,
+                        Status: customer.Status,
+                        PhoneNumber: customer.PhoneNumber,
+                        eMail: customer.eMail,
+                        Address: customer.Address
                     };
-                    const indexRole = getIndexOfSelectedItem(contactBeforeUpdate.Category.Role, 'role_list');
+                    const indexRole = getIndexOfSelectedItem(customerBeforeUpdate.Category.Role, 'role_list');
                     console.log('indexRole=' + indexRole);
                     $scope.roleCategory = $scope.roles[indexRole];
                     console.log('$scope.roleCategory=' + JSON.stringify($scope.roleCategory));
-                    $scope.statusRole = $scope.roles[indexRole].Statuses[getIndexOfSelectedItem(contactBeforeUpdate.Category.Role, 'status_list', contactBeforeUpdate.Status)];
+                    $scope.statusRole = $scope.roles[indexRole].Statuses[getIndexOfSelectedItem(customerBeforeUpdate.Category.Role, 'status_list', customerBeforeUpdate.Status)];
                     console.log('$scope.statusRole=' + $scope.statusRole);
-                    $scope.updateStatus = contactBeforeUpdate.Status;
-                    console.log('contactBeforeUpdate.Status=' + contactBeforeUpdate.Status);
+                    $scope.updateStatus = customerBeforeUpdate.Status;
+                    console.log('customerBeforeUpdate.Status=' + customerBeforeUpdate.Status);
                 };
 
                 /*
-                    a function for saving the deatailes of user before update
-                    the function gets the parameter 'user' that contains selected users details
+                    a function for saving the deatailes of worker before update
+                    the function gets the parameter 'worker' that contains selected workers details
                 */
-                $scope.updateUserFunction = function (user) {
-                    //get all details of user in json format
-                    userBeforeUpdate = {Role: user.Role, Name: user.Name, UserName: user.UserName, eMail: user.eMail};
-                    $scope.role = $scope.roles[getIndexOfSelectedItem(userBeforeUpdate.Role, 'role_list')];
+                $scope.updateWorkerFunction = function (worker) {
+                    //get all details of worker in json format
+                    workerBeforeUpdate = {Role: worker.Role, Name: worker.Name, WorkerName: worker.WorkerName, eMail: worker.eMail};
+                    $scope.role = $scope.roles[getIndexOfSelectedItem(workerBeforeUpdate.Role, 'role_list')];
                 };
 
                 /*
@@ -1970,7 +1966,7 @@
                     if ($scope.systemStatusFromModal && $scope.systemStatusFromModal !== '') {
                         //save the chosen status in json format
                         const newSatus = {Status: $scope.systemStatusFromModal};
-                        $http.post(SERVER_URI + '/addOption', {
+                        $http.post(SERVER_URI + '/addStatus', {
                             newSatus: newSatus
                         }).then(
                             function (response) { //success callback
@@ -2057,14 +2053,14 @@
                 };
 
                 /*
-                    get the contacts list from server with http request
+                    get the customers list from server with http request
                 */
-                $scope.getContactsList = function () {
-                    $http.get(SERVER_URI + '/getContacts').then(
+                $scope.getCustomersList = function () {
+                    $http.get(SERVER_URI + '/getCustomers').then(
                         function (response) {//success callback
 
-                            //return the list of the contacts
-                            $scope.contactsInfo = response.data.contacts;
+                            //return the list of the customers
+                            $scope.customersInfo = response.data.customers;
                             $scope.role = '';
                             $scope.statusRole = '';
                             $scope.newName = '';
@@ -2093,22 +2089,22 @@
                 };
 
                 /*
-                    a function for getting the list of users from server with http request
+                    a function for getting the list of workers from server with http request
                 */
-                $scope.getUsersList = function (flag) {
+                $scope.getWorkersList = function (flag) {
                     $log.log('flag : ' + flag);
-                    $http.post(SERVER_URI + '/getUsers', {
+                    $http.post(SERVER_URI + '/getWorkers', {
                         statusFlag: flag
                     }).then(
                         function (response) {//success callback
 
-                            //return the list of the users
-                            $scope.users = response.data.users;
+                            //return the list of the workers
+                            $scope.workers = response.data.workers;
 
-                            //if was chosen to delete the user
-                            if (response.data.deleteUser) {
-                                //show modal for deleting the user
-                                $scope.messageType = 'Choose user to delete';
+                            //if was chosen to delete the worker
+                            if (response.data.deleteWorker) {
+                                //show modal for deleting the worker
+                                $scope.messageType = 'Choose worker to delete';
                                 angular.element(document.querySelector('#deleteModal')).modal('show');
                             }
 
@@ -2124,25 +2120,25 @@
                 };
 
                 /*
-                    a function for shing the users list in page in html
-                    and getting the list of the users and list of roles
+                    a function for shing the workers list in page in html
+                    and getting the list of the workers and list of roles
                 */
-                $scope.getUsersFunction = function (flag) {
-                    $scope.showUsers = true;
+                $scope.getWorkersFunction = function (flag) {
+                    $scope.showWorkers = true;
 
-                    //hide the parts in html that are not relevant to users tab
+                    //hide the parts in html that are not relevant to workers tab
                     $scope.showSettings = false;
-                    $scope.showContacts = false;
+                    $scope.showCustomers = false;
                     $scope.showCalendar = false;
                     $scope.showWorkersEvents = false;
                     $scope.account = true;
-                    $scope.getUsersList(flag);
+                    $scope.getWorkersList(flag);
                     $scope.getRolesList();
                 };
 
 
                 /*
-                    a validation function for checking all new contact fildes
+                    a validation function for checking all new customer fildes
                     if there was an error in 1 field show error modal
                 */
                 $scope.checkAndSaveDetails = function () {
@@ -2246,24 +2242,24 @@
 
                     $scope.click = true;
 
-                    //call the function to add the new contact
-                    $scope.addNewContact();
+                    //call the function to add the new customer
+                    $scope.addNewCustomer();
                 };
 
 
 
                 /*
-                    a function for adding a new contact to system
+                    a function for adding a new customer to system
                     with http request to server
                 */
-                $scope.addNewContact = function () {
+                $scope.addNewCustomer = function () {
                     //save the current date
-                    const contactHistory = 'Date : ' + moment().format('MM/DD/YYYY HH:mm') + '\n\nContact Addition\n ';
+                    const customerHistory = 'Date : ' + moment().format('MM/DD/YYYY HH:mm') + '\n\nCustomer Addition\n ';
 
                     //add to history the action
-                    historyArray.push(contactHistory);
-                    $log.log('contactHistory :' + contactHistory);
-                    const contact = {
+                    historyArray.push(customerHistory);
+                    $log.log('customerHistory :' + customerHistory);
+                    const customer = {
                         Name: $scope.newName,
                         Category: category,
                         Status: statusRole,
@@ -2272,15 +2268,15 @@
                         Address: $scope.newAddress,
                         History: historyArray
                     };
-                    $http.post(SERVER_URI + '/addContact', {
-                        contact: contact
+                    $http.post(SERVER_URI + '/addCustomer', {
+                        customer: customer
                     }).then(
                         function (response) { //success callback
 
                             //check if the phone number exists in system
                             if (!response.data.phoneExists) {
-                                $scope.getNewContactDetails = false;
-                                $scope.getContactsList();
+                                $scope.getNewCustomerDetails = false;
+                                $scope.getCustomersList();
                                 $scope.newName = undefined;
                                 $scope.newPhoneNumber = undefined;
                                 $scope.newEmail = undefined;
@@ -2297,7 +2293,7 @@
                         },
                         function (response) { //failure callback
 
-                            //clear fields of new contact that was edit
+                            //clear fields of new customer that was edit
                             $scope.newName = undefined;
                             $scope.newPhoneNumber = undefined;
                             $scope.newEmail = undefined;
@@ -2311,15 +2307,15 @@
                     );
                 };
 
-                //delete a contact from server
-                $scope.deleteContactFunction = function (contact) {
+                //delete a customer from server
+                $scope.deleteCustomerFunction = function (customer) {
 
-                    $http.post(SERVER_URI + '/deleteContact', {
-                        contact: contact
+                    $http.post(SERVER_URI + '/deleteCustomer', {
+                        customer: customer
                     }).then(
                         function (response) { //success callback
-                            $scope.getContactsList();
-                            contactToDelete = '';
+                            $scope.getCustomersList();
+                            customerToDelete = '';
                         },
                         function (response) { //failure callback
 
@@ -2328,75 +2324,75 @@
                 };
 
                 /*
-                     a function for catching any chane in contact
-                     and save changes in history of contact
+                     a function for catching any chane in customer
+                     and save changes in history of customer
                 */
-                $scope.changedDtails = function (contactInfoToUpdate) {
-                    let updatedContactHistory = '';
+                $scope.changedDtails = function (customerInfoToUpdate) {
+                    let updatedCustomerHistory = '';
                     let change = -1;
-                    let contactHistory = '';
-                    if (category.Role !== contactBeforeUpdate.Category.Role) {
-                        updatedContactHistory = 'Role changed from : ' + contactBeforeUpdate.Category.Role + ' to : ' + category.Role + '\n';
+                    let customerHistory = '';
+                    if (category.Role !== customerBeforeUpdate.Category.Role) {
+                        updatedCustomerHistory = 'Role changed from : ' + customerBeforeUpdate.Category.Role + ' to : ' + category.Role + '\n';
                         change = 0;
                     }
-                    if (statusRole !== contactBeforeUpdate.Status) {
-                        updatedContactHistory += 'Status changed from : ' + contactBeforeUpdate.Status + ' to : ' + statusRole + '\n';
+                    if (statusRole !== customerBeforeUpdate.Status) {
+                        updatedCustomerHistory += 'Status changed from : ' + customerBeforeUpdate.Status + ' to : ' + statusRole + '\n';
                         change = 0;
                     }
-                    if (contactInfoToUpdate.Name !== contactBeforeUpdate.Name) {
-                        updatedContactHistory += 'Name changed from : ' + contactBeforeUpdate.Name + ' to : ' + contactInfoToUpdate.Name + '\n';
+                    if (customerInfoToUpdate.Name !== customerBeforeUpdate.Name) {
+                        updatedCustomerHistory += 'Name changed from : ' + customerBeforeUpdate.Name + ' to : ' + customerInfoToUpdate.Name + '\n';
                         change = 0;
                     }
-                    if (contactInfoToUpdate.PhoneNumber !== contactBeforeUpdate.PhoneNumber) {
-                        updatedContactHistory += 'Phone number changed from : ' + contactBeforeUpdate.PhoneNumber + ' to : ' + contactInfoToUpdate.PhoneNumber + '\n';
+                    if (customerInfoToUpdate.PhoneNumber !== customerBeforeUpdate.PhoneNumber) {
+                        updatedCustomerHistory += 'Phone number changed from : ' + customerBeforeUpdate.PhoneNumber + ' to : ' + customerInfoToUpdate.PhoneNumber + '\n';
                         change = 0;
                     }
-                    if (contactInfoToUpdate.eMail !== contactBeforeUpdate.eMail) {
-                        updatedContactHistory += 'Email changed from : ' + contactBeforeUpdate.eMail + 'to : ' + contactInfoToUpdate.eMail + '\n';
+                    if (customerInfoToUpdate.eMail !== customerBeforeUpdate.eMail) {
+                        updatedCustomerHistory += 'Email changed from : ' + customerBeforeUpdate.eMail + 'to : ' + customerInfoToUpdate.eMail + '\n';
                         change = 0;
                     }
-                    if (contactInfoToUpdate.Address !== contactBeforeUpdate.Address) {
-                        updatedContactHistory += 'Address changed from : ' + contactBeforeUpdate.Address + 'to : ' + contactInfoToUpdate.Address + '\n';
+                    if (customerInfoToUpdate.Address !== customerBeforeUpdate.Address) {
+                        updatedCustomerHistory += 'Address changed from : ' + customerBeforeUpdate.Address + 'to : ' + customerInfoToUpdate.Address + '\n';
                         change = 0;
                     }
 
                     if (change === 0) {
-                        contactHistory = 'Date: ' + moment().format('MM/DD/YYYY HH:mm') + '\n\nContact Edit\n\n' + updatedContactHistory + '\n';
+                        customerHistory = 'Date: ' + moment().format('MM/DD/YYYY HH:mm') + '\n\nCustomer Edit\n\n' + updatedCustomerHistory + '\n';
 
                     }
-                    return contactHistory;
+                    return customerHistory;
                 };
 
 
                 /*
-                    a function for checking validation of all updated contact fildes
+                    a function for checking validation of all updated customer fildes
                     and if they are corcect send them to the server
                 */
-                $scope.saveUpdated = function (contactInfoToUpdate) {
-                    $log.log('Category before: ' + contactBeforeUpdate.Category.Role);
+                $scope.saveUpdated = function (customerInfoToUpdate) {
+                    $log.log('Category before: ' + customerBeforeUpdate.Category.Role);
                     $log.log('Category after : ' + JSON.stringify(category));
 
                     //check if role was celected
                     if (category === undefined) {
-                        category = contactBeforeUpdate.Category;
+                        category = customerBeforeUpdate.Category;
                         if (statusRole === undefined) {
-                            statusRole = contactBeforeUpdate.Status;
+                            statusRole = customerBeforeUpdate.Status;
                         }
                     }
 
 
                     //check if no name was entered if so show an error modal
-                    if (contactInfoToUpdate.Name === undefined || contactInfoToUpdate.Name === '') {
+                    if (customerInfoToUpdate.Name === undefined || customerInfoToUpdate.Name === '') {
                         $scope.messageType = 'ERROR';
                         $scope.message = 'You must enter a name';
                         angular.element(document.querySelector('#msgModal')).modal('show');
                         return;
                     } else { //if a name was entered
-                        if (contactInfoToUpdate.Name.length > MAX_LETTERS_IN_NAME) {//check the length of the name
+                        if (customerInfoToUpdate.Name.length > MAX_LETTERS_IN_NAME) {//check the length of the name
                             $scope.messageType = 'WARNNING';
                             $scope.message = 'This name is too long, therefore only ' + MAX_LETTERS_IN_NAME + ' characters including spaces will be saved';
                             angular.element(document.querySelector('#msgModal')).modal('show');
-                            contactInfoToUpdate.Name = contactInfoToUpdate.Name.slice(0, MAX_LETTERS_IN_NAME);
+                            customerInfoToUpdate.Name = customerInfoToUpdate.Name.slice(0, MAX_LETTERS_IN_NAME);
                             return;
                         }
                     }
@@ -2411,10 +2407,10 @@
 
 
                     //check if phone number was entered and if it is valid
-                    if (contactInfoToUpdate.PhoneNumber && contactInfoToUpdate.PhoneNumber !== '') {
+                    if (customerInfoToUpdate.PhoneNumber && customerInfoToUpdate.PhoneNumber !== '') {
                         const validPhoneNumber = /^\+?([0-9]{2})?[0-9]{7,10}$/;
                         //if the phone number is invalid shoe an error modal
-                        if (!validPhoneNumber.test(contactInfoToUpdate.PhoneNumber)) {
+                        if (!validPhoneNumber.test(customerInfoToUpdate.PhoneNumber)) {
                             $scope.messageType = 'ERROR';
                             $scope.message = 'This phone number is invalid';
                             angular.element(document.querySelector('#msgModal')).modal('show');
@@ -2428,54 +2424,54 @@
                     }
 
                     //check if an email address was entered and if it is valid
-                    if (contactInfoToUpdate.eMail && contactInfoToUpdate.eMail !== '') {
+                    if (customerInfoToUpdate.eMail && customerInfoToUpdate.eMail !== '') {
                         const validEmail = /^(([^<>()[\]\\.,;:\s@\']+(\.[^<>()[\]\\.,;:\s@\']+)*)|(\'.+\'))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-                        if (!validEmail.test(contactInfoToUpdate.eMail)) {//check the email
+                        if (!validEmail.test(customerInfoToUpdate.eMail)) {//check the email
                             $scope.messageType = 'ERROR';
                             $scope.message = 'This email is invalid';
                             angular.element(document.querySelector('#msgModal')).modal('show');
                             return;
                         }
                     } else { //if no email address was entered
-                        contactInfoToUpdate.eMail = '';
+                        customerInfoToUpdate.eMail = '';
                     }
 
                     //if a address was entered
-                    if (contactInfoToUpdate.Address) {
-                        if (contactInfoToUpdate.Address.length > MAX_LETTERS_IN_ADDRESS) {//check the length of the address
+                    if (customerInfoToUpdate.Address) {
+                        if (customerInfoToUpdate.Address.length > MAX_LETTERS_IN_ADDRESS) {//check the length of the address
                             $scope.messageType = 'WARNNING';
                             $scope.message = 'This address is too long, therefore only ' + MAX_LETTERS_IN_ADDRESS + ' characters including spaces will be saved';
                             angular.element(document.querySelector('#msgModal')).modal('show');
                             $scope.newAddress = $scope.newAddress.slice(0, MAX_LETTERS_IN_ADDRESS);
-                            contactInfoToUpdate.Address = contactInfoToUpdate.Address.slice(0, MAX_LETTERS_IN_ADDRESS);
+                            customerInfoToUpdate.Address = customerInfoToUpdate.Address.slice(0, MAX_LETTERS_IN_ADDRESS);
                             return;
                         }
                     } else {
-                        contactInfoToUpdate.Address = '';
+                        customerInfoToUpdate.Address = '';
                     }
 
-                    //save the changes on contact in the history
-                    const contactHistory = $scope.changedDtails(contactInfoToUpdate);
+                    //save the changes on customer in the history
+                    const customerHistory = $scope.changedDtails(customerInfoToUpdate);
 
-                    //save the details of the updated contact in a json format
-                    const updatedContact = {
-                        Name: contactInfoToUpdate.Name,
+                    //save the details of the updated customer in a json format
+                    const updatedCustomer = {
+                        Name: customerInfoToUpdate.Name,
                         Category: category,
                         Status: statusRole,
-                        PhoneNumber: contactInfoToUpdate.PhoneNumber,
-                        eMail: contactInfoToUpdate.eMail,
-                        Address: contactInfoToUpdate.Address,
-                        History: contactHistory
+                        PhoneNumber: customerInfoToUpdate.PhoneNumber,
+                        eMail: customerInfoToUpdate.eMail,
+                        Address: customerInfoToUpdate.Address,
+                        History: customerHistory
                     };
 
                     //call server with an http request
-                    $http.post(SERVER_URI + '/updateContact', {
-                        contactBeforeUpdate: contactBeforeUpdate, updatedContact: updatedContact
+                    $http.post(SERVER_URI + '/updateCustomer', {
+                        customerBeforeUpdate: customerBeforeUpdate, updatedCustomer: updatedCustomer
                     }).then(
                         function (response) { //success callback
                             //check if the phone number does not exist already
                             if (!response.data.phoneExists) {
-                                $scope.getContactsList();
+                                $scope.getCustomersList();
                                 category = undefined;
                                 statusRole = undefined;
                             } else { //if the phone already exsist show an error modal
@@ -2494,11 +2490,11 @@
                 };
 
                 /*
-                    a function for updating a user in the system
+                    a function for updating a worker in the system
                 */
-                $scope.saveUpdatedUser = function (userToUpdate) {
-                    //regular expression for a valid user name
-                    const reUserName = /^[a-zA-Z]{3,10}$/;
+                $scope.saveUpdatedWorker = function (workerToUpdate) {
+                    //regular expression for a valid worker name
+                    const reWorkerName = /^[a-zA-Z]{3,10}$/;
 
                     //regular expression for a valid name
                     const reName = /^[a-zA-Z\s\u0590-\u05fe]{2,20}$/;
@@ -2506,23 +2502,23 @@
                     $log.log('category : ' + category);
                     //if no role was selected show an error modal
                     if (category === undefined) {
-                        $log.log('entered if : ' + userBeforeUpdate.Role);
-                        category = userBeforeUpdate.Role;
+                        $log.log('entered if : ' + workerBeforeUpdate.Role);
+                        category = workerBeforeUpdate.Role;
                     } else {
                         $log.log('entered else : ' + category.Role);
                         category = category.Role;
                     }
 
-                    //if a user name was not entered or was invalid show an error modal
-                    if (userToUpdate.UserName === undefined || !reUserName.test(userToUpdate.UserName)) {
-                        $scope.message = 'User name must contain only English letters ,minimum 3 leterrs and maximum 10 letters and no whitespace';
+                    //if a worker name was not entered or was invalid show an error modal
+                    if (workerToUpdate.WorkerName === undefined || !reWorkerName.test(workerToUpdate.WorkerName)) {
+                        $scope.message = 'Worker name must contain only English letters ,minimum 3 leterrs and maximum 10 letters and no whitespace';
                         $scope.messageType = 'ERROR';
                         angular.element(document.querySelector('#msgModal')).modal('show');
                         return;
                     }
 
                     //if a name was not entered or was invalid show an error modal
-                    if (userToUpdate.Name === undefined || !reName.test(userToUpdate.Name)) {
+                    if (workerToUpdate.Name === undefined || !reName.test(workerToUpdate.Name)) {
                         $scope.message = 'The name must contain only English or Hebrew letters ,minimum 2 leterrs and maximum 20 letters ';
                         $scope.messageType = 'ERROR';
                         angular.element(document.querySelector('#msgModal')).modal('show');
@@ -2531,7 +2527,7 @@
                     const reMail = /^(([^<>()[\]\\.,;:\s@\']+(\.[^<>()[\]\\.,;:\s@\']+)*)|(\'.+\'))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
 
                     //check if an email address was entered and if it is valid
-                    if (userToUpdate.eMail === undefined || !reMail.test(userToUpdate.eMail)) {
+                    if (workerToUpdate.eMail === undefined || !reMail.test(workerToUpdate.eMail)) {
                         $scope.message = 'This email is invalid ';
                         $scope.messageType = 'ERROR';
                         angular.element(document.querySelector('#msgModal')).modal('show');
@@ -2539,21 +2535,21 @@
                     }
 
 
-                    //save the updated details of the user
-                    const updatedUser = {
+                    //save the updated details of the worker
+                    const updatedWorker = {
                         Role: category,
-                        UserName: userToUpdate.UserName,
-                        Name: userToUpdate.Name,
-                        eMail: userToUpdate.eMail
+                        WorkerName: workerToUpdate.WorkerName,
+                        Name: workerToUpdate.Name,
+                        eMail: workerToUpdate.eMail
                     };
 
                     //call server with http request
-                    $http.post(SERVER_URI + '/updateUser', {
-                        userBeforeUpdate: userBeforeUpdate, updatedUser: updatedUser
+                    $http.post(SERVER_URI + '/updateWorker', {
+                        workerBeforeUpdate: workerBeforeUpdate, updatedWorker: updatedWorker
                     }).then(
                         function (response) { //success callback
 
-                            $scope.users = response.data.users;
+                            $scope.workers = response.data.workers;
                             category = undefined;
                         },
                         function (response) { //failure callback
@@ -2608,11 +2604,11 @@
                         angular.element(document.querySelector('#editOrDeleteEvent')).modal('show');
                         missingDetailsEditEvent = false;
                     }
-                    if (missingUserToDelete) {
-                        $scope.messageType = 'Choose user to delete';
+                    if (missingWorkerToDelete) {
+                        $scope.messageType = 'Choose worker to delete';
 
                         angular.element(document.querySelector('#deleteModal')).modal('show');
-                        missingUserToDelete = false;
+                        missingWorkerToDelete = false;
                     }
                     if (missingStatusSystemFiled) {
                         angular.element(document.querySelector('#addNewStatusToSystemModal')).modal('show');
@@ -2678,7 +2674,7 @@
                     }
 
                     //save the new password in server with an hyyp request
-                    const loggedInNewPassword = {username: loggedInUser.UserName, newPassword: $scope.newPassword};
+                    const loggedInNewPassword = {workername: loggedInWorker.WorkerName, newPassword: $scope.newPassword};
                     $http.post(SERVER_URI + '/changeCurrentPassword', {
                         loggedInNewPassword: loggedInNewPassword
                     }).then(
@@ -2699,20 +2695,20 @@
 
                 /*
                     a function for verifing the passord that was entered
-                    with the password in server for the current user name
+                    with the password in server for the current worker name
                 */
                 $scope.verifyPassword = function (currenPassword) {
-                    const loggedInCurrentPassword = {username: loggedInUser.UserName, currentPassword: currenPassword};
+                    const loggedInCurrentPassword = {workername: loggedInWorker.WorkerName, currentPassword: currenPassword};
                     $http.post(SERVER_URI + '/verifyCurrentPassword', {
                         loggedInCurrentPassword: loggedInCurrentPassword
                     }).then(
                         function (response) { //success callback
                             $scope.currenPassword = undefined;
 
-                            //the current password was verified for this username
+                            //the current password was verified for this workername
                             if (response.data.verified) {
                                 angular.element(document.querySelector('#changePasswordModal')).modal('show');
-                            } else { //the current password was not verified for this username
+                            } else { //the current password was not verified for this workername
                                 console.log('verifyPassword: response.data.notVerified=' + response.data.notVerified);
                                 $scope.messageType = 'ERROR';
                                 $scope.message = response.data.notVerified;
@@ -2823,75 +2819,75 @@
                     );
                 };
 
-                //a function for showing a modal for insuring the delition of all contacts from syetem
-                $scope.insureDeleteAllContacts = function () {
-                    $scope.message = 'Are you sure you want to delede all the contacts from system ? if you press OK, all contacts will be deleted and the information will be lost. ';
+                //a function for showing a modal for insuring the delition of all customers from syetem
+                $scope.insureDeleteAllCustomers = function () {
+                    $scope.message = 'Are you sure you want to delede all the customers from system ? if you press OK, all customers will be deleted and the information will be lost. ';
                     $scope.messageType = 'WARNNING';
                     angular.element(document.querySelector('#messageModalWithCancel')).modal('show');
-                    deleteAllContactsFlag = true;
+                    deleteAllCustomersFlag = true;
                 };
-                //a function for showing a modal for insuring the delition of contact from syetem
-                $scope.insureDeleteContact = function (contact) {
-                    contactToDelete = contact;
-                    $scope.message = 'Are you sure you want to delede this contact from system ? if you press OK, the information of this contact will be lost. ';
+                //a function for showing a modal for insuring the delition of customer from syetem
+                $scope.insureDeleteCustomer = function (customer) {
+                    customerToDelete = customer;
+                    $scope.message = 'Are you sure you want to delede this customer from system ? if you press OK, the information of this customer will be lost. ';
                     $scope.messageType = 'WARNNING';
                     angular.element(document.querySelector('#messageModalWithCancel')).modal('show');
-                    deleteContactFlag = true;
+                    deleteCustomerFlag = true;
                 };
-                //a function for showing a modal for insuring the delition of user from syetem
-                $scope.insureDeleteUser = function (user) {
-                    userToDelete = user;
-                    $scope.message = 'Are you sure you want to delede this user from system ? if you press OK, the information of this user will be lost. ';
+                //a function for showing a modal for insuring the delition of worker from syetem
+                $scope.insureDeleteWorker = function (worker) {
+                    workerToDelete = worker;
+                    $scope.message = 'Are you sure you want to delede this worker from system ? if you press OK, the information of this worker will be lost. ';
                     $scope.messageType = 'WARNNING';
                     angular.element(document.querySelector('#messageModalWithCancel')).modal('show');
-                    deleteUserFlag = true;
+                    deleteWorkerFlag = true;
                 };
 
-                //a function for showing a modal for insuring the delition of all users from syetem
-                $scope.ensureDeleteAllUsers = function () {
-                    $scope.message = 'Are you sure you want to delede all the users from system ? if you press OK, all users will be deleted and the information will be lost. ';
+                //a function for showing a modal for insuring the delition of all workers from syetem
+                $scope.ensureDeleteAllWorkers = function () {
+                    $scope.message = 'Are you sure you want to delede all the workers from system ? if you press OK, all workers will be deleted and the information will be lost. ';
                     $scope.messageType = 'WARNNING';
                     angular.element(document.querySelector('#messageModalWithCancel')).modal('show');
-                    deleteAllUsersFlag = true;
+                    deleteAllWorkersFlag = true;
                 };
                 /*
-                    a function for deleting all contacts or users depends on 'flag' parameter
+                    a function for deleting all customers or workers depends on 'flag' parameter
                 */
                 $scope.responseOk = function () {
-                    $log.log('entered responseOk ' + deleteAllContactsFlag);
-                    if (deleteAllContactsFlag) {
-                        //call function for deleting all contacts from server
-                        $scope.deleteAllContacts();
-                        deleteAllContactsFlag = false;
+                    $log.log('entered responseOk ' + deleteAllCustomersFlag);
+                    if (deleteAllCustomersFlag) {
+                        //call function for deleting all customers from server
+                        $scope.deleteAllCustomers();
+                        deleteAllCustomersFlag = false;
 
                     }
-                    if (deleteContactFlag) {
-                        //call function for deleting contact from server
-                        $scope.deleteContactFunction(contactToDelete);
-                        deleteContactFlag = false;
+                    if (deleteCustomerFlag) {
+                        //call function for deleting customer from server
+                        $scope.deleteCustomerFunction(customerToDelete);
+                        deleteCustomerFlag = false;
 
                     }
-                    if (deleteUserFlag) {
-                        //call function for deleting user from server
-                        $scope.deleteUser(userToDelete);
-                        deleteUserFlag = false;
+                    if (deleteWorkerFlag) {
+                        //call function for deleting worker from server
+                        $scope.deleteWorker(workerToDelete);
+                        deleteWorkerFlag = false;
 
                     }
 
-                    //call function for deleting all users from server
-                    if (deleteAllUsersFlag) {
-                        $scope.deleteAllUsers();
-                        deleteAllUsersFlag = false;
+                    //call function for deleting all workers from server
+                    if (deleteAllWorkersFlag) {
+                        $scope.deleteAllWorkers();
+                        deleteAllWorkersFlag = false;
 
                     }
                 };
 
                 /*
-                    a function for deleting all contacts from srever
+                    a function for deleting all customers from srever
                     with an http request
                 */
-                $scope.deleteAllContacts = function () {
-                    $http.get(SERVER_URI + '/deleteAllContacts').then(
+                $scope.deleteAllCustomers = function () {
+                    $http.get(SERVER_URI + '/deleteAllCustomers').then(
                         function (response) {//success callback
 
                             //show success modal
@@ -2906,13 +2902,13 @@
                 };
 
                 /*
-                    a function for deleting all users from srever
+                    a function for deleting all workers from srever
                     with an http request
                 */
-                $scope.deleteAllUsers = function () {
-                    $log.log('entered deleteAllUsers');
+                $scope.deleteAllWorkers = function () {
+                    $log.log('entered deleteAllWorkers');
 
-                    $http.get(SERVER_URI + '/deleteAllUsers').then(
+                    $http.get(SERVER_URI + '/deleteAllWorkers').then(
                         function (response) {//success callback
 
                             //show success modal
@@ -2927,15 +2923,15 @@
                 };
 
                 /*
-                    a function for saving the user name of user to delete that was selected at modal
+                    a function for saving the worker name of worker to delete that was selected at modal
                 */
                 $scope.itemSelected = function (item, flag) {
-                    $scope.selectedContact = item;
+                    $scope.selectedCustomer = item;
 
                     const res = item.split(',');
 
-                    if (flag === 'contact_list') {
-                        const res2 = res[0].split(':');//contact name
+                    if (flag === 'customer_list') {
+                        const res2 = res[0].split(':');//customer name
                         selectedItemPart1 = String(res2[1]).trim();
                     }
 
@@ -2944,31 +2940,31 @@
                     selectedItemPart2 = res1[1].split(' ');
                     selectedItemPart2 = String(selectedItemPart2[1]).trim();
 
-                    $scope.selectedContact = selectedItemPart1 + ' ' + selectedItemPart2;
+                    $scope.selectedCustomer = selectedItemPart1 + ' ' + selectedItemPart2;
                     $log.log(selectedItemPart2);
                 };
 
                 /*
-                    a function for deleting user from server
+                    a function for deleting worker from server
                 */
-                $scope.deleteUser = function (flag) {
+                $scope.deleteWorker = function (flag) {
                     if (flag === undefined) {
                         if (selectedItemPart2 === undefined) {
-                            $scope.message = 'You did not select user to delete , Please select one';
+                            $scope.message = 'You did not select worker to delete , Please select one';
                             $scope.messageType = 'Error';
                             angular.element(document.querySelector('#msgModal')).modal('show');
-                            missingUserToDelete = true;
+                            missingWorkerToDelete = true;
                             return;
                         }
                         //selectedItemPart2 = selectedItemPart2;
                     } else {
                         selectedItemPart2 = flag;
                     }
-                    $http.post(SERVER_URI + '/deleteUser', {
-                        username: selectedItemPart2
+                    $http.post(SERVER_URI + '/deleteWorker', {
+                        workername: selectedItemPart2
                     }).then(
                         function (response) { //success callback
-                            $scope.users = response.data.users;
+                            $scope.workers = response.data.workers;
                             selectedItemPart2 = undefined;
                         },
                         function (response) { //failure callback
@@ -2998,7 +2994,7 @@
                             $scope.roles = response.data.roles;
                             $scope.role = undefined;
                             selectedItems = undefined;
-                            userToDelete = '';
+                            workerToDelete = '';
 
                         },
                         function (response) { //failure callback
@@ -3021,8 +3017,8 @@
                     $scope.allSystem = false;
                     $scope.loginPage = true;
                     $scope.tempPassword = '';
-                    $scope.showContacts = false;
-                    $scope.showUsers = false;
+                    $scope.showCustomers = false;
+                    $scope.showWorkers = false;
                     $scope.showSettings = false;
                     $scope.showCalendar = false;
                     $scope.account = true;

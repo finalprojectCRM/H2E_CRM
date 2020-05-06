@@ -11,5 +11,7 @@ module.exports = {
     getItem: storage.getItem,
     deleteItem: storage.deleteItem,
     getAllItems: storage.getAllItems,
-    getCollection: storage.getCollection
+    getCollection: storage.getCollection,
+    updateItemByCondition: storage.updateItemByCondition,
+    deleteAllItems: storage.deleteAllItems
 };

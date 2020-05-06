@@ -26,9 +26,9 @@ function getMongoConnectionString() {
         }
         connectionString += util.format('%s/%s?', mongoConfig.clusterUrl, mongoConfig.dbName);
     } else if (mongoConfig.authType === 'SHA-1') {
-        const dbUserName = process.env.mongo_username ? process.env.mongo_username : mongoConfig.dbDefaultUserName;
-        const dbUserPassword = process.env.mongo_password ? process.env.mongo_password : mongoConfig.dbDefaultUserPassword;
-        connectionString = util.format('%s://%s:%s@%s/%s?', mongoConfig.uriPrefix, dbUserName, dbUserPassword, mongoConfig.clusterUrl, mongoConfig.dbName);
+        const dbWorkerName = process.env.mongo_workername ? process.env.mongo_workername : mongoConfig.dbDefaultWorkerName;
+        const dbWorkerPassword = process.env.mongo_password ? process.env.mongo_password : mongoConfig.dbDefaultWorkerPassword;
+        connectionString = util.format('%s://%s:%s@%s/%s?', mongoConfig.uriPrefix, dbWorkerName, dbWorkerPassword, mongoConfig.clusterUrl, mongoConfig.dbName);
     }
     const replicaSet = mongoConfig.replicaSet;
     if (replicaSet) {
@@ -86,12 +86,20 @@ module.exports = {
         return await dbHandle.collection(collections[type]).insertOne(item);
     },
 
-    updateItem: async function (item, type, changedItem = undefined) {
-        if (changedItem) {
-            return dbHandle.collection(collections[type]).updateOne(item, {$set: changedItem});
+    updateItem: async function (findItem, type, updatedItem = undefined, insertIfNotFound = false) {
+        if (updatedItem) {
+            if (insertIfNotFound) {
+                return dbHandle.collection(collections[type]).updateOne(findItem, {$set: updatedItem}, {upsert: true});
+            } else {
+                return dbHandle.collection(collections[type]).updateOne(findItem, {$set: updatedItem});
+            }
         } else {
-            return dbHandle.collection(collections[type]).updateOne(item, {$set: item}, {upsert: true});
+            return dbHandle.collection(collections[type]).updateOne(findItem, {$set: findItem}, {upsert: true});
         }
+    },
+
+    updateItemByCondition: async function (findItem, updatedItem, type) {
+        return dbHandle.collection(collections[type]).updateOne(findItem, updatedItem);
     },
 
     addItems: async function (items, type) {
@@ -113,6 +121,10 @@ module.exports = {
 
     deleteItem: async function (item, type) {
         return dbHandle.collection(collections[type]).deleteOne(item);
+    },
+
+    deleteAllItems: async function (type, condition = {}) {
+        return dbHandle.collection(collections[type]).remove(condition);
     },
 
     getItem: async function (item, type) {

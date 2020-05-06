@@ -96,18 +96,26 @@ router.route('/getRolesColors')
 router.route('/getFiles')
     .get(serverApiRequestHandler.getFiles);
 
-router.route('/getContacts')
-    .get(serverApiRequestHandler.getContacts);
+router.route('/getCustomers')
+    .get(serverApiRequestHandler.getCustomers);
 
 router.route('/getRoles')
     .get(serverApiRequestHandler.getRoles);
 
-router.route('/getUserEvents/:UserName')
-    .get(serverApiRequestHandler.getUserEvents);
+router.route('/getWorkerEvents/:WorkerName')
+    .get(serverApiRequestHandler.getWorkerEvents);
 
-router.route('/getCustomerEvents/:UserName/:eventId')
+router.route('/getCustomerEvents/:WorkerName/:eventId')
     .get(serverApiRequestHandler.getCustomerEvents);
 
+router.route('/deleteAllCustomers')
+    .get(serverApiRequestHandler.deleteAllCustomers);
+
+router.route('/deleteAllWorkers')
+    .get(serverApiRequestHandler.deleteAllWorkers);
+
+router.route('/getCustomer/:PhoneNumber')
+    .get(serverApiRequestHandler.getCustomer);
 
 router.route('/uploadFile')
     .post(serverApiRequestHandler.uploadFile);
@@ -127,18 +135,29 @@ router.route('/verifyCurrentPassword')
 router.route('/changeCurrentPassword')
     .post(serverApiRequestHandler.changeCurrentPassword);
 
-router.route('/deleteContact')
-    .post(serverApiRequestHandler.deleteContact);
+router.route('/deleteCustomer')
+    .post(serverApiRequestHandler.deleteCustomer);
 
 router.route('/deleteFile')
     .post(serverApiRequestHandler.deleteFile);
 
-router.route('/deleteUser')
-    .post(serverApiRequestHandler.deleteUser);
+router.route('/deleteWorker')
+    .post(serverApiRequestHandler.deleteWorker);
 
-router.route('/getContact/:PhoneNumber')
-    .get(serverApiRequestHandler.getContact);
+router.route('/addCustomer')
+    .post(serverApiRequestHandler.addCustomer);
 
+router.route('/updateCustomer')
+    .post(serverApiRequestHandler.updateCustomer);
+
+router.route('/getWorkers')
+    .post(serverApiRequestHandler.getWorkers);
+
+router.route('/getWorkers')
+    .post(serverApiRequestHandler.getWorkers);
+
+router.route('/addStatus')
+    .post(serverApiRequestHandler.addStatus);
 
 router.route('*')
     .get(utils.handleInvalidRequest);

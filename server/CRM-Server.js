@@ -43,144 +43,68 @@ app.listen(config.server.access.port, () => {
     })();
 });
 
-
 /*
-	This request is to add a new user to system
+	This request is to add a new worker to system
 */
-app.post('/addUser', (request, response) => {
-    console.log('entered addUser function');
-    let user = request.body.user;
-    const userEvents = [];
-    //user with his details : Role , UserName ,Name ,eMail,Password
-    user = {
+app.post('/addWorker', (request, response) => {
+    console.log('entered addWorker function');
+    let worker = request.body.worker;
+    const workerEvents = [];
+    //worker with his details : Role , WorkerName ,Name ,eMail,Password
+    worker = {
         'Role': 'new in the system',
-        'UserName': user.UserName,
-        'Name': user.Name,
-        'eMail': user.eMail,
-        'Password': user.Password,
-        'Events': userEvents
+        'WorkerName': worker.WorkerName,
+        'Name': worker.Name,
+        'eMail': worker.eMail,
+        'Password': worker.Password,
+        'Events': workerEvents
     };
-    //check if this username does not exist in the system
-    workersCollection.findOne({'UserName': user.UserName}).then(function (mongoUser) {
-        if (!mongoUser) {
-            //if this username does not exist in the system - add a new user with his details
-            workersCollection.insertOne(user, function (err, res) {
+    //check if this workername does not exist in the system
+    workersCollection.findOne({'WorkerName': worker.WorkerName}).then(function (mongoWorker) {
+        if (!mongoWorker) {
+            //if this workername does not exist in the system - add a new worker with his details
+            workersCollection.insertOne(worker, function (err, res) {
                 if (err) throw err;
-                //return the user details with isAdmin:false
+                //return the worker details with isAdmin:false
                 response.writeHead(200, {'Content-Type': 'application/json'});
                 response.end(JSON.stringify({
-                    'user': {
-                        'Role': user.Role, 'UserName': user.UserName, 'Name': user.Name,
-                        'eMail': user.eMail, 'Password': user.Password, isAdmin: false
+                    'worker': {
+                        'Role': worker.Role, 'WorkerName': worker.WorkerName, 'Name': worker.Name,
+                        'eMail': worker.eMail, 'Password': worker.Password, isAdmin: false
                     }
                 }));
             });
         } else {
-            //when the username already exists with admin and his fields did not fill
-            if (mongoUser.UserName === 'Admin' && mongoUser.Name === '' && mongoUser.eMail === '' && mongoUser.Password === '') {
+            //when the workername already exists with admin and his fields did not fill
+            if (mongoWorker.WorkerName === 'Admin' && mongoWorker.Name === '' && mongoWorker.eMail === '' && mongoWorker.Password === '') {
                 //update the Admin empty details with a new details
-                workersCollection.update({'UserName': 'Admin'}, {
+                workersCollection.update({'WorkerName': 'Admin'}, {
                     $set: {
-                        'Role': 'Administrator', 'Name': user.Name,
-                        'eMail': user.eMail, 'Password': user.Password
+                        'Role': 'Administrator', 'Name': worker.Name,
+                        'eMail': worker.eMail, 'Password': worker.Password
                     }
                 }, function (err, obj) {
                     if (err) throw err;
 
                     response.writeHead(200, {'Content-Type': 'application/json'});
                     response.end(JSON.stringify({
-                        'user': {
-                            'Role': 'Administrator', 'UserName': user.UserName, 'Name': user.Name,
-                            'eMail': user.eMail, 'Password': user.Password, isAdmin: true
+                        'worker': {
+                            'Role': 'Administrator', 'WorkerName': worker.WorkerName, 'Name': worker.Name,
+                            'eMail': worker.eMail, 'Password': worker.Password, isAdmin: true
                         }
                     }));
                     console.log('admin register');
                 });
             } else {
-                //if the username already exists and he is not the Admin
+                //if the workername already exists and he is not the Admin
                 response.writeHead(200, {'Content-Type': 'application/json'});
-                response.end(JSON.stringify({userExists: 'This user name already exists.'}));
+                response.end(JSON.stringify({workerExists: 'This worker name already exists.'}));
             }
         }
     }).catch(function (err) {
         response.send({error: err});
     });
 });
-
-
-/*
-	This request is to contact only if the contact does not exist
-*/
-app.post('/addContact', (request, response) => {
-    console.log('addContact FUNCTION');
-    //add new contact
-    const contact = request.body.contact;
-    console.log('contact: ' + contact.History);
-
-    //check if the contact is already exist by the key - the PhoneNumber
-    customersCollection.findOne({'PhoneNumber': contact.PhoneNumber}).then(function (result) {
-        if (!result) {
-            //if this contact does not exist in the system - add a new contact with his details
-            customersCollection.insertOne(
-                {
-                    'Name': contact.Name,
-                    'Category': contact.Category,
-                    'Status': contact.Status,
-                    'PhoneNumber': contact.PhoneNumber,
-                    'eMail': contact.eMail,
-                    'Address': contact.Address,
-                    History: contact.History
-                }, function (err, res) {
-                    if (err) throw err;
-                });
-            response.end();
-        } else { //check if the contact already exists
-            response.writeHead(200, {'Content-Type': 'application/json'});
-            //response with error massage
-            response.end(JSON.stringify({'phoneExists': 'ERROR : this phone number already exists, change it or search for this user.'}));
-        }
-    }).catch(function (err) {
-        response.send({error: err});
-    });
-});
-
-/*
-	This request is to get the list of users
-*/
-app.post('/getUsers', (request, response) => {
-
-    console.log('entered getUsers function');
-    const statusFlag = request.body.statusFlag;
-    console.log('statusFlag : ' + statusFlag);
-
-    //if request is to get the users for the delete user
-    if (statusFlag === 'deleteUser') {
-        console.log('entered if with : ' + statusFlag);
-        //get the user list without the administrator
-        workersCollection.find({UserName: {$ne: 'Admin'}}).toArray((error, result) => {
-            if (error) {
-                return response.status(500).send(error);
-            }
-            //response with ok, and with the users list
-            response.writeHead(200, {'Content-Type': 'application/json'});
-            response.end(JSON.stringify({'deleteUser': true, 'users': result}));
-        });
-    } else if (statusFlag === 'showUsers') { //if request is to get the users for show user
-        //enter all members of workersCollection to array
-        workersCollection.find({}).toArray((error, result) => {
-            if (error) {
-                return response.status(500).send(error);
-            }
-            //response with ok, and with the users list
-            response.writeHead(200, {'Content-Type': 'application/json'});
-            response.end(JSON.stringify({'showUsers': true, 'users': result}));
-        });
-
-    }
-
-
-});
-
 /*
 	This request is add a new status with an appropriate roles
 */
@@ -207,8 +131,6 @@ app.post('/addStatutsWithRoles', (request, response) => {
             });
 
     }
-
-
     //add to the statuses list a new status
     statusesCollection.updateOne(
         {'Status': statusWithRoles.Status},
@@ -224,7 +146,6 @@ app.post('/addStatutsWithRoles', (request, response) => {
 	This request is add a new role with an appropriate statuses
 */
 app.post('/addRoleWithStatuses', (request, response) => {
-
     const roleWithStatuses = request.body.roleWithStatuses;
     console.log('before updateOne');
     //insert to the colors list the role color
@@ -250,8 +171,6 @@ app.post('/addRoleWithStatuses', (request, response) => {
             function (err, res) {
                 console.log('after updateOne');
             });
-
-
     }
     //response with ok
     response.writeHead(200, {'Content-Type': 'application/json'});
@@ -280,25 +199,23 @@ app.post('/updateRole', (request, response) => {
             function (err, res) {
                 console.log('after updateOne');
             });
-
-
     }
 });
 
 /*
-	update contact details only with phone number that does not exist in the system
+	update customer details only with phone number that does not exist in the system
 */
 
 app.post('/addEvent', (request, response) => {
     console.log('/addEvent');
-    const userForEvent = request.body.newEvent.user;
-    console.log('user_for_task.UserName: ' + userForEvent.UserName);
+    const workerForEvent = request.body.newEvent.worker;
+    console.log('worker_for_task.WorkerName: ' + workerForEvent.WorkerName);
     const event = request.body.newEvent.event;
     console.log('event: ' + event.id);
 
-    workersCollection.updateOne({UserName: userForEvent.UserName}, {$addToSet: {Events: event}}, {upsert: true},
+    workersCollection.updateOne({WorkerName: workerForEvent.WorkerName}, {$addToSet: {Events: event}}, {upsert: true},
         function (err, res) {
-            workersCollection.find({Events: userForEvent.Events}).toArray((error, Events) => {
+            workersCollection.find({Events: workerForEvent.Events}).toArray((error, Events) => {
                 if (error) {
                     return response.status(500).send(error);
                 }
@@ -312,12 +229,12 @@ app.post('/addEvent', (request, response) => {
 
 app.post('/deleteEvent', (request, response) => {
     console.log('/deleteEvent');
-    const userForEvent = request.body.deletevent.user;
-    console.log('user_for_task.UserName: ' + userForEvent.UserName);
+    const workerForEvent = request.body.deletevent.worker;
+    console.log('worker_for_task.WorkerName: ' + workerForEvent.WorkerName);
     const event = request.body.deletevent.event;
     console.log('event start: ' + event.start + 'end ' + event.end);
     workersCollection.updateOne(
-        {UserName: userForEvent.UserName},
+        {WorkerName: workerForEvent.WorkerName},
         {
             $pull: {
                 Events: {
@@ -341,14 +258,14 @@ app.post('/deleteEvent', (request, response) => {
 
 app.post('/updateEvent', (request, response) => {
     console.log('/updateEvent');
-    const userForEvent = request.body.updatEvent.user;
-    console.log('user_for_task.UserName: ' + userForEvent.UserName);
+    const workerForEvent = request.body.updatEvent.worker;
+    console.log('worker_for_task.WorkerName: ' + workerForEvent.WorkerName);
     const eventBeforeUpdate = request.body.updatEvent.eventBeforeUpdate;
     const eventAfterUpdate = request.body.updatEvent.eventAfterUpdate;
     // console.log('event start: '+ event.start +'end '+ event.end);
     workersCollection.updateOne(
         {
-            UserName: userForEvent.UserName,
+            WorkerName: workerForEvent.WorkerName,
             Events: eventBeforeUpdate
         },
         {
@@ -374,143 +291,40 @@ app.post('/updateEvent', (request, response) => {
         });
 });
 
-
-app.post('/updateContact', (request, response) => {
-//update contact
-    console.log('updateContact FUNCTION');
-    const contactBeforeUpdateBody = request.body.contactBeforeUpdate;
-    const contactAfterUpdateBody = request.body.updatedContact;
-    const contactBeforeUpdate = {
-        'Name': contactBeforeUpdateBody.Name,
-        'Category': contactBeforeUpdateBody.Category,
-        'Status': contactBeforeUpdateBody.Status,
-        'PhoneNumber': contactBeforeUpdateBody.PhoneNumber,
-        'eMail': contactBeforeUpdateBody.eMail,
-        'Address': contactBeforeUpdateBody.Address
+//update customer details only with phone number that does not exist in the system
+app.post('/updateWorker', (request, response) => {
+//update customer
+    console.log('update workers FUNCTION');
+    const workerBeforeUpdateBody = request.body.workerBeforeUpdate;
+    const workerAfterUpdateBody = request.body.updatedWorker;
+    const workerBeforeUpdate = {
+        Role: workerBeforeUpdateBody.Role,
+        WorkerName: workerBeforeUpdateBody.WorkerName,
+        Name: workerBeforeUpdateBody.Name,
+        eMail: workerBeforeUpdateBody.eMail
     };
-
-    if (contactAfterUpdateBody.PhoneNumber === contactBeforeUpdateBody.PhoneNumber) {
-        const contactAfterUpdate = {
-            $set: {
-                'Name': contactAfterUpdateBody.Name,
-                'Category': contactAfterUpdateBody.Category,
-                'Status': contactAfterUpdateBody.Status,
-                'PhoneNumber': contactAfterUpdateBody.PhoneNumber,
-                'eMail': contactAfterUpdateBody.eMail,
-                'Address': contactAfterUpdateBody.Address
-            }
-        };
-        customersCollection.updateOne(contactBeforeUpdate, contactAfterUpdate, function (err, res) {
-            if (err) throw err;
-            customersCollection.updateOne({PhoneNumber: contactAfterUpdateBody.PhoneNumber}, {$addToSet: {History: contactAfterUpdateBody.History}},
-                function (err, res) {
-                    console.log('after updateOne');
-                });
-
-
-            customersCollection.find({}).toArray((error, result) => {
-                if (error) {
-                    return response.status(500).send(error);
-                }
-                response.writeHead(200, {'Content-Type': 'application/json'});
-                response.end(JSON.stringify({'contacts': result}));
-            });
-        });
-    } else {
-        customersCollection.findOne({'PhoneNumber': contactAfterUpdateBody.PhoneNumber}).then(function (result) {
-            if (!result) {
-                const contactAfterUpdate = {
-                    $set: {
-                        'Name': contactAfterUpdateBody.Name,
-                        'Category': contactAfterUpdateBody.Category,
-                        'Status': contactAfterUpdateBody.Status,
-                        'PhoneNumber': contactAfterUpdateBody.PhoneNumber,
-                        'eMail': contactAfterUpdateBody.eMail,
-                        'Address': contactAfterUpdateBody.Address
-                    }
-                };
-                customersCollection.updateOne(contactBeforeUpdate, contactAfterUpdate, function (err, res) {
-                    if (err) throw err;
-                    customersCollection.updateOne({PhoneNumber: contactAfterUpdateBody.PhoneNumber}, {$addToSet: {History: contactAfterUpdateBody.History}},
-                        function (err, res) {
-                            console.log('after updateOne');
-                        });
-                    customersCollection.find({}).toArray((error, result) => {
-                        if (error) {
-                            return response.status(500).send(error);
-                        }
-                        response.writeHead(200, {'Content-Type': 'application/json'});
-                        response.end(JSON.stringify({'contacts': result}));
-                    });
-
-                });
-            } else {
-                response.writeHead(200, {'Content-Type': 'application/json'});
-                response.end(JSON.stringify({'phoneExists': 'This phone number already exists, change it or search for this user.'}));
-            }
-
-        });
-    }
-});
-
-//update contact details only with phone number that does not exist in the system
-app.post('/updateUser', (request, response) => {
-//update contact
-    console.log('update users FUNCTION');
-    const userBeforeUpdateBody = request.body.userBeforeUpdate;
-    const userAfterUpdateBody = request.body.updatedUser;
-    const userBeforeUpdate = {
-        Role: userBeforeUpdateBody.Role,
-        UserName: userBeforeUpdateBody.UserName,
-        Name: userBeforeUpdateBody.Name,
-        eMail: userBeforeUpdateBody.eMail
-    };
-    const userAfterUpdate = {
+    const workerAfterUpdate = {
         $set: {
-            Role: userAfterUpdateBody.Role,
-            UserName: userAfterUpdateBody.UserName,
-            Name: userAfterUpdateBody.Name,
-            eMail: userAfterUpdateBody.eMail
+            Role: workerAfterUpdateBody.Role,
+            WorkerName: workerAfterUpdateBody.WorkerName,
+            Name: workerAfterUpdateBody.Name,
+            eMail: workerAfterUpdateBody.eMail
         }
     };
-    workersCollection.updateOne(userBeforeUpdate, userAfterUpdate, function (err, res) {
+    workersCollection.updateOne(workerBeforeUpdate, workerAfterUpdate, function (err, res) {
         if (err) throw err;
         workersCollection.find({}).toArray((error, result) => {
             if (error) {
                 return response.status(500).send(error);
             }
             response.writeHead(200, {'Content-Type': 'application/json'});
-            response.end(JSON.stringify({'showUsers': true, 'users': result}));
+            response.end(JSON.stringify({'showWorkers': true, 'workers': result}));
         });
     });
 });
 
-
-app.get('/deleteAllContacts', (request, response) => {
-
-    customersCollection.remove({}, function (err, obj) {
-        if (err) throw err;
-        response.writeHead(200, {'Content-Type': 'application/json'});
-        response.end(JSON.stringify({'message': 'All contacts have been deleted from the system'}));
-
-    });
-
-});
-
-app.get('/deleteAllUsers', (request, response) => {
-
-    workersCollection.remove({UserName: {$ne: 'Admin'}}, function (err, obj) {
-        if (err) throw err;
-        response.writeHead(200, {'Content-Type': 'application/json'});
-        response.end(JSON.stringify({'message': 'All users have been deleted from the system'}));
-
-    });
-
-});
-
-
 app.post('/deleteStatusFromRole', (request, response) => {
-//add new contact
+//add new customer
     console.log('entered deleteStatusFromRole function');
     const statusToDelete = request.body.statusToDelete;
     console.log('statusToDelete.Role ' + statusToDelete.Role);
@@ -528,13 +342,10 @@ app.post('/deleteStatusFromRole', (request, response) => {
             response.end(JSON.stringify({'roles': result}));
         });
     });
-
-
 });
 
-
 app.post('/deleteStatusFromSystem', (request, response) => {
-//add new contact
+//add new customer
     console.log('entered deleteStatusFromSystem function');
     const statusToDelete = request.body.statusToDelete;
     let statuses, rolesStatuses, statusesRoles;
@@ -566,29 +377,23 @@ app.post('/deleteStatusFromSystem', (request, response) => {
                 if (error) {
                     return response.status(500).send(error);
                 }
-
                 //rolesStatuses = rolesStatuses;
-
             });
         });
-
     });
-
     response.writeHead(200, {'Content-Type': 'application/json'});
     response.end(JSON.stringify({'statuses': statuses, 'roles': rolesStatuses}));
 
 });
 
 app.post('/deleteRole', (request, response) => {
-//add new contact
+//add new customer
     console.log('entered deleteRole function');
     const roleToDelete = request.body.role;
-
     console.log('roleToDelete:' + roleToDelete);
-
     rolesWithStatusesCollection.deleteOne({Role: roleToDelete}, function (err, obj) {
         if (err) throw err;
-        console.log('1 user deleted');
+        console.log('1 worker deleted');
         rolesWithStatusesCollection.find({}).toArray((error, result) => {
             if (error) {
                 return response.status(500).send(error);
@@ -596,9 +401,7 @@ app.post('/deleteRole', (request, response) => {
             response.writeHead(200, {'Content-Type': 'application/json'});
             response.end(JSON.stringify({'roles': result}));
         });
-
     });
-
     statusesWithRolesCollection.updateMany({}, {$pull: {Roles: {$in: [roleToDelete]}}}, function (err, obj) {
         if (err) throw err;
         console.log('1 status was deleted from role ');
@@ -606,37 +409,19 @@ app.post('/deleteRole', (request, response) => {
             if (error) {
                 return response.status(500).send(error);
             }
-
             //rolesStatuses = rolesStatuses;
-
         });
     });
 });
 
-//add a new status
-app.post('/addOption', (request, response) => {
+app.post('/updateCustomerHistory', (request, response) => {
 //add new option
-    const statusToAdd = request.body.newSatus;
-
-    statusesCollection.updateOne(
-        {'Status': statusToAdd.Status},
-        {$setOnInsert: {'Status': statusToAdd.Status}},
-        {upsert: true}
-    );
-    response.writeHead(200, {'Content-Type': 'application/json'});
-    response.end();
-});
-
-app.post('/updateContactHistory', (request, response) => {
-//add new option
-    console.log('/updateContactHistory');
-
-    const contactPhoneToUpdateHistory = request.body.updateHistory.contactPhoneNumber;
-    const History = request.body.updateHistory.contactHistory;
-    console.log('contactPhoneToUpdateHistory : '+contactPhoneToUpdateHistory);
+    console.log('/updateCustomerHistory');
+    const customerPhoneToUpdateHistory = request.body.updateHistory.customerPhoneNumber;
+    const History = request.body.updateHistory.customerHistory;
+    console.log('customerPhoneToUpdateHistory : '+customerPhoneToUpdateHistory);
     console.log('History : '+History);
-
-    customersCollection.updateMany({PhoneNumber: { "$in" : contactPhoneToUpdateHistory}}, {$addToSet: {History: {$each: History}}},
+    customersCollection.updateMany({PhoneNumber: { "$in" : customerPhoneToUpdateHistory}}, {$addToSet: {History: {$each: History}}},
         function (err, res) {
             console.log('after updateOne');
         });

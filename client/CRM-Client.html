@@ -68,7 +68,7 @@
                     <p><label class="header_text form-signin-heading text-center text-primary">Please log in</label></p>
                     <div class="input-group">
                         <span class="input-group-addon primary"><i class="fa fa-user fa-lg"></i></span>
-                        <input ng-model="UserNameLogin" class="form-control w-50 p-3" placeholder="Enter user name">
+                        <input ng-model="WorkerNameLogin" class="form-control w-50 p-3" placeholder="Enter worker name">
                     </div>
                     </p>
                     <div class="input-group">
@@ -186,8 +186,8 @@
             <div class="col-xs-4 col-md-offset-5">
                 <div class="input-group">
                     <span class="input-group-addon primary"><i class="fa fa-user fa-lg"></i></span>
-                    <input ng-disabled="Admin==true" ng-model="registrationUserName" class="form-control w-50 p-3"
-                           placeholder="Enter user name">
+                    <input ng-disabled="Admin==true" ng-model="registrationWorkerName" class="form-control w-50 p-3"
+                           placeholder="Enter worker name">
 
                 </div>
                 </br>
@@ -234,8 +234,8 @@
                 <a href="#" class="dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     <i style="font-size: 50px; margin-bottom:10px" class="fa fa-user-circle-o fa-lg"></i>
                     </br>
-                    <label class="text-primary" style="font-size: 15px;">{{nameOfUser}}</label></br>
-                    <label class="text-primary" style="font-size: 15px;">{{roleOfUser}}</label>
+                    <label class="text-primary" style="font-size: 15px;">{{nameOfWorker}}</label></br>
+                    <label class="text-primary" style="font-size: 15px;">{{roleOfWorker}}</label>
                     <span class="caret"></span>
                 </a>
                 </br>
@@ -251,27 +251,27 @@
 
         <div ng-show="menu==true" id="div-vertical" class="navbar">
             <ul>
-                <li ng-click="getUsersFunction('showUsers');usersNavColor='#ff0066';contactsNavColor='#004d99';spesificContactsNavColor='#004d99';calendarNavColor='#004d99';settingsNavColor='#004d99'"
-                    ng-style="{'background-color': usersNavColor}"><a><i class="fa fa-fw fa-user"></i></p>Workers</a>
+                <li ng-click="getWorkersFunction('showWorkers');workersNavColor='#ff0066';customersNavColor='#004d99';spesificCustomersNavColor='#004d99';calendarNavColor='#004d99';settingsNavColor='#004d99'"
+                    ng-style="{'background-color': workersNavColor}"><a><i class="fa fa-fw fa-user"></i></p>Workers</a>
                 </li>
-                <li ng-click="getContactsFunction();contactsNavColor='#ff0066';usersNavColor='#004d99';spesificContactsNavColor='#004d99';calendarNavColor='#004d99';settingsNavColor='#004d99'"
-                    ng-style="{'background-color': contactsNavColor}"><a><i class="fa fa-fw fa-user"></i></p>
+                <li ng-click="getCustomersFunction();customersNavColor='#ff0066';workersNavColor='#004d99';spesificCustomersNavColor='#004d99';calendarNavColor='#004d99';settingsNavColor='#004d99'"
+                    ng-style="{'background-color': customersNavColor}"><a><i class="fa fa-fw fa-user"></i></p>
                     Customers</a></li>
-                <li ng-click="getSpecificEvents();spesificContactsNavColor='#ff0066';contactsNavColor='#004d99';usersNavColor='#004d99';calendarNavColor='#004d99';settingsNavColor='#004d99'"
-                    ng-style="{'background-color': spesificContactsNavColor}"><a><i class="glyphicon glyphicon-list-alt"></i></p>
+                <li ng-click="getSpecificEvents();spesificCustomersNavColor='#ff0066';customersNavColor='#004d99';workersNavColor='#004d99';calendarNavColor='#004d99';settingsNavColor='#004d99'"
+                    ng-style="{'background-color': spesificCustomersNavColor}"><a><i class="glyphicon glyphicon-list-alt"></i></p>
                     Events</a></li>
-                <li ng-click="calendarFunction() ;calendarNavColor='#ff0066';contactsNavColor='#004d99';spesificContactsNavColor='#004d99';usersNavColor='#004d99';settingsNavColor='#004d99'"
+                <li ng-click="calendarFunction() ;calendarNavColor='#ff0066';customersNavColor='#004d99';spesificCustomersNavColor='#004d99';workersNavColor='#004d99';settingsNavColor='#004d99'"
                     ng-style="{'background-color': calendarNavColor}" id="display_calendar"><a><i
                         class="fa fa-calendar"></i></p>Calendar</a></li>
-                <li ng-click="settingsFunction();settingsNavColor='#ff0066';contactsNavColor='#004d99';spesificContactsNavColor='#004d99';calendarNavColor='#004d99';usersNavColor='#004d99'"
+                <li ng-click="settingsFunction();settingsNavColor='#ff0066';customersNavColor='#004d99';spesificCustomersNavColor='#004d99';calendarNavColor='#004d99';workersNavColor='#004d99'"
                     ng-style="{'background-color': settingsNavColor}" ng-show="adminPage==true"><a><i
                         class="fa fa-gear"></i></p>Settings </a></li>
             </ul>
         </div>
 
         <div id="info_navbar">
-            <!--contacts table-->
-            <form id="users_div" ng-show="showUsers == true;"><!-- -->
+            <!--customers table-->
+            <form id="workers_div" ng-show="showWorkers == true;"><!-- -->
                 <table>
                     <tr>
                         <td>
@@ -281,7 +281,7 @@
                                               aria-hidden="true">
 										</span>
 									</span>
-                                <input class="form-control-md-6" ng-model="search_users" placeholder="search...">
+                                <input class="form-control-md-6" ng-model="search_workers" placeholder="search...">
                             </div>
                         </td>
                         <td></td>
@@ -298,11 +298,11 @@
                                 </br>
                                 <ul class="dropdown-menu">
                                     <li class="hover_color"
-                                        ng-click="selectAll(false,'users');chooseUserToEmail=true;show_send_or_cancel_multiple_button=true">
+                                        ng-click="selectAll(false,'workers');chooseWorkerToEmail=true;show_send_or_cancel_multiple_button=true">
                                         <a href="#"><i style=" color: rgb(50, 118, 177);" class="fa fa-user fa-fw"></i>
                                             select</a></li>
                                     <li class="hover_color"
-                                        ng-click="selectAll(true,'users');chooseUserToEmail=true;show_send_or_cancel_multiple_button=true">
+                                        ng-click="selectAll(true,'workers');chooseWorkerToEmail=true;show_send_or_cancel_multiple_button=true">
                                         <a href="#"><i style=" color: rgb(50, 118, 177);" class="fa fa-user fa-fw"></i>
                                             select all</a></li>
                                 </ul>
@@ -318,7 +318,7 @@
                         <tr class="table_head">
                             <th>Role</th>
                             <th>Name</th>
-                            <th ng-show="isAdmin==true">Username</th>
+                            <th ng-show="isAdmin==true">Workername</th>
                             <th>Email</th>
                             <th ng-show="isAdmin==true"></th>
                             <th ng-show="isAdmin==true"></th>
@@ -328,26 +328,26 @@
                         </tr>
                         <thead>
                         <tbody>
-                        <tr ng-repeat="userInfo in users | filter:search_users"
-                            ng-init="userIsEdit = false;username='Admin'">
-                            <td ng-show="userIsEdit==false">{{userInfo.Role}}</td>
-                            <td ng-show="userIsEdit==false">{{userInfo.Name}}</td>
-                            <td ng-show="userIsEdit==false && isAdmin==true">{{userInfo.UserName}}</td>
-                            <td ng-show="userIsEdit==false">{{userInfo.eMail}}</td>
-                            <td ng-show="userIsEdit==false && isAdmin==true"><i class="fa fa-envelope"
+                        <tr ng-repeat="workerInfo in workers | filter:search_workers"
+                            ng-init="workerIsEdit = false;workername='Admin'">
+                            <td ng-show="workerIsEdit==false">{{workerInfo.Role}}</td>
+                            <td ng-show="workerIsEdit==false">{{workerInfo.Name}}</td>
+                            <td ng-show="workerIsEdit==false && isAdmin==true">{{workerInfo.WorkerName}}</td>
+                            <td ng-show="workerIsEdit==false">{{workerInfo.eMail}}</td>
+                            <td ng-show="workerIsEdit==false && isAdmin==true"><i class="fa fa-envelope"
                                                                                 style="font-size:24px;color:#00b3b3"
                                                                                 aria-hidden="true"
-                                                                                ng-click="sendMailModal(userInfo.eMail)"></i>
+                                                                                ng-click="sendMailModal(workerInfo.eMail)"></i>
                             </td>
 
 
-                            <td ng-show="userIsEdit==false && isAdmin==true && username!=userInfo.UserName "><i
+                            <td ng-show="workerIsEdit==false && isAdmin==true && workername!=workerInfo.WorkerName "><i
                                     class="fa fa-edit" style="font-size:24px;color:#008fb3" aria-hidden="true"
-                                    ng-click="userIsEdit =!userIsEdit;updateUserFunction(userInfo)"></i></td>
-                            <div ng-if="userIsEdit" class="form-group row">
+                                    ng-click="workerIsEdit =!workerIsEdit;updateWorkerFunction(workerInfo)"></i></td>
+                            <div ng-if="workerIsEdit" class="form-group row">
 
 
-                                <td ng-show="userIsEdit==true">
+                                <td ng-show="workerIsEdit==true">
                                     <div class="form-group"><!-- ng-if="roles.indexOf(role)>0"-->
                                         <select class="form-control" ng-model="role"
                                                 ng-options="objRole as objRole.Role disable when objRole.Role  === '-- Choose category for role --' for objRole in roles | filter: ({Role : '!new in the system'})"
@@ -361,28 +361,28 @@
 
                                     </div>
                                 </td>
-                                <td ng-show="userIsEdit==true">{{userInfo.Name}}</td>
-                                <td ng-show="userIsEdit==true">{{userInfo.UserName}}</td>
-                                <td ng-show="userIsEdit==true">{{userInfo.eMail}}</td>
+                                <td ng-show="workerIsEdit==true">{{workerInfo.Name}}</td>
+                                <td ng-show="workerIsEdit==true">{{workerInfo.WorkerName}}</td>
+                                <td ng-show="workerIsEdit==true">{{workerInfo.eMail}}</td>
 
                             </div>
 
-                            <td ng-show="isAdmin==true && username!=userInfo.UserName "><i class="fa fa-trash"
+                            <td ng-show="isAdmin==true && workername!=workerInfo.WorkerName "><i class="fa fa-trash"
                                                                                            style="font-size:24px;color:#003366"
-                                                                                           ng-show="userIsEdit==false"
+                                                                                           ng-show="workerIsEdit==false"
                                                                                            aria-hidden="true"
-                                                                                           ng-click="insureDeleteUser(userInfo.UserName)"></i>
+                                                                                           ng-click="insureDeleteWorker(workerInfo.WorkerName)"></i>
                             </td>
-                            <td ng-show="isAdmin==true &&username==userInfo.UserName "></td>
-                            <td ng-show="isAdmin==true && username==userInfo.UserName "></td>
-                            <td ng-show="userIsEdit==false">
-                                <div ng-if="chooseUserToEmail"><input type="checkbox"
-                                                                         ng-show="chooseUserToEmail==true"
-                                                                         ng-model="selected[userInfo.UserName]"/></div>
+                            <td ng-show="isAdmin==true &&workername==workerInfo.WorkerName "></td>
+                            <td ng-show="isAdmin==true && workername==workerInfo.WorkerName "></td>
+                            <td ng-show="workerIsEdit==false">
+                                <div ng-if="chooseWorkerToEmail"><input type="checkbox"
+                                                                         ng-show="chooseWorkerToEmail==true"
+                                                                         ng-model="selected[workerInfo.WorkerName]"/></div>
                             </td>
-                            <td ng-show="userIsEdit==true"><i class="fa fa-check-square-o"
+                            <td ng-show="workerIsEdit==true"><i class="fa fa-check-square-o"
                                                               style="font-size:24px;color:#00e600" aria-hidden="true"
-                                                              ng-click="saveUpdatedUser(userInfo)"></i></td>
+                                                              ng-click="saveUpdatedWorker(workerInfo)"></i></td>
 
 
                         </tr>
@@ -393,18 +393,18 @@
                     <div class="col-xs-offset-4" ng-show="show_send_or_cancel_multiple_button == true">
                         <button type="button" class="btn btn-md center-block "
                                 style="display:inline-block;background-color: #008fb3;color: white;margin-top:10px"
-                                ng-click="sendEmailToSelectedContacts('users');">
+                                ng-click="sendEmailToSelectedCustomers('workers');">
                             send mail to selected workers
                         </button>
                         <button type="button" class="btn btn-md center-block "
                                 style="display:inline-block;background-color: #ff0066;color: white; margin-top:10px"
-                                ng-click="show_send_or_cancel_multiple_button=false;chooseUserToEmail=false;">
+                                ng-click="show_send_or_cancel_multiple_button=false;chooseWorkerToEmail=false;">
                             cancel
                         </button>
                     </div>
                 </div>
             </form>
-            <form id="contacts_div" ng-show="showContacts"><!-- -->
+            <form id="customers_div" ng-show="showCustomers"><!-- -->
                 <table>
                     <tr>
                         <td>
@@ -414,7 +414,7 @@
                                               aria-hidden="true">
 										</span>
 									</span>
-                                <input class="form-control-md-6" ng-model="searchContacts" placeholder="search...">
+                                <input class="form-control-md-6" ng-model="searchCustomers" placeholder="search...">
                             </div>
                         </td>
                         <td></td>
@@ -431,11 +431,11 @@
                                 </br>
                                 <ul class="dropdown-menu">
                                     <li class="hover_color"
-                                        ng-click="selectAll(false);chooseContactToEmail=true;showSendOrCancelMultipleButtonContacts=true">
+                                        ng-click="selectAll(false);chooseCustomerToEmail=true;showSendOrCancelMultipleButtonCustomers=true">
                                         <a href="#"><i style=" color: rgb(50, 118, 177);" class="fa fa-user fa-fw"></i>
                                             select</a></li>
                                     <li class="hover_color"
-                                        ng-click="selectAll(true);chooseContactToEmail=true;showSendOrCancelMultipleButtonContacts=true">
+                                        ng-click="selectAll(true);chooseCustomerToEmail=true;showSendOrCancelMultipleButtonCustomers=true">
                                         <a href="#"><i style=" color: rgb(50, 118, 177);" class="fa fa-user fa-fw"></i>
                                             select all</a></li>
                                 </ul>
@@ -467,34 +467,34 @@
                         </tr>
                         <thead>
                         <tbody>
-                        <tr ng-repeat="contactInfo in contactsInfo | filter:searchContacts"
-                            ng-init="contactIsEdit = false;contactInfo.selected_to_email=false">
-                            <td ng-show="contactIsEdit==false">{{contactInfo.Category.Role}}</td>
-                            <td ng-show="contactIsEdit==false">{{contactInfo.Status}}</td>
-                            <td ng-show="contactIsEdit==false">{{contactInfo.Name}}</td>
-                            <td ng-show="contactIsEdit==false">{{contactInfo.PhoneNumber}}</td>
-                            <td ng-show="contactIsEdit==false">{{contactInfo.eMail}}</td>
-                            <td ng-show="contactIsEdit==false">{{contactInfo.Address}}</td>
+                        <tr ng-repeat="customerInfo in customersInfo | filter:searchCustomers"
+                            ng-init="customerIsEdit = false;customerInfo.selected_to_email=false">
+                            <td ng-show="customerIsEdit==false">{{customerInfo.Category.Role}}</td>
+                            <td ng-show="customerIsEdit==false">{{customerInfo.Status}}</td>
+                            <td ng-show="customerIsEdit==false">{{customerInfo.Name}}</td>
+                            <td ng-show="customerIsEdit==false">{{customerInfo.PhoneNumber}}</td>
+                            <td ng-show="customerIsEdit==false">{{customerInfo.eMail}}</td>
+                            <td ng-show="customerIsEdit==false">{{customerInfo.Address}}</td>
 
 
-                            <td ng-show="contactIsEdit==false" ><i class="fa fa-calendar"
+                            <td ng-show="customerIsEdit==false" ><i class="fa fa-calendar"
                                                                   style="font-size:24px;color:#cc99ff"
                                                                   aria-hidden="true"
-                                                                  ng-click="calendarContact(contactInfo);"
+                                                                  ng-click="calendarCustomer(customerInfo);"
                                                                   ></i></td>
-                            <td ng-show="contactIsEdit==false"><i class="fa fa-envelope"
+                            <td ng-show="customerIsEdit==false"><i class="fa fa-envelope"
                                                                   style="font-size:24px;color:#00b3b3"
                                                                   aria-hidden="true"
-                                                                  ng-click="sendMailModal(contactInfo)"></i></td>
+                                                                  ng-click="sendMailModal(customerInfo)"></i></td>
 
-                            <td ng-show="contactIsEdit==false"><i class="fa fa-edit"
+                            <td ng-show="customerIsEdit==false"><i class="fa fa-edit"
                                                                   style="font-size:25px;color:#008fb3"
                                                                   aria-hidden="true"
-                                                                  ng-click="contactIsEdit =!contactIsEdit;updateContactFunction(contactInfo)"></i>
+                                                                  ng-click="customerIsEdit =!customerIsEdit;updateCustomerFunction(customerInfo)"></i>
                             </td>
-                            <div ng-if="contactIsEdit" class="form-group row">
+                            <div ng-if="customerIsEdit" class="form-group row">
 
-                                <td ng-show="contactIsEdit==true">
+                                <td ng-show="customerIsEdit==true">
                                     <div class="form-group">
                                         <select class="form-control" ng-model="roleCategory"
                                                 ng-options="objRole as objRole.Role disable when objRole.Role  === '-- Choose category for role --' for objRole in roles | filter: ({Role : '!new in the system'})"
@@ -506,7 +506,7 @@
                                         </select>
                                     </div>
                                 </td>
-                                <td ng-show="contactIsEdit==true">
+                                <td ng-show="customerIsEdit==true">
                                     <div class="form-group" ng-if="roleCategory">
 
                                         <select class="form-control" ng-model="statusRole"
@@ -518,48 +518,48 @@
                                     </div>
                                 </td>
 
-                                <td ng-show="contactIsEdit==true"><input ng-model="contactInfo.Name" type="text"
+                                <td ng-show="customerIsEdit==true"><input ng-model="customerInfo.Name" type="text"
                                                                          class="form-control"/></td>
-                                <td ng-show="contactIsEdit==true"><input ng-model="contactInfo.PhoneNumber" type="text"
+                                <td ng-show="customerIsEdit==true"><input ng-model="customerInfo.PhoneNumber" type="text"
                                                                          class="form-control"/></td>
 
-                                <td ng-show="contactIsEdit==true"><input ng-model="contactInfo.eMail" type="text"
+                                <td ng-show="customerIsEdit==true"><input ng-model="customerInfo.eMail" type="text"
                                                                          class="form-control"/></td>
-                                <td ng-show="contactIsEdit==true"><input ng-model="contactInfo.Address" type="text"
+                                <td ng-show="customerIsEdit==true"><input ng-model="customerInfo.Address" type="text"
                                                                          class="form-control"/></td>
                             </div>
 
-                            <td ng-show="contactIsEdit==false"><i class="fa fa-trash"
+                            <td ng-show="customerIsEdit==false"><i class="fa fa-trash"
                                                                   style="font-size:24px;color:#003366"
                                                                   aria-hidden="true"
-                                                                  ng-click="insureDeleteContact(contactInfo)"></i>
+                                                                  ng-click="insureDeleteCustomer(customerInfo)"></i>
                             </td>
-                            <td ng-show="contactIsEdit==false"><i class="fa fa-history"
+                            <td ng-show="customerIsEdit==false"><i class="fa fa-history"
                                                                   style="font-size:24px;color:#003366" pop-over
-                                                                  history="contactInfo.History" , title="History"></i>
+                                                                  history="customerInfo.History" , title="History"></i>
 
                                 <script type="text/ng-template" id="popover_template.html">
                                     <div>
 										 <pre>
-											<span ng-repeat='contactHistory in history track by $index'>{{contactHistory}}<b><hr></b></span>
+											<span ng-repeat='customerHistory in history track by $index'>{{customerHistory}}<b><hr></b></span>
 										</pre>
                                     </div>
                                 </script>
                             <td>
-                            <td ng-show="contactIsEdit==false">
-                                <div ng-if="chooseContactToEmail"><input type="checkbox"
-                                                                            ng-show="chooseContactToEmail==true"
-                                                                            ng-model="selected[contactInfo.PhoneNumber]"/>
+                            <td ng-show="customerIsEdit==false">
+                                <div ng-if="chooseCustomerToEmail"><input type="checkbox"
+                                                                            ng-show="chooseCustomerToEmail==true"
+                                                                            ng-model="selected[customerInfo.PhoneNumber]"/>
                                 </div>
                             </td>
 
-                            <td ng-show="contactIsEdit==true"><i class="fa fa-check-square-o"
+                            <td ng-show="customerIsEdit==true"><i class="fa fa-check-square-o"
                                                                  style="font-size:24px;color:#00e600" aria-hidden="true"
-                                                                 ng-click="saveUpdated(contactInfo)"></i></td>
+                                                                 ng-click="saveUpdated(customerInfo)"></i></td>
 
                         </tr>
 
-                        <tr ng-show="getNewContactDetails==true">
+                        <tr ng-show="getNewCustomerDetails==true">
 
                             <td>
                                 <div class="form-group" ng-init="role">
@@ -596,7 +596,7 @@
                                    ng-click="cancelFunction()"></i></td>
 
                         </tr>
-                        <tr ng-show="showContacts==true">
+                        <tr ng-show="showCustomers==true">
                             <td></td>
                             <td></td>
                             <td></td>
@@ -611,21 +611,21 @@
                             <td></td>
 
                             <td ng-show="click==true"><i class="fa fa-user-plus" style="font-size:24px;color:#00cc99"
-                                                         ng-click="addContactFunction() "></i></td>
+                                                         ng-click="addCustomerFunction() "></i></td>
                         </tr>
 
                         </tbody>
                         </p>
                     </table>
-                    <div class="col-xs-offset-4" ng-show="showSendOrCancelMultipleButtonContacts == true">
+                    <div class="col-xs-offset-4" ng-show="showSendOrCancelMultipleButtonCustomers == true">
                         <button type="button" class="btn btn-md center-block "
                                 style="display:inline-block;background-color: #008fb3;color: white;margin-top:10px"
-                                ng-click="sendEmailToSelectedContacts('contacts');contactInfo.selected_to_email=false">
+                                ng-click="sendEmailToSelectedCustomers('customers');customerInfo.selected_to_email=false">
                             send mail to selected customers
                         </button>
                         <button type="button" class="btn btn-md center-block "
                                 style="display:inline-block;background-color: #ff0066;color: white; margin-top:10px"
-                                ng-click="showSendOrCancelMultipleButtonContacts=false;chooseContactToEmail=false;contactInfo.selected_to_email=false">
+                                ng-click="showSendOrCancelMultipleButtonCustomers=false;chooseCustomerToEmail=false;customerInfo.selected_to_email=false">
                             cancel
                         </button>
                     </div>
@@ -643,15 +643,15 @@
                             <th>start date</th>
                             <th>end date</th>
                             <th>task description</th>
-                            <th>contact for task</th>
+                            <th>customer for task</th>
                             <th></th>
                             <th></th>
                         </tr>
                         <thead>
                         <tbody>
-                        <tr ng-repeat="event in userEvents"
+                        <tr ng-repeat="event in workerEvents"
 
-                            ng-init="userIsEdit = false;username='Admin'">
+                            ng-init="workerIsEdit = false;workername='Admin'">
                             <td >{{event.start}}</td>
                             <td >{{event.end}}</td>
                             <td >{{event.title}}</td>
@@ -660,12 +660,12 @@
 
 
                             <td><i class="fa fa-calendar" style="font-size:24px;color:#cc99ff" aria-hidden="true" ng-click="getCalendarEvent(event);"></i></td>
-                            <td ng-if="event.id!=-1"><i class="fa fa-address-card-o" style="font-size:24px;color:#00b3b3" aria-hidden="true" ng-click="getContactEventByPhone(event.id)"></i></td>
+                            <td ng-if="event.id!=-1"><i class="fa fa-address-card-o" style="font-size:24px;color:#00b3b3" aria-hidden="true" ng-click="getCustomerEventByPhone(event.id)"></i></td>
 
-                            <!--<td ng-show="contactIsEdit==false"><i class="fa fa-edit"
+                            <!--<td ng-show="customerIsEdit==false"><i class="fa fa-edit"
                                                                   style="font-size:25px;color:#008fb3"
                                                                   aria-hidden="true"
-                                                                  ng-click="contactIsEdit =!contactIsEdit;updateContactFunction(contactInfo)"></i>
+                                                                  ng-click="customerIsEdit =!customerIsEdit;updateCustomerFunction(customerInfo)"></i>
                             </td>-->
 
 
@@ -723,38 +723,38 @@
             </div>
 
             <div ng-show="showSettings==true">
-                <div class="dropdown" id="users_settings_div">
+                <div class="dropdown" id="workers_settings_div">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown" aria-haspopup="true"
                        aria-expanded="false">
                         <i style="font-size: 50px; margin-bottom:10px" class="fa fa-users fa-lg"></i>
                         </br>
-                        <label class="text-primary" style="font-size: 18px;">Users</label>
+                        <label class="text-primary" style="font-size: 18px;">Workers</label>
                         <span class="caret"></span>
                     </a>
                     </br>
                     <ul class="dropdown-menu">
-                        <li class="hover_color" ng-click="getUsersList('deleteUser')"><a href="#"><i
-                                style=" color: rgb(50, 118, 177);" class="fa fa-trash fa-fw"></i> delete user</a></li>
-                        <li class="hover_color" ng-click="ensureDeleteAllUsers()"><a href="#"><i
-                                style=" color: rgb(50, 118, 177);" class="fa fa-trash fa-fw"></i> delete all users</a>
+                        <li class="hover_color" ng-click="getWorkersList('deleteWorker')"><a href="#"><i
+                                style=" color: rgb(50, 118, 177);" class="fa fa-trash fa-fw"></i> delete worker</a></li>
+                        <li class="hover_color" ng-click="ensureDeleteAllWorkers()"><a href="#"><i
+                                style=" color: rgb(50, 118, 177);" class="fa fa-trash fa-fw"></i> delete all workers</a>
                         </li>
                     </ul>
 
                 </div>
 
-                <div class="dropdown" id="contacts_settings_div">
+                <div class="dropdown" id="customers_settings_div">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown" aria-haspopup="true"
                        aria-expanded="false">
                         <i style="font-size: 50px; margin-bottom:10px" class="fa fa-address-book fa-lg"></i>
                         </br>
-                        <label class="text-primary" style="font-size: 18px;">Contacts</label>
+                        <label class="text-primary" style="font-size: 18px;">Customers</label>
                         <span class="caret"></span>
                     </a>
                     </br>
                     <ul class="dropdown-menu">
-                        <li class="hover_color" ng-click="insureDeleteAllContacts()"><a href="#"><i
+                        <li class="hover_color" ng-click="insureDeleteAllCustomers()"><a href="#"><i
                                 style=" color: rgb(50, 118, 177);" class="fa fa-trash fa-fw"></i> delete all
-                            contacts</a></li>
+                            customers</a></li>
                     </ul>
                 </div>
 
@@ -1158,7 +1158,7 @@
                         <!-- TO field -->
                         <div class="form-group ">
                             <label class="control-label col-sm-2 text-primary">To:<label
-                                    style=" color:black;font-weight: normal"> {{contactEmail}}</label></label>
+                                    style=" color:black;font-weight: normal"> {{customerEmail}}</label></label>
                         </div>
 
                         <!-- Subject field -->
@@ -1212,7 +1212,7 @@
                         cancel
                     </button>
                     <button type="button" class="btn btn-primary"
-                            ng-click="sendEmail(contactEmail,emailSubject,emailBody)" data-dismiss="modal">
+                            ng-click="sendEmail(customerEmail,emailSubject,emailBody)" data-dismiss="modal">
                         send
                     </button>
                 </div>
@@ -1250,9 +1250,9 @@
                                 </div>
                             </div>
 
-                            <div class="col-sm-10"><input type="checkbox" ng-model="contactTask"/><em
-                                    style=" color:#ff0066"> Task for contact</em></div>
-                            <div ng-if="contactTask">
+                            <div class="col-sm-10"><input type="checkbox" ng-model="customerTask"/><em
+                                    style=" color:#ff0066"> Task for customer</em></div>
+                            <div ng-if="customerTask">
                                 <div class="col-sm-10 text-primary">
                                     <div>
                                         </br><b>Select contant for task:</b>
@@ -1261,10 +1261,10 @@
                                     </br>
                                     <div class="row-fluid">
                                         <select class="form-control" data-show-subtext="true" data-live-search="true"
-                                                ng-model="contact" ng-change="itemSelected(contact,'contact_list')">
+                                                ng-model="customer" ng-change="itemSelected(customer,'customer_list')">
                                             <option value='' disabled="disabled">-- Choose Customer --</option>
-                                            <option ng-repeat="contactInfo in contactsInfo">Name: {{contactInfo.Name}} ,
-                                                Phone Number: {{contactInfo.PhoneNumber}}</style></option>
+                                            <option ng-repeat="customerInfo in customersInfo">Name: {{customerInfo.Name}} ,
+                                                Phone Number: {{customerInfo.PhoneNumber}}</style></option>
                                         </select>
                                     </div>
                                 </div>
@@ -1333,7 +1333,7 @@
                         cancel
                     </button>
                     <button type="button" class="btn btn-primary" data-dismiss="modal"
-                            ng-click="addEventToCalendar(contactTask,true);">
+                            ng-click="addEventToCalendar(customerTask,true);">
                         ok
                     </button>
 
@@ -1370,9 +1370,9 @@
                                 </div>
                             </div>
 
-                            <div class="col-sm-10"><input type="checkbox" ng-model="contactTask"/><em
-                                    style=" color:#ff0066"> Task for contact</em></div>
-                            <div ng-if="contactTask">
+                            <div class="col-sm-10"><input type="checkbox" ng-model="customerTask"/><em
+                                    style=" color:#ff0066"> Task for customer</em></div>
+                            <div ng-if="customerTask">
                                 <div class="col-sm-10 text-primary">
                                     <div>
                                         </br><b>Select contant for task:</b>
@@ -1381,10 +1381,10 @@
                                     </br>
                                     <div class="row-fluid">
                                         <select class="form-control" data-show-subtext="true" data-live-search="true"
-                                                ng-model="contact" ng-change="itemSelected(contact,'contact_list')">
+                                                ng-model="customer" ng-change="itemSelected(customer,'customer_list')">
                                             <option value='' disabled="disabled">-- Choose Customer --</option>
-                                            <option ng-repeat="contactInfo in contactsInfo">Name: {{contactInfo.Name}} ,
-                                                Phone Number: {{contactInfo.PhoneNumber}}</style></option>
+                                            <option ng-repeat="customerInfo in customersInfo">Name: {{customerInfo.Name}} ,
+                                                Phone Number: {{customerInfo.PhoneNumber}}</style></option>
                                         </select>
                                     </div>
                                 </div>
@@ -1417,7 +1417,7 @@
                         cancel
                     </button>
                     <button type="button" class="btn btn-primary" data-dismiss="modal"
-                            ng-click="addEventToCalendar(contactTask,false);">
+                            ng-click="addEventToCalendar(customerTask,false);">
                         ok
                     </button>
 
@@ -1455,23 +1455,23 @@
                                     </select></br>
                                 </div>
                             </div>
-                            <div ng-show="contactSelected==true">
+                            <div ng-show="customerSelected==true">
                                 <div ng-show="taskIsEdit==false" class="col-sm-10 text-primary"></br>
-                                    <b>Contact:</b>
+                                    <b>Customer:</b>
                                 </div>
                                 <div ng-show="taskIsEdit==false" class="col-sm-10">
-                                    </br>{{contactEvent}}<a href=""><em style=" color:#ff0066;"
-                                                                         ng-click="goToContact()"> go to contact</em></a>
+                                    </br>{{customerEvent}}<a href=""><em style=" color:#ff0066;"
+                                                                         ng-click="goToCustomer()"> go to customer</em></a>
                                 </div>
                             </div>
 
                             <div ng-show="taskIsEdit==true" class="col-sm-10"><input type="checkbox"
-                                                                                     ng-model="contactTask"/><em
-                                    style=" color:#ff0066"> Task for contact</em></br></div>
-                            <div ng-show="taskIsEdit==true" ng-if="contactTask">
+                                                                                     ng-model="customerTask"/><em
+                                    style=" color:#ff0066"> Task for customer</em></br></div>
+                            <div ng-show="taskIsEdit==true" ng-if="customerTask">
 
                                 <div class="col-sm-10 ">
-                                    </br><b class="text-primary">Selected contact: </b> {{selectedContact}}
+                                    </br><b class="text-primary">Selected customer: </b> {{selectedCustomer}}
                                 </div>
                                 </br>
                                 <div class="col-sm-10 text-primary">
@@ -1482,10 +1482,10 @@
                                     </br>
                                     <div class="row-fluid">
                                         <select class="form-control" data-show-subtext="true" data-live-search="true"
-                                                ng-model="contact" ng-change="itemSelected(contact,'contact_list')">
+                                                ng-model="customer" ng-change="itemSelected(customer,'customer_list')">
                                             <option value='' disabled="disabled">-- Choose Customer --</option>
-                                            <option ng-repeat="contactInfo in contactsInfo">Name: {{contactInfo.Name}} ,
-                                                Phone Number: {{contactInfo.PhoneNumber}}</style></option>
+                                            <option ng-repeat="customerInfo in customersInfo">Name: {{customerInfo.Name}} ,
+                                                Phone Number: {{customerInfo.PhoneNumber}}</style></option>
                                         </select>
 
                                     </div>
@@ -1574,7 +1574,7 @@
                             cancel
                         </button>
                         <button type="button" class="btn btn-primary" data-dismiss="modal"
-                                ng-click="saveEditEvent(contactTask)">
+                                ng-click="saveEditEvent(customerTask)">
                             save
                         </button>
                     </div>
@@ -1600,10 +1600,10 @@
 
                     <div class="row-fluid">
                         <select class="form-control" data-show-subtext="true" data-live-search="true"
-                                ng-model="username" ng-change="itemSelected(username,'user_listsss')">
-                            <option value='' disabled="disabled">-- Choose user --</option>
-                            <option ng-repeat="user in users">Name: {{user.Name}} , User name:
-                                {{user.UserName}}</style></option>
+                                ng-model="workername" ng-change="itemSelected(workername,'worker_listsss')">
+                            <option value='' disabled="disabled">-- Choose worker --</option>
+                            <option ng-repeat="worker in workers">Name: {{worker.Name}} , Worker name:
+                                {{worker.WorkerName}}</style></option>
                         </select>
                     </div>
                 </div>
@@ -1616,7 +1616,7 @@
                     <button type="button" class="btn btn-primary" data-dismiss="modal">
                         cancel
                     </button>
-                    <button type="button" class="btn btn-primary" data-dismiss="modal" ng-click="deleteUser()">
+                    <button type="button" class="btn btn-primary" data-dismiss="modal" ng-click="deleteWorker()">
                         delete
                     </button>
 
@@ -1691,7 +1691,7 @@
                         <span class="sr-only">Close</span>
                     </button>
                     <h4 class="modal-title" id="addNewStatusModalLabel">
-                        Add status to user role
+                        Add status to worker role
                     </h4>
                 </div>
                 </br>
@@ -1861,7 +1861,7 @@
                         <span class="sr-only">Close</span>
                     </button>
                     <h4 class="modal-title" id="addNewRoleModalLabel">
-                        Add user role with matching statuses
+                        Add worker role with matching statuses
                     </h4>
                 </div>
                 </br>
@@ -1873,7 +1873,7 @@
                             </br>
                             <div class="col-sm-10">
                                 <input class="form-control" ng-model="roleFromModal"
-                                       placeholder="Enter new role for user..."/>
+                                       placeholder="Enter new role for worker..."/>
                             </div>
                         </div>
 

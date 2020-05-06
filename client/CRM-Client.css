@@ -12,7 +12,7 @@ body {
     width: 14%;
 }
 
-#contacts_div {
+#customers_div {
     font-size: 17px;
     margin-left: 5%;
     margin-top: 5%;
@@ -55,7 +55,7 @@ table td:nth-child(2) {
     text-align: left;
 }
 
-#users_div {
+#workers_div {
     font-size: 17px;
     margin-left: 15%;
     margin-top: 5%;
@@ -65,7 +65,7 @@ table td:nth-child(2) {
 
 }
 
-#add_contact {
+#add_customer {
     margin-top: 5.5%;
     text-align: center;
 }
@@ -80,7 +80,7 @@ form {
     margin-left: 5%;
 }
 
-#add_contact_button {
+#add_customer_button {
     font-size: 25px;
     height: 80px;
     width: 200px;
@@ -253,14 +253,14 @@ ul, li {
     opacity: 0.9;
 }
 
-#users_settings_div {
+#workers_settings_div {
     position: absolute;
     top: 300px;
     left: 500px;
     text-align: center;
 }
 
-#contacts_settings_div {
+#customers_settings_div {
     position: absolute;
     top: 300px;
     left: 800px;

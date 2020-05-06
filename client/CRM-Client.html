@@ -497,7 +497,7 @@
                                 <td ng-show="customerIsEdit==true">
                                     <div class="form-group">
                                         <select class="form-control" ng-model="roleCategory"
-                                                ng-options="objRole as objRole.Role disable when objRole.Role  === '-- Choose category for role --' for objRole in roles | filter: ({Role : '!new in the system'})"
+                                                ng-options="objRole as objRole.Role disable when objRole.Role  === '-- Choose category for role --' for objRole in assignedRoles | filter: ({Role : '!new in the system'})"
                                                 ng-change="onChangeCategory(roleCategory)"><!---->
                                             <option value='' disabled="disabled">-- Choose category for role --</option>
 
@@ -565,7 +565,7 @@
                                 <div class="form-group" ng-init="role">
                                     <select class="form-control" data-show-subtext="true" data-live-search="true"
                                             ng-model="role"
-                                            ng-options="objRole as objRole.Role disable when objRole.Role  === '-- Choose category for role --' for objRole in roles | filter: ({Role : '!new in the system'})"
+                                            ng-options="objRole as objRole.Role disable when objRole.Role  === '-- Choose category for role --' for objRole in assignedRoles | filter: ({Role : '!new in the system'})"
                                             ng-change="onChangeCategory(role)">
                                         <option value='' disabled="disabled">-- Choose category for role --</option>
 

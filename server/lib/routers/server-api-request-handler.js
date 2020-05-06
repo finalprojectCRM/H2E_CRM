@@ -282,6 +282,13 @@ module.exports = {
         logger.info('getRoles');
         await repo.getItems(req, res, 'rolesWithStatus', 'roles');
     },
+    /*
+        get list of all roles with their statuses
+    */
+    getAssignedRoles: async function (req, res) {
+        logger.info('getRoles');
+        await repo.getAssignedRoles(req, res);
+    },
 
     /*
         get list of all events for specific worker

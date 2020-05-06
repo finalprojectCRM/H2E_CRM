@@ -73,6 +73,7 @@
                 $scope.files = [];
                 $scope.rolesColors = [];
                 $scope.retreivedCalendarEvents = [];
+                $scope.assignedRoles = [];
 
                 function refreshCalendarEvents() {
                     $log.log('refreshCalendarEvents');
@@ -141,13 +142,25 @@
 
                 }
 
+                function getAssignedRoles() {
+                    $http.get(SERVER_URI + '/getAssignedRoles').then(
+                        function (response) {//success callback
+
+                            //return the list of the assigned roles
+                            $scope.assignedRoles = response.data.assignedRoles;
+                        }, function (response) {//failure callback
+
+                        }
+                    );
+                };
+
                 function getIndexOfSelectedItem(item, flag, status) {
                     if (flag === 'status_list') {
-                        for (let i = 0; i < $scope.roles.length; i++) {
-                            if (item === $scope.roles[i].Role) {
+                        for (let i = 0; i < $scope.assignedRoles.length; i++) {
+                            if (item === $scope.assignedRoles[i].Role) {
                                 $log.log('entered if ##: ');
-                                for (let j = 0; j < $scope.roles[i].Statuses.length; j++) {
-                                    if (status === $scope.roles[i].Statuses[j]) {
+                                for (let j = 0; j < $scope.assignedRoles[i].Statuses.length; j++) {
+                                    if (status === $scope.assignedRoles[i].Statuses[j]) {
                                         $log.log('j: ' + j);
                                         return j;
                                     }
@@ -155,8 +168,8 @@
                             }
                         }
                     } else if (flag === 'role_list') {
-                        for (let i = 0; i < $scope.roles.length; i++) {
-                            if (item === $scope.roles[i].Role) {
+                        for (let i = 0; i < $scope.assignedRoles.length; i++) {
+                            if (item === $scope.assignedRoles[i].Role) {
                                 return i;
                             }
                         }
@@ -766,7 +779,7 @@
                 function addHistoryToCustomerEvent(description,startDate,endDate,color,customer){
                     let history='';
                     history = 'New Task\n\n'+'Start Date : '+ startDate+'\n' +'End Date : '+endDate+'\n';
-                    history = history+'Category : '+$scope.roles[getIndexOfSelectedItem(color,'color_of_role')].Role+'\n';
+                    history = history+'Category : '+$scope.assignedRoles[getIndexOfSelectedItem(color,'color_of_role')].Role+'\n';
                     history = history+description+'\n';
                     $log.log(history);
                     return history;
@@ -1824,9 +1837,9 @@
                     };
                     const indexRole = getIndexOfSelectedItem(customerBeforeUpdate.Category.Role, 'role_list');
                     console.log('indexRole=' + indexRole);
-                    $scope.roleCategory = $scope.roles[indexRole];
+                    $scope.roleCategory = $scope.assignedRoles[indexRole];
                     console.log('$scope.roleCategory=' + JSON.stringify($scope.roleCategory));
-                    $scope.statusRole = $scope.roles[indexRole].Statuses[getIndexOfSelectedItem(customerBeforeUpdate.Category.Role, 'status_list', customerBeforeUpdate.Status)];
+                    $scope.statusRole = $scope.assignedRoles[indexRole].Statuses[getIndexOfSelectedItem(customerBeforeUpdate.Category.Role, 'status_list', customerBeforeUpdate.Status)];
                     console.log('$scope.statusRole=' + $scope.statusRole);
                     $scope.updateStatus = customerBeforeUpdate.Status;
                     console.log('customerBeforeUpdate.Status=' + customerBeforeUpdate.Status);
@@ -2068,7 +2081,11 @@
                             $scope.newEmail = '';
                             $scope.newAddress = '';
                             $scope.roleCategory = '';
+
+                            getAssignedRoles();
+
                         }, function (response) {//failure callback
+
                         }
                     );
                 };

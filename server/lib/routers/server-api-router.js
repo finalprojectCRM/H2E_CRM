@@ -102,6 +102,9 @@ router.route('/getCustomers')
 router.route('/getRoles')
     .get(serverApiRequestHandler.getRoles);
 
+router.route('/getAssignedRoles')
+    .get(serverApiRequestHandler.getAssignedRoles);
+
 router.route('/getWorkerEvents/:WorkerName')
     .get(serverApiRequestHandler.getWorkerEvents);
 

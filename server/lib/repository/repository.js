@@ -27,7 +27,7 @@ module.exports = {
         try {
             await module.exports.setDBConnectionStatus(utils.getErrorStatus(util.format(config.server.errors.DB.ERROR_DB_CONNECTION_FAILED,
                 config.storage, 'possible networking issues')), false);
-            const {statusCode, statusMessage, dbHandle} = await storage.init(mediator, logger);
+            const {statusCode, statusMessage} = await storage.init(mediator, logger);
             connStatus = {
                 'code': statusCode,
                 'message': statusMessage
@@ -42,19 +42,7 @@ module.exports = {
             };
             await module.exports.setDBConnectionStatus(connStatus);
             connStatus = await module.exports.getDBConnectionStatus();
-
-            // create db collections
-            return {
-                status: connStatus,
-                customers: dbHandle.collection('customers'),
-                statuses: dbHandle.collection('statuses'),
-                workers: dbHandle.collection('workers'),
-                files: dbHandle.collection('files'),
-                rolesWithStatuses: dbHandle.collection('roles with statuses'),
-                statusesWithRoles: dbHandle.collection('statuses with roles'),
-                colors: dbHandle.collection('colors')
-            };
-
+            return connStatus;
         } catch (err) {
             logger.error(util.format('Error while trying to connect: %s', err));
             setTimeout(module.exports.init, config.mongo.retryInterval);

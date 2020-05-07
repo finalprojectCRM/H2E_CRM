@@ -609,4 +609,40 @@ module.exports = {
         const event = req.body.event;
         await repo.deleteItemAndReturnUpdatedList(req, res, event, 'event', {'Events': {}}, 'Events');
     }
+/*
+    app.post('/updateEvent', (request, response) => {
+        console.log('/updateEvent');
+        const workerForEvent = request.body.updatEvent.worker;
+        console.log('worker_for_task.WorkerName: ' + workerForEvent.WorkerName);
+        const eventBeforeUpdate = request.body.updatEvent.eventBeforeUpdate;
+        const eventAfterUpdate = request.body.updatEvent.eventAfterUpdate;
+        // console.log('event start: '+ event.start +'end '+ event.end);
+        workersCollection.updateOne(
+            {
+                WorkerName: workerForEvent.WorkerName,
+                Events: eventBeforeUpdate
+            },
+            {
+                $set: {
+                    'Events.$.title': eventAfterUpdate.title,
+                    'Events.$.start': eventAfterUpdate.start,
+                    'Events.$.end': eventAfterUpdate.end,
+                    'Events.$.color': eventAfterUpdate.color,
+                    'Events.$.id': eventAfterUpdate.id,
+                    'Events.$.editable': eventAfterUpdate.editable,
+                    'Events.$.allDay': eventAfterUpdate.allDay
+                }
+            }, function (err, document) {
+                if (err) {
+                    console.log(err);
+                    response.writeHead(500, {'Content-Type': 'application/json'});
+                } else {
+                    console.log('after update');
+                    response.writeHead(200, {'Content-Type': 'application/json'});
+
+                }
+                response.end();
+            });
+    });
+*/
 };

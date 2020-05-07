@@ -65,16 +65,14 @@ module.exports = {
         if (!conn) {
             return {
                 statusCode: statusCode,
-                statusMessage: statusMessage,
-                dbHandle: null
+                statusMessage: statusMessage
             };
         }
         mongoConn = conn;
         dbHandle = mongoConn.db(mongoConfig.dbName);
         return {
             statusCode: 200,
-            statusMessage: connectionString,
-            dbHandle: dbHandle
+            statusMessage: connectionString
         };
     },
 

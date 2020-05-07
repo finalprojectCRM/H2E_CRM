@@ -639,11 +639,13 @@
                         editable: event.editable, allDay: event.allDay
                     };
 
-                    const deleteEvent = {event: eventToDelete, worker: worker};
                     $http.post(SERVER_URI + '/deleteEvent', {
-                        deletevent: deleteEvent
+                        event: eventToDelete
                     }).then(
                         function (response) {
+                            $log.log('response.data.Events: '+ JSON.stringify(response.data.Events));
+                            $scope.retreivedCalendarEvents = response.data.Events;
+                            refreshCalendarEvents();
                         },
                         function (response) { //failure callback
                         }
@@ -651,16 +653,8 @@
                 }
 
                 $scope.deleteEvent = function (event, element, view) {
-                    uiCalendarConfig.calendars['myCalendar'].fullCalendar('removeEvents', function (event) {
-
-                        deleteEventFromDataBase(event, loggedInWorker);
-
-                        /*
-                            delete event from mongodb
-                            and from cotacts events list
-                        */
-                        return event === editEventDetails;
-                    });
+                    // delete event from mongodb and from contacts events list
+                    deleteEventFromDataBase(editEventDetails, loggedInWorker);
                 };
 
                 $scope.eventRender = function (event, element, view) {
@@ -805,6 +799,7 @@
                     let startDate;
                     let endDate;
                     let customerHistory;
+                    let customerId;
 
                     if (!outsideModal) {
                         const date = $scope.date.split('-');
@@ -895,14 +890,16 @@
                             return;
                         } else {
                             description = 'Task for customer ' + selectedItemPart1 + ' ' + selectedItemPart2 + ' : ' + $scope.title;
+                            customerId = selectedItemPart2;
                             customer = selectedItemPart1 + ' ' + selectedItemPart2;
                             customerHistory = addHistoryToCustomerEvent(description,startDate,endDate,$scope.role.Color,customer);
                             historyArray.push(customerHistory);
 
                         }
-                    } else { //if the task is not for a spesific customer -> id of customer = '-1'
+                    } else { //if the task is not for a specific customer -> id of customer = '-1'
                         description = $scope.title;
                         customer = -1;
+                        customerId = -1;
                     }
 
                     $log.log('description: ' + description);
@@ -912,6 +909,7 @@
                         end: endDate,
                         color: $scope.role.Color,
                         id: customer,
+                        customerPhone: customerId,
                         editable: true,
                         allDay: false
                     };
@@ -919,8 +917,6 @@
                     //uiCalendarConfig.calendars['myCalendar'].fullCalendar('renderEvent', eventToAdd, true);
                     addEventToDataBase(eventToAdd, loggedInWorker);
                     //uiCalendarConfig.calendars['myCalendar'].fullCalendar('refetchEvents');
-
-
                     //  console.log($scope.pendingRequests);
                 };
                 $scope.getCalendarEvent = function (event) {
@@ -933,28 +929,9 @@
                     uiCalendarConfig.calendars.myCalendar.fullCalendar('rerenderEvents');
                     $log.log('after $scope.retreivedCalendarEvents')
                     $scope.calendarFunction();
-                   /* $http.get(SERVER_URI + '/getEvent/' + loggedInWorker.WorkerName + '/' + event).then(
-                        function (response) {//success callback
-                            $scope.retreivedCalendarEvents = response.data.customerEvents;
-                            $log.log('retreivedCalendarEvents=' + JSON.stringify($scope.retreivedCalendarEvents));
-                            uiCalendarConfig.calendars.myCalendar.fullCalendar('removeEvents');
-                            uiCalendarConfig.calendars.myCalendar.fullCalendar('addEventSource', $scope.retreivedCalendarEvents);
-                            uiCalendarConfig.calendars.myCalendar.fullCalendar('rerenderEvents');
-                            $scope.calendarFunction();
-                        },
-                        function (response) {//failure callback
-                            //if failed show error modal
-                            $scope.message = response.data.error;
-                            $scope.messageType = 'ERROR';
-                            angular.element(document.querySelector('#msgModal')).modal('show');
-                        }
-                    );*/
                 }
-
-
                 //cancel function from modal in calendar
                 $scope.cancelEvent = function () {
-
                     $scope.role = '';
                     $scope.customerTask = false;
                     $scope.customer = undefined;

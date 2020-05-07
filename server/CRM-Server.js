@@ -44,35 +44,6 @@ app.listen(config.server.access.port, () => {
     })();
 });
 
-app.post('/deleteEvent', (request, response) => {
-    console.log('/deleteEvent');
-    const workerForEvent = request.body.deletevent.worker;
-    console.log('worker_for_task.WorkerName: ' + workerForEvent.WorkerName);
-    const event = request.body.deletevent.event;
-    console.log('event start: ' + event.start + 'end ' + event.end);
-    workersCollection.updateOne(
-        {WorkerName: workerForEvent.WorkerName},
-        {
-            $pull: {
-                Events: {
-                    title: event.title,
-                    start: event.start,
-                    end: event.end,
-                    color: event.color
-                }
-            }
-        }, function (err, document) {
-            if (err) {
-                console.log(err);
-                response.writeHead(500, {'Content-Type': 'application/json'});
-            } else {
-                console.log('after update');
-                response.writeHead(200, {'Content-Type': 'application/json'});
-            }
-            response.end();
-        });
-});
-
 app.post('/updateEvent', (request, response) => {
     console.log('/updateEvent');
     const workerForEvent = request.body.updatEvent.worker;

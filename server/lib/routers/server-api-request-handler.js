@@ -602,5 +602,11 @@ module.exports = {
         logger.info(util.format('Response Data: %s', JSON.stringify(responseData)));
         res.writeHead(200, {'Content-Type': 'application/json'});
         res.end(JSON.stringify(responseData));
+    },
+    deleteEvent: async function (req, res) {
+        logger.info('deleteEvent');
+        //the event to delete with its details
+        const event = req.body.event;
+        await repo.deleteItemAndReturnUpdatedList(req, res, event, 'event', {'Events': {}}, 'Events');
     }
 };

@@ -192,6 +192,9 @@ router.route('/updateWorker')
 router.route('/addEvent')
     .post(serverApiRequestHandler.addEvent);
 
+router.route('/deleteEvent')
+    .post(serverApiRequestHandler.deleteEvent);
+
 router.route('*')
     .get(utils.handleInvalidRequest);
 

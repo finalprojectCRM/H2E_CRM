@@ -339,6 +339,11 @@
                                                                                 aria-hidden="true"
                                                                                 ng-click="sendMailModal(workerInfo.eMail)"></i>
                             </td>
+                            <td ng-show="workerIsEdit==false && isAdmin==true"><i class="fa fa-users"
+                                                                                style="font-size:24px;color:#3ada82"
+                                                                                aria-hidden="true"
+                                                                                ng-click="getWorkerNameCustomers(workerInfo.WorkerName)"></i>
+                            </td>
 
 
                             <td ng-show="workerIsEdit==false && isAdmin==true && workername!=workerInfo.WorkerName "><i

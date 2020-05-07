@@ -296,7 +296,14 @@ module.exports = {
     },
     getCustomerEvents: async function (req, res) {
         logger.info(util.format('/getCustomerEvents/%s/%s', req.params.WorkerName, req.params.eventId));
-        await repo.getCustomerEvents(req, res, 'worker');
+        const workerName = req.params.WorkerName;
+        let condition = {WorkerName: req.params.WorkerName,customerPhone:req.params.eventId};
+        logger.info(util.format('/getWorkerEvents/%s', workerName));
+        if (workerName === 'Admin') {
+            condition = {customerPhone:req.params.eventId};
+        }
+        await repo.getItems(req, res, 'event', 'customerEvents', condition);
+        //await repo.getCustomerEvents(req, res, 'event');
     },
     uploadFile: async function (req, res) {
         logger.info('/uploadFile');

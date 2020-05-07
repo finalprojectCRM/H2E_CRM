@@ -105,6 +105,13 @@
                             uiCalendarConfig.calendars.myCalendar.fullCalendar('removeEvents');
                             uiCalendarConfig.calendars.myCalendar.fullCalendar('addEventSource', $scope.retreivedCalendarEvents);
                             uiCalendarConfig.calendars.myCalendar.fullCalendar('rerenderEvents');
+                            if($scope.retreivedCalendarEvents.length==0)
+                            {
+                                $scope.getCustomersFunction();
+                                $scope.message = 'There are no events for this customer';
+                                $scope.messageType = 'ERROR';
+                                angular.element(document.querySelector('#msgModal')).modal('show');
+                            }
                         },
                         function (response) {//failure callback
                             //if failed show error modal
@@ -415,11 +422,11 @@
                     editable: true,
                     eventLimit: true,
                     renderCalender: $scope.renderCalender(),
-                    /*events: function (start, end, timezone, callback) { // Fetch your events here
+                    vents: function (start, end, timezone, callback) { // Fetch your events here
                         $log.log('retreivedCalendarEvents=' + $scope.retreivedCalendarEvents);
                         // This could be an ajax call or you could get the events locally
                         callback($scope.retreivedCalendarEvents);
-                    },*/
+                    },
                     /*
                         select date with clicking trigger
                         and save start and end date in format : 'DD/MM/YYYY HH:mm'
@@ -646,8 +653,8 @@
                     //let customer_name = customer.Name;
                     const customerPhone = customer.PhoneNumber;
                     $log.log('eventId : ' + eventId);
-                    $scope.retreivedCalendarEvents = refreshCustomerCalendarEvents(eventId);
-                    $scope.calendarFunction();
+                    //refreshCustomerCalendarEvents();
+                    $scope.calendarFunction(customerPhone);
                 };
 
                 function deleteEventFromDataBase(event, worker) {
@@ -1440,7 +1447,6 @@
                                     return;
 
                                 }
-                                refreshCalendarEvents();
 
                                 //if admin show admin page and update that admin is logged in
                                 if (LoginWorker.adminWorker) {
@@ -1472,6 +1478,8 @@
                                 $scope.getCustomersList();
                                 $scope.getFilesList();
                                 $scope.getWorkersList('showWorkers');
+                                refreshCalendarEvents();
+
                             } else { //if there is no match show error modal
                                 $scope.message = response.data.noMatch;
                                 $scope.messageType = 'ERROR';
@@ -1493,6 +1501,8 @@
                     $scope.showUpdateExpression = true;
                     $scope.showUpdateInput = false;
                      */
+                    $scope.calendarNavColor = '#004d99';
+                    $scope.customersNavColor = '#ff0066';
                     $scope.loginPage = false;
                     $scope.showCustomers = true;
                     $scope.showWorkers = false;
@@ -1676,7 +1686,7 @@
                     a function for showing the calendar page
                     and hiding all other pages that are not relevant
                 */
-                $scope.calendarFunction = function () {
+                $scope.calendarFunction = function (flag) {
                     $scope.loginPage = false;
                     $scope.showCustomers = false;
                     $scope.showCalendar = true;
@@ -1697,6 +1707,13 @@
                         uiCalendarConfig.calendars['myCalendar'].fullCalendar('render');
 
                     }, 5); // Set enough time to wait until animation finishes;*/
+                    if(flag)
+                    {
+
+                        refreshCustomerCalendarEvents(flag);
+                        return;
+                    }
+                    refreshCalendarEvents()
                 };
 
                 /*
@@ -2061,8 +2078,8 @@
                 /*
                     get the customers list from server with http request
                 */
-                $scope.getCustomersList = function () {
-                    $http.get(SERVER_URI + '/getCustomers/' + loggedInWorker.WorkerName).then(
+                $scope.getCustomersList = function (WorkerName = loggedInWorker.WorkerName ) {
+                    $http.get(SERVER_URI + '/getCustomers/' + WorkerName).then(
                         function (response) {//success callback
 
                             //return the list of the customers
@@ -2097,6 +2114,15 @@
                         }
                     );
                 };
+
+                $scope.getWorkerNameCustomers = function (workerName)
+                {
+                    $scope.workersNavColor = '#004d99';
+                    $scope.customersNavColor = '#ff0066';
+                    $scope.getCustomersFunction(true);
+                    $scope.getCustomersList(workerName);
+
+                }
 
                 /*
                     a function for getting the list of workers from server with http request

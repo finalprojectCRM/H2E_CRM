@@ -122,7 +122,7 @@ module.exports = {
             storage.getCollection(collectionName).find(
                 {
                     'WorkerName': req.params.WorkerName,
-                    'Events.id': req.params.eventId
+                    'customerPhone': req.params.eventId
                 }).forEach(function (doc) {
                 doc.Events = doc.Events.filter(function (event) {
                     if (event.id === req.params.eventId) {

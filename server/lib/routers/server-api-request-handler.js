@@ -608,41 +608,46 @@ module.exports = {
         //the event to delete with its details
         const event = req.body.event;
         await repo.deleteItemAndReturnUpdatedList(req, res, event, 'event', {'Events': {}}, 'Events');
-    }
-/*
-    app.post('/updateEvent', (request, response) => {
-        console.log('/updateEvent');
-        const workerForEvent = request.body.updatEvent.worker;
-        console.log('worker_for_task.WorkerName: ' + workerForEvent.WorkerName);
-        const eventBeforeUpdate = request.body.updatEvent.eventBeforeUpdate;
-        const eventAfterUpdate = request.body.updatEvent.eventAfterUpdate;
-        // console.log('event start: '+ event.start +'end '+ event.end);
-        workersCollection.updateOne(
-            {
-                WorkerName: workerForEvent.WorkerName,
-                Events: eventBeforeUpdate
-            },
-            {
-                $set: {
-                    'Events.$.title': eventAfterUpdate.title,
-                    'Events.$.start': eventAfterUpdate.start,
-                    'Events.$.end': eventAfterUpdate.end,
-                    'Events.$.color': eventAfterUpdate.color,
-                    'Events.$.id': eventAfterUpdate.id,
-                    'Events.$.editable': eventAfterUpdate.editable,
-                    'Events.$.allDay': eventAfterUpdate.allDay
-                }
-            }, function (err, document) {
-                if (err) {
-                    console.log(err);
-                    response.writeHead(500, {'Content-Type': 'application/json'});
-                } else {
-                    console.log('after update');
-                    response.writeHead(200, {'Content-Type': 'application/json'});
+    },
+    updateEvent: async function (req, res) {
+        logger.info('updateEvent');
+        let status = {code: 200, message: 'OK'};
+        try {
+            const eventExists = {'eventExists': 'The task already exists on this date, please select another time for this task'};
+            const eventBeforeUpdate = req.body.updatedEvent.eventBeforeUpdate;
+            const eventAfterUpdate = req.body.updatedEvent.eventAfterUpdate;
+            if (eventBeforeUpdate.color !== eventAfterUpdate.color) {
+                const eventRole = await repo.getItem({Color: eventAfterUpdate.color}, 'rolesWithStatus');
+                eventAfterUpdate.WorkerName = await repo.assignWorker({Role: eventRole.Role}, 'event');
+            }
 
-                }
-                response.end();
-            });
-    });
-*/
+            /*if (eventBeforeUpdate.WorkerName === eventAfterUpdate.WorkerName ||
+                eventBeforeUpdate.start !== eventAfterUpdate.start ||
+                eventBeforeUpdate.end !== eventAfterUpdate.end) {
+                status.message = eventExists.eventExists;
+            } else {*/
+            const foundItems = await repo.getAllCollectionItems('event',
+                {
+                    WorkerName: eventAfterUpdate.WorkerName,
+                    start: eventAfterUpdate.start,
+                    end: eventAfterUpdate.end
+                });
+            if (foundItems.length === 0 ||( foundItems.length === 1 && foundItems[0].WorkerName === eventBeforeUpdate.WorkerName && foundItems[0].start === eventBeforeUpdate.start && foundItems[0].end === eventBeforeUpdate.end)) {
+                await repo.updateItem(req, res, eventBeforeUpdate, {$set: eventAfterUpdate},
+                    'event');
+                return;
+            }
+            status.message = eventExists;
+
+
+            //}
+        } catch (err) {
+            logger.error(util.format('happened error[%s]', err));
+            status = module.exports.getErrorStatus(err);
+        }
+        const response = status.code === 200 ? JSON.stringify(status.message) : JSON.stringify(status);
+        logger.info(util.format('Response Data: %s', response));
+        res.writeHead(status.code, {'Content-Type': 'application/json'});
+        res.end(response);
+    }
 };

@@ -195,6 +195,9 @@ router.route('/addEvent')
 router.route('/deleteEvent')
     .post(serverApiRequestHandler.deleteEvent);
 
+router.route('/updateEvent')
+    .post(serverApiRequestHandler.updateEvent);
+
 router.route('*')
     .get(utils.handleInvalidRequest);
 

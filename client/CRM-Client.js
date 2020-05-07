@@ -174,8 +174,8 @@
                             }
                         }
                     } else if (flag === 'color_of_role') {
-                        for (let i = 0; i < $scope.roles.length; i++) {
-                            if (item === $scope.roles[i].Color) {
+                        for (let i = 0; i < $scope.assignedRoles.length; i++) {
+                            if (item === $scope.assignedRoles[i].Color) {
                                 return i;
                             }
                         }
@@ -243,9 +243,12 @@
                         end: endDate,
                         color: eventAfterUpdate.color,
                         id: eventAfterUpdate.id,
-                        editable: eventAfterUpdate.editable, allDay: eventAfterUpdate.allDay
+                        customerPhone:eventAfterUpdate.customerPhone,
+                        WorkerName: eventAfterUpdate.WorkerName,
+                        editable: eventAfterUpdate.editable,
+                        allDay: eventAfterUpdate.allDay
                     };
-                    $log.log('after update :' + eventAfterUpdate.title + ' ' +
+                    $log.log('after update : ' +eventAfterUpdate.customerPhone+' '+ eventAfterUpdate.title + ' ' +
                         eventAfterUpdate.start + ' ' + eventAfterUpdate.end + ' ' + eventAfterUpdate.color + ' ' +
                         eventAfterUpdate.id + ' ' + eventAfterUpdate.editable + ' ' + eventAfterUpdate.allDay);
                     startDate = changeDateFormat(eventBeforeUpdate.start);
@@ -256,21 +259,29 @@
                         start: startDate,
                         end: endDate,
                         color: eventBeforeUpdate.color,
+                        customerPhone:eventBeforeUpdate.customerPhone,
                         id: eventBeforeUpdate.id,
-                        editable: eventBeforeUpdate.editable, allDay: eventBeforeUpdate.allDay
+                        WorkerName: eventBeforeUpdate.WorkerName,
+                        editable: eventBeforeUpdate.editable,
+                        allDay: eventBeforeUpdate.allDay
                     };
-                    $log.log('before update :' + eventBeforeUpdate.title + ' ' + eventBeforeUpdate.start + ' ' + eventBeforeUpdate.end + ' ' +
+                    $log.log('before update : ' +eventBeforeUpdate.customerPhone+' '+ eventBeforeUpdate.title + ' ' + eventBeforeUpdate.start + ' ' + eventBeforeUpdate.end + ' ' +
                         eventBeforeUpdate.color + ' ' + eventBeforeUpdate.id + ' ' + eventBeforeUpdate.editable + ' ' + eventBeforeUpdate.allDay);
 
-                    const updatEvent = {
+                    const updatedEvent = {
                         eventBeforeUpdate: eventBeforeUpdateDB,
-                        eventAfterUpdate: eventAfterUpdateDB,
-                        worker: worker
+                        eventAfterUpdate: eventAfterUpdateDB
                     };
                     $http.post(SERVER_URI + '/updateEvent', {
-                        updatEvent: updatEvent
+                        updatedEvent: updatedEvent
                     }).then(
                         function (response) {
+                            if (response.data.eventExists) {
+                                $scope.message = response.data.eventExists;
+                                $scope.messageType = 'ERROR';
+                                angular.element(document.querySelector('#msgModal')).modal('show');
+                                return;
+                            }
                             refreshCalendarEvents();
                         },
                         function (response) { //failure callback
@@ -449,11 +460,18 @@
                             end: event.end,
                             color: event.color,
                             id: event.id,
-                            editable: event.editable, allDay: event.allDay
+                            customerPhone: event.customerPhone,
+                            WorkerName: event.WorkerName,
+                            editable: event.editable,
+                            allDay: event.allDay
                         };
                         const indexRole = getIndexOfSelectedItem(event.color, 'color_of_role');
                         $log.log('indexRole : ' + indexRole);
-                        $scope.role = $scope.roles[indexRole];
+
+                        $scope.role = $scope.assignedRoles[indexRole];
+                        $log.log(' $scope.role : ' +  $scope.role);
+                        $log.log(' $scope.role : ' +  $scope.role.Role);
+
 
                         //if a customer was not selected for the event, the event id is = '-1'
                         if (editEventDetails.id !== -1) {
@@ -483,9 +501,12 @@
                         $scope.eventEnd = event.end;
                         $scope.eventDate = moment(event.start).format('DD/MM/YYYY HH:mm') + ' - ' + moment(event.end).format('DD/MM/YYYY HH:mm');
                         $scope.taskIsEdit = false;
-                        getAssignedRoles();
                         //show modal for edit or delete event
+                        $log.log(' $scope.role : ' +  $scope.role);
+                        $log.log(' $scope.role : ' +  $scope.role.Role);
                         angular.element(document.querySelector('#editOrDeleteEvent')).modal('show');
+                        $log.log(' $scope.role : ' +  $scope.role);
+                        $log.log(' $scope.role : ' +  $scope.role.Role);
                     }
                 };
 
@@ -501,7 +522,8 @@
                     let endDate;
 
                     console.log('1: $scope.eventTitle=' + $scope.eventTitle);
-                    if ($scope.role === undefined || $scope.role === '' || $scope.role.Role === undefined || $scope.role.Role === '' || $scope.role.Role === '-- Choose category for role --') {
+                    console.log('$scope.role=' + $scope.role);
+                    if (!$scope.role ||$scope.role === undefined || $scope.role === '' || $scope.role.Role === undefined || $scope.role.Role === '' || $scope.role.Role === '-- Choose category for role --') {
                         $scope.message = 'Category is a must field, please select one';
                         $scope.messageType = 'ERROR';
                         angular.element(document.querySelector('#msgModal')).modal('show');
@@ -564,6 +586,8 @@
                             selectedItemPart2 = undefined;
                             return;
                         } else {
+                            editEventDetails.customerPhone = selectedItemPart2;
+
                             description = 'Task for customer ' + selectedItemPart1 + ' ' + selectedItemPart2 + ' : ' + $scope.eventTitle;
                             customer = selectedItemPart1 + ' ' + selectedItemPart2;
                             selectedItemPart1 = undefined;
@@ -573,6 +597,9 @@
                         description = $scope.eventTitle;
                         console.log('description=' + description);
                         customer = -1;
+                        editEventDetails.customerPhone = -1;
+
+
                     }
                     console.log('description=' + description);
 
@@ -580,6 +607,7 @@
                     editEventDetails.start = $scope.eventStart;
                     editEventDetails.end = $scope.eventEnd;
                     editEventDetails.color = $scope.role.Color;
+                    editEventDetails.WorkerName = evenBeforeUpdate.WorkerName;
                     editEventDetails.id = customer;
 
                     let eventForUpdate = {};
@@ -1658,7 +1686,9 @@
                     $scope.account = false;
                     $scope.calendarNavColor = '#ff0066';
                     $scope.customersNavColor = '#004d99';
-                    $scope.getRolesList();
+                   // $scope.getRolesList();
+                    getAssignedRoles();
+
 
                     //clearing the search field
                     $scope.search = '';

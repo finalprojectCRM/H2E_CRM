@@ -294,14 +294,6 @@ module.exports = {
         logger.info('getAssignedRoles');
         await repo.getAssignedRoles(req, res);
     },
-    /*
-        get list of all events for specific worker
-    */
-    getWorkerEvents: async function (req, res) {
-        logger.info(util.format('/getWorkerEvents/%s', req.params.WorkerName));
-        await repo.getItems(req, res, 'worker',
-            'workerEvents', {WorkerName: req.params.WorkerName}, 'Events');
-    },
     getCustomerEvents: async function (req, res) {
         logger.info(util.format('/getCustomerEvents/%s/%s', req.params.WorkerName, req.params.eventId));
         await repo.getCustomerEvents(req, res, 'worker');
@@ -569,5 +561,46 @@ module.exports = {
         const workerAfterUpdate = req.body.updatedWorker;
         await repo.updateItem(req, res, workerBeforeUpdate, {$set: workerAfterUpdate}, 'worker', undefined,
             {'showWorkers': true, 'workers': {}}, 'workers');
+    },
+    /*
+    get list of all events for specific worker
+*/
+    getWorkerEvents: async function (req, res) {
+        const workerName = req.params.WorkerName;
+        let condition = {WorkerName: workerName};
+        logger.info(util.format('/getWorkerEvents/%s', workerName));
+        if (workerName === 'Admin') {
+            condition = {};
+        }
+        await repo.getItems(req, res, 'event', 'workerEvents', condition);
+    },
+    /*
+	    add a new Event to calendar
+    */
+    addEvent: async function (req, res) {
+        logger.info('addEvent');
+        const event = req.body.newEvent.event;
+        const eventWorker = req.body.newEvent.worker;
+        const responseData = {};
+        const eventExists = {'eventExists': 'The task already exists on this date, please select another time for this task'};
+        let result = {};
+        let condition = {WorkerName: eventWorker.WorkerName};
+        const eventRole = await repo.getItem({Color: event.color}, 'rolesWithStatus');
+        event.WorkerName = await repo.assignWorker({Role: eventRole.Role}, 'event');
+        const eventAlreadyExists = await repo.getItem({WorkerName: event.WorkerName,
+            start: event.start, end: event.end}, 'event');
+        if (!eventAlreadyExists) {
+            result = await repo.insertItemByCondition(req, res, event, event, eventExists, 'event', false);
+        }
+        if (eventWorker.WorkerName === 'Admin') {
+            condition = {};
+        }
+        responseData.Events = await repo.getAllCollectionItems('event', condition);
+        if (!result.success) {
+            responseData.eventExists = eventExists.eventExists;
+        }
+        logger.info(util.format('Response Data: %s', JSON.stringify(responseData)));
+        res.writeHead(200, {'Content-Type': 'application/json'});
+        res.end(JSON.stringify(responseData));
     }
 };

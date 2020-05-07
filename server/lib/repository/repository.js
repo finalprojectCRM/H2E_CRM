@@ -81,6 +81,9 @@ module.exports = {
     getAdminWorker: async function () {
         return await storage.getItem({'WorkerName': 'Admin'}, 'worker');
     },
+    getItem: async function (item, type) {
+        return await storage.getItem(item, type);
+    },
     getAllCollectionItems: async function (type, condition) {
         return await storage.getAllItems(type, condition);
     },
@@ -97,7 +100,7 @@ module.exports = {
     getWorkerLogInInfo: async function (workerName, password) {
         return await storage.getItem({'WorkerName': workerName, 'Password': password}, 'worker');
     },
-    getItems: async function (req, res, collectionName, desc, condition = {}, arrayValue = '', jsonObj = {}) {
+    getItems: async function (req, res, collectionName, desc, condition = {}, arrayValue = '', jsonObj = undefined) {
         let status = {code: 200, message: 'OK'};
         try {
             let itemArray = await module.exports.getAllCollectionItems(collectionName, condition);

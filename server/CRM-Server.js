@@ -44,30 +44,6 @@ app.listen(config.server.access.port, () => {
     })();
 });
 
-/*
-	update customer details only with phone number that does not exist in the system
-*/
-app.post('/addEvent', (request, response) => {
-    console.log('/addEvent');
-    const workerForEvent = request.body.newEvent.worker;
-    console.log('worker_for_task.WorkerName: ' + workerForEvent.WorkerName);
-    const event = request.body.newEvent.event;
-    console.log('event: ' + event.id);
-
-    workersCollection.updateOne({WorkerName: workerForEvent.WorkerName}, {$addToSet: {Events: event}}, {upsert: true},
-        function (err, res) {
-            workersCollection.find({Events: workerForEvent.Events}).toArray((error, Events) => {
-                if (error) {
-                    return response.status(500).send(error);
-                }
-                console.log(Events);
-                response.writeHead(200, {'Content-Type': 'application/json'});
-                response.end(JSON.stringify({'Events': Events}));
-            });
-
-        });
-});
-
 app.post('/deleteEvent', (request, response) => {
     console.log('/deleteEvent');
     const workerForEvent = request.body.deletevent.worker;

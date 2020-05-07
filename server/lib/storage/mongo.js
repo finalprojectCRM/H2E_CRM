@@ -8,14 +8,14 @@ let dbHandle;
 let mongoConn;
 
 const collections = {
-    test: 'test',
     customer: 'customers',
     status: 'statuses',
     worker: 'workers',
     file: 'files',
     rolesWithStatus: 'roles with statuses',
     statusesWithRole: 'statuses with roles',
-    color: 'colors'
+    color: 'colors',
+    event: 'events'
 };
 
 function getMongoConnectionString() {

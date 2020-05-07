@@ -189,6 +189,9 @@ router.route('/addWorker')
 router.route('/updateWorker')
     .post(serverApiRequestHandler.updateWorker);
 
+router.route('/addEvent')
+    .post(serverApiRequestHandler.addEvent);
+
 router.route('*')
     .get(utils.handleInvalidRequest);
 

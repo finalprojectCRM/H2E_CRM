@@ -77,10 +77,10 @@
 
                 function refreshCalendarEvents() {
                     $log.log('refreshCalendarEvents');
-                    return;
                     $http.get(SERVER_URI + '/getWorkerEvents/' + loggedInWorker.WorkerName).then(
                         function (response) {//success callback
                             $scope.retreivedCalendarEvents = response.data.workerEvents;
+                            $log.log('response.data.workerEvents=' + JSON.stringify(response.data.workerEvents));
                             //$scope.retreivedCalendarEvents = Object.assign({}, response.data.workerEvents);
                             $log.log('retreivedCalendarEvents=' + JSON.stringify($scope.retreivedCalendarEvents));
                             uiCalendarConfig.calendars.myCalendar.fullCalendar('removeEvents');
@@ -98,7 +98,6 @@
 
                 function refreshCustomerCalendarEvents(eventId) {
                     $log.log('refreshCustomerCalendarEvents');
-                    return;
                     $http.get(SERVER_URI + '/getCustomerEvents/' + loggedInWorker.WorkerName + '/' + eventId).then(
                         function (response) {//success callback
                             $scope.retreivedCalendarEvents = response.data.customerEvents;
@@ -147,7 +146,6 @@
                 function getAssignedRoles() {
                     $http.get(SERVER_URI + '/getAssignedRoles').then(
                         function (response) {//success callback
-
                             //return the list of the assigned roles
                             $scope.assignedRoles = response.data.assignedRoles;
                         }, function (response) {//failure callback
@@ -250,7 +248,6 @@
                     $log.log('after update :' + eventAfterUpdate.title + ' ' +
                         eventAfterUpdate.start + ' ' + eventAfterUpdate.end + ' ' + eventAfterUpdate.color + ' ' +
                         eventAfterUpdate.id + ' ' + eventAfterUpdate.editable + ' ' + eventAfterUpdate.allDay);
-                    $log.log('after: workerName=' + eventAfterUpdate.workerName);
                     startDate = changeDateFormat(eventBeforeUpdate.start);
                     endDate = changeDateFormat(eventBeforeUpdate.end);
 
@@ -407,31 +404,6 @@
                     editable: true,
                     eventLimit: true,
                     renderCalender: $scope.renderCalender(),
-                    events:  [
-                        {
-                            id: 'event1 0545664349',
-                            title  : 'event1',
-                            start  : '2020-05-06T12:30:00',
-                            end    : '2020-05-06T15:30:00',
-                            workerName: 'aaa'
-                        },
-                        {
-                            id: 'event2 0545664349',
-                            title  : 'event2',
-                            start  : '2020-05-08T11:30:00',
-                            end    : '2020-05-08T19:30:00',
-                            workerName: 'bbb'
-                        },
-                        {
-                            id: 'event3 0545664349',
-                            title  : 'event3',
-                            start  : '2020-05-11T16:00:00',
-                            end    : '2020-05-11T23:00:00',
-                            allDay : false, // will make the time show
-                            workerName: 'ccc'
-                        }
-                    ],
-
                     /*events: function (start, end, timezone, callback) { // Fetch your events here
                         $log.log('retreivedCalendarEvents=' + $scope.retreivedCalendarEvents);
                         // This could be an ajax call or you could get the events locally
@@ -455,7 +427,7 @@
                         $scope.getRolesList();
                         $scope.customerTask = undefined;
                         $scope.title = undefined;
-
+                        getAssignedRoles();
                         //show modal of add event
                         angular.element(document.querySelector('#addEvent')).modal('show');
 
@@ -479,7 +451,6 @@
                             id: event.id,
                             editable: event.editable, allDay: event.allDay
                         };
-                        $log.log('workerName=' + event.workerName);
                         const indexRole = getIndexOfSelectedItem(event.color, 'color_of_role');
                         $log.log('indexRole : ' + indexRole);
                         $scope.role = $scope.roles[indexRole];
@@ -512,6 +483,7 @@
                         $scope.eventEnd = event.end;
                         $scope.eventDate = moment(event.start).format('DD/MM/YYYY HH:mm') + ' - ' + moment(event.end).format('DD/MM/YYYY HH:mm');
                         $scope.taskIsEdit = false;
+                        getAssignedRoles();
                         //show modal for edit or delete event
                         angular.element(document.querySelector('#editOrDeleteEvent')).modal('show');
                     }
@@ -635,7 +607,7 @@
 
                 //add event from button outside of the calendar
                 $scope.addEventOutsideCalendar = function () {
-
+                    getAssignedRoles();
                     //show 'document.querySelector('#addEventOutside')' modal
                     angular.element(document.querySelector('#addEventOutside')).modal('show');
 
@@ -779,12 +751,8 @@
                         newEvent: newEvent
                     }).then(
                         function (response) {
-                            //retreivedCalendarEvents = response.data.Events;
-                            //$log.log('retreivedCalendarEvents=' + retreivedCalendarEvents);
-                            $log.log('selectedItemPart2: '+ selectedItemPart2)
-                            customersPhone.push(selectedItemPart2);
-                            updateCustomerHistory(historyArray ,customersPhone);
-
+                            $log.log('response.data.Events: '+ JSON.stringify(response.data.Events));
+                            $scope.retreivedCalendarEvents = response.data.Events;
                             $scope.role = '';
                             $scope.customerTask = false;
                             $scope.customer = undefined;
@@ -796,8 +764,18 @@
                             selectedItemPart1 = undefined;
                             selectedItemPart2 = undefined;
                             $scope.selectedCustomer = '';
-
-
+                            if (response.data.eventExists) {
+                                $scope.message = response.data.eventExists;
+                                $scope.messageType = 'ERROR';
+                                angular.element(document.querySelector('#msgModal')).modal('show');
+                                return;
+                            }
+                            $log.log('selectedItemPart2: '+ selectedItemPart2);
+                            if (selectedItemPart2 !== undefined) {
+                                customersPhone.push(selectedItemPart2);
+                                updateCustomerHistory(historyArray ,customersPhone);
+                            }
+                            refreshCalendarEvents();
                         },
                         function (response) { //failure callback
                         }
@@ -893,27 +871,6 @@
                         }
                         return;
                     }
-                    if ($scope.retreivedCalendarEvents) {
-                        sameDate = $scope.retreivedCalendarEvents.filter(function (item) {
-                            return item.start === startDate && item.end === endDate;
-                        });
-                        $log.log('sameDate : ' + sameDate);
-                        if (sameDate.length > 0) {
-                            startDate = '';
-                            endDate = '';
-                            sameDate = '';
-
-                            $scope.message = 'There is a task already exists on this date, please select a different time for this task ';
-                            $scope.messageType = 'ERROR';
-                            angular.element(document.querySelector('#msgModal')).modal('show');
-                            if (!outsideModal) {
-                                missingDetailInsideAddEvent = true;
-                            } else {
-                                missingDetailsOutsideAddEvent = true;
-                            }
-                            return;
-                        }
-                    }
                     /*
                         check if the task was chosen for a spesific customer - optional
                         then id = 'customer name' + ' customer phone number'
@@ -959,7 +916,7 @@
                         allDay: false
                     };
                     $scope.selections = [];
-                    uiCalendarConfig.calendars['myCalendar'].fullCalendar('renderEvent', eventToAdd, true);
+                    //uiCalendarConfig.calendars['myCalendar'].fullCalendar('renderEvent', eventToAdd, true);
                     addEventToDataBase(eventToAdd, loggedInWorker);
                     //uiCalendarConfig.calendars['myCalendar'].fullCalendar('refetchEvents');
 

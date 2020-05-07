@@ -1243,7 +1243,7 @@
                                 </br>
                                 <div>
                                     <select class="form-control" ng-model="role"
-                                            ng-options="objRole as objRole.Role disable when objRole.Role  === '-- Choose category for role --' for objRole in roles | filter: ({Role : '!new in the system'})"
+                                            ng-options="objRole as objRole.Role disable when objRole.Role  === '-- Choose category for role --' for objRole in assignedRoles | filter: ({Role : '!new in the system'})"
                                             ng-change="onChangeCategory(role,'update role')">
                                         <option value='' disabled="disabled">-- Choose role --</option>
                                     </select></br>
@@ -1363,7 +1363,7 @@
                                 </br>
                                 <div>
                                     <select class="form-control" ng-model="role"
-                                            ng-options="objRole as objRole.Role disable when objRole.Role  === '-- Choose category for role --' for objRole in roles | filter: ({Role : '!new in the system'})"
+                                            ng-options="objRole as objRole.Role disable when objRole.Role  === '-- Choose category for role --' for objRole in assignedRoles | filter: ({Role : '!new in the system'})"
                                             ng-change="onChangeCategory(role,'update role')">
                                         <option value='' disabled="disabled">-- Choose role --</option>
                                     </select></br>
@@ -1449,7 +1449,7 @@
                                 </br>
                                 <div>
                                     <select class="form-control" ng-model="role"
-                                            ng-options="objRole as objRole.Role disable when objRole.Role  === '-- Choose category for role --' for objRole in roles | filter: ({Role : '!new in the system'})"
+                                            ng-options="objRole as objRole.Role disable when objRole.Role  === '-- Choose category for role --' for objRole in assignedRoles | filter: ({Role : '!new in the system'})"
                                             ng-change="selectedItem(role)">
                                         <option value='' disabled="disabled">-- Choose role --</option>
                                     </select></br>
@@ -1487,10 +1487,7 @@
                                             <option ng-repeat="customerInfo in customersInfo">Name: {{customerInfo.Name}} ,
                                                 Phone Number: {{customerInfo.PhoneNumber}}</style></option>
                                         </select>
-
                                     </div>
-
-
                                 </div>
                             </div>
 

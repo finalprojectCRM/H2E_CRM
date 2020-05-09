@@ -26,9 +26,9 @@ function getMongoConnectionString() {
         }
         connectionString += util.format('%s/%s?', mongoConfig.clusterUrl, mongoConfig.dbName);
     } else if (mongoConfig.authType === 'SHA-1') {
-        const dbWorkerName = process.env.mongo_workername ? process.env.mongo_workername : mongoConfig.dbDefaultWorkerName;
-        const dbWorkerPassword = process.env.mongo_password ? process.env.mongo_password : mongoConfig.dbDefaultWorkerPassword;
-        connectionString = util.format('%s://%s:%s@%s/%s?', mongoConfig.uriPrefix, dbWorkerName, dbWorkerPassword, mongoConfig.clusterUrl, mongoConfig.dbName);
+        const dbworkerName = process.env.mongoWorkerName ? process.env.mongoWorkerName : mongoConfig.dbDefaultWorkerName;
+        const dbWorkerPassword = process.env.mongoPassword ? process.env.mongoPassword : mongoConfig.dbDefaultWorkerPassword;
+        connectionString = util.format('%s://%s:%s@%s/%s?', mongoConfig.uriPrefix, dbworkerName, dbWorkerPassword, mongoConfig.clusterUrl, mongoConfig.dbName);
     }
     const replicaSet = mongoConfig.replicaSet;
     if (replicaSet) {
@@ -89,43 +89,36 @@ module.exports = {
             if (insertIfNotFound) {
                 if (useAddToSet) {
                     return dbHandle.collection(collections[type]).updateOne(findItem, {$addToSet: updatedItem}, {upsert: true});
-                } else {
-                    return dbHandle.collection(collections[type]).updateOne(findItem, {$set: updatedItem}, {upsert: true});
                 }
+                return dbHandle.collection(collections[type]).updateOne(findItem, {$set: updatedItem}, {upsert: true});
             }
             if (useAddToSet) {
                 return dbHandle.collection(collections[type]).updateOne(findItem, {$addToSet: updatedItem});
-            } else {
-                return dbHandle.collection(collections[type]).updateOne(findItem, {$set: updatedItem});
             }
+            return dbHandle.collection(collections[type]).updateOne(findItem, {$set: updatedItem});
         }
         if (useAddToSet) {
             return dbHandle.collection(collections[type]).updateOne(findItem, {$addToSet: findItem}, {upsert: true});
-        } else {
-            return dbHandle.collection(collections[type]).updateOne(findItem, {$set: findItem}, {upsert: true});
         }
+        return dbHandle.collection(collections[type]).updateOne(findItem, {$set: findItem}, {upsert: true});
     },
-
     updateItems: async function (findItem, type, updatedItem = undefined, insertIfNotFound = false, useAddToSet = false) {
         if (updatedItem) {
             if (insertIfNotFound) {
                 if (useAddToSet) {
                     return dbHandle.collection(collections[type]).updateMany(findItem, {$addToSet: updatedItem}, {upsert: true});
-                } else {
-                    return dbHandle.collection(collections[type]).updateMany(findItem, {$set: updatedItem}, {upsert: true});
                 }
+                return dbHandle.collection(collections[type]).updateMany(findItem, {$set: updatedItem}, {upsert: true});
             }
             if (useAddToSet) {
                 return dbHandle.collection(collections[type]).updateMany(findItem, {$addToSet: updatedItem});
-            } else {
-                return dbHandle.collection(collections[type]).updateMany(findItem, {$set: updatedItem});
             }
+            return dbHandle.collection(collections[type]).updateMany(findItem, {$set: updatedItem});
         }
         if (useAddToSet) {
             return dbHandle.collection(collections[type]).updateMany(findItem, {$addToSet: findItem}, {upsert: true});
-        } else {
-            return dbHandle.collection(collections[type]).updateMany(findItem, {$set: findItem}, {upsert: true});
         }
+        return dbHandle.collection(collections[type]).updateMany(findItem, {$set: findItem}, {upsert: true});
     },
 
     updateItemByCondition: async function (findItem, updatedItem, type) {
@@ -151,10 +144,9 @@ module.exports = {
 
     deleteItem: async function (item, type, deleteItem = false, isPullItem = false) {
         if (isPullItem) {
-            return dbHandle.collection(collections[type]).updateMany(item, {$pull : deleteItem});
-        } else {
-            return dbHandle.collection(collections[type]).deleteOne(item);
+            return dbHandle.collection(collections[type]).updateMany(item, {$pull: deleteItem});
         }
+        return dbHandle.collection(collections[type]).deleteOne(item);
     },
 
     deleteAllItems: async function (type, condition = {}) {

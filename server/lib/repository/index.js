@@ -19,5 +19,6 @@ module.exports = {
     deleteAllItems: repo.deleteAllItems,
     addOrUpdateItem: repo.addOrUpdateItem,
     getAssignedRoles: repo.getAssignedRoles,
-    getItem: repo.getItem
+    getItem: repo.getItem,
+    handleWorker: repo.handleWorker
 };

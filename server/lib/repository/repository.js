@@ -67,7 +67,7 @@ module.exports = {
         }], 'statusesWithRole', logger);
     },
     getAdminWorker: async function () {
-        return await storage.getItem({'WorkerName': 'Admin'}, 'worker');
+        return await storage.getItem({'workerName': 'Admin'}, 'worker');
     },
     getItem: async function (item, type) {
         return await storage.getItem(item, type);
@@ -77,7 +77,7 @@ module.exports = {
     },
     addDefaultAdminWorker: async function () {
         return await storage.addItem({
-            'WorkerName': 'Admin',
+            'workerName': 'Admin',
             'Role': 'Administrator',
             'Name': '',
             'eMail': '',
@@ -86,9 +86,9 @@ module.exports = {
         }, 'worker');
     },
     getWorkerLogInInfo: async function (workerName, password) {
-        return await storage.getItem({'WorkerName': workerName, 'Password': password}, 'worker');
+        return await storage.getItem({'workerName': workerName, 'Password': password}, 'worker');
     },
-    getItems: async function (req, res, collectionName, desc, condition = {}, arrayValue = '', jsonObj = undefined) {
+    getItems: async function (req, res, collectionName, desc, condition = {}, arrayValue = '', jsonObj = undefined, isResponse = true) {
         let status = {code: 200, message: 'OK'};
         try {
             let itemArray = await module.exports.getAllCollectionItems(collectionName, condition);
@@ -108,11 +108,60 @@ module.exports = {
             logger.error(util.format('happened error[%s]', err));
             status = utils.getErrorStatus(err);
         }
+        if (isResponse) {
+            const response = status.code === 200 ? JSON.stringify(status.message) : JSON.stringify(status);
+            logger.info(util.format('Response Data: %s', response));
+            res.writeHead(status.code, {'Content-Type': 'application/json'});
+            res.end(response);
+        } {
+            return status.message;
+        }
+    },
+    handleWorker: async function (req, res, workerName, warningMessage, isDelete = false ) {
+        logger.info('deleteWorker');
+        //the customer to delete with its details
+        let status = {code: 200, message: 'OK'};
+        try {
+            logger.info(util.format('workerName: %s', workerName));
+            const worker = await module.exports.getItem({'workerName': workerName}, 'worker');
+            const workers = await module.exports.getItems(req, res, 'worker', 'workers', {'Role': worker.Role}, '', {'workers': {}}, false);
+            if (workers.workers.length > 1) {
+                if (isDelete) {
+                    const updatedWorkers = await module.exports.deleteItemAndReturnUpdatedList(req, res, {'workerName': workerName}, 'worker',
+                        {'workers': {}}, 'workers', undefined, false, false);
+                    logger.info(util.format('updatedWorkers=%s', JSON.stringify(updatedWorkers)));
+                }
+                
+                const eventsItems = await module.exports.getItems(req, res, 'event', 'events',
+                    {'workerName': worker.workerName}, '', {'events': {}}, false);
+                for (let i = 0; i < eventsItems.events.length; i++) {
+                    const eventBeforeUpdate = _.clone(eventsItems.events[i], true);
+                    const eventAfterUpdate = _.clone(eventsItems.events[i], true);
+                    eventAfterUpdate.workerName = await module.exports.assignWorker({Role: worker.Role}, 'event');
+                    await module.exports.updateItem(req, res, eventBeforeUpdate, {$set: eventAfterUpdate}, 'event', undefined, undefined, undefined, false);
+                }
+                const customersItems = await module.exports.getItems(req, res, 'customer', 'customers',
+                    {'workerName': worker.workerName}, '', {'customers': {}}, false);
+                for (let i = 0; i < customersItems.events.length; i++) {
+                    const customerBeforeUpdate = _.clone(customersItems.events[i], true);
+                    const customerAfterUpdate = _.clone(customersItems.events[i], true);
+                    customerAfterUpdate.workerName = await module.exports.assignWorker({Role: worker.Role}, 'customer');
+                    await module.exports.updateItem(req, res, customerBeforeUpdate, {$set: customerAfterUpdate}, 'customer', undefined, undefined, undefined, false);
+                }
+                await module.exports.getItems(req, res, 'worker', 'workers', {}, '', {'workers': {}});
+            } else {
+                status.message = warningMessage;
+            }
+        } catch (err) {
+            logger.error(util.format('happened error[%s]', err));
+            status = module.exports.getErrorStatus(err);
+        }
         const response = status.code === 200 ? JSON.stringify(status.message) : JSON.stringify(status);
         logger.info(util.format('Response Data: %s', response));
         res.writeHead(status.code, {'Content-Type': 'application/json'});
         res.end(response);
     },
+
     getCustomerEvents: async function (req, res, collectionName) {
         let status = {
             code: 200,
@@ -121,7 +170,7 @@ module.exports = {
         try {
             storage.getCollection(collectionName).find(
                 {
-                    'WorkerName': req.params.WorkerName,
+                    'workerName': req.params.workerName,
                     'customerPhone': req.params.eventId
                 }).forEach(function (doc) {
                 doc.Events = doc.Events.filter(function (event) {
@@ -216,7 +265,7 @@ module.exports = {
             return status.message;
         }
     },
-    updateItem: async function (req, res, condition, item, type, descJson = undefined, jsonObj = undefined, desc = undefined) {
+    updateItem: async function (req, res, condition, item, type, descJson = undefined, jsonObj = undefined, desc = undefined, isResponse = true) {
         let status = {code: 200, message: 'OK'};
         try {
             await storage.updateItemByCondition(condition, item, type);
@@ -234,10 +283,14 @@ module.exports = {
             logger.error(util.format('happened error[%s]', err));
             status = utils.getErrorStatus(err);
         }
-        const response = status.code === 200 ? JSON.stringify(status.message) : JSON.stringify(status);
-        logger.info(util.format('Response Data: %s', response));
-        res.writeHead(status.code, {'Content-Type': 'application/json'});
-        res.end(response);
+        if (isResponse) {
+            const response = status.code === 200 ? JSON.stringify(status.message) : JSON.stringify(status);
+            logger.info(util.format('Response Data: %s', response));
+            res.writeHead(status.code, {'Content-Type': 'application/json'});
+            res.end(response);
+        } else {
+            return status.message;
+        }
     },
     addOrUpdateItem: async function (req, res, findItem, type, updatedItem = undefined, insertIfNotFound = false, sendResponse = true, useAddToSet = false, updateMany = false, resJson = undefined) {
         let status = {code: 200, message: 'OK'};
@@ -283,11 +336,11 @@ module.exports = {
         const workerArray = await module.exports.getAllCollectionItems('worker', condition);
 
         for (let i = 0; i < workerArray.length; i++) {
-            const foundItems = await module.exports.getAllCollectionItems(assignedCollection, {WorkerName: workerArray[i].WorkerName});
+            const foundItems = await module.exports.getAllCollectionItems(assignedCollection, {workerName: workerArray[i].workerName});
             assignedItems.push(foundItems.length);
         }
         const minIndex = _.indexOf(assignedItems, _.min(assignedItems));
-        return minIndex === -1 ? null : workerArray[minIndex].WorkerName;
+        return minIndex === -1 ? null : workerArray[minIndex].workerName;
     },
     getAssignedRoles: async function (req, res) {
         let status = {code: 200, message: 'OK'};

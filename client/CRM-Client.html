@@ -68,7 +68,7 @@
                     <p><label class="header_text form-signin-heading text-center text-primary">Please log in</label></p>
                     <div class="input-group">
                         <span class="input-group-addon primary"><i class="fa fa-user fa-lg"></i></span>
-                        <input ng-model="WorkerNameLogin" class="form-control w-50 p-3" placeholder="Enter worker name">
+                        <input ng-model="workerNameLogin" class="form-control w-50 p-3" placeholder="Enter worker name">
                     </div>
                     </p>
                     <div class="input-group">
@@ -186,7 +186,7 @@
             <div class="col-xs-4 col-md-offset-5">
                 <div class="input-group">
                     <span class="input-group-addon primary"><i class="fa fa-user fa-lg"></i></span>
-                    <input ng-disabled="Admin==true" ng-model="registrationWorkerName" class="form-control w-50 p-3"
+                    <input ng-disabled="Admin==true" ng-model="registrationworkerName" class="form-control w-50 p-3"
                            placeholder="Enter worker name">
 
                 </div>
@@ -318,7 +318,7 @@
                         <tr class="table_head">
                             <th>Role</th>
                             <th>Name</th>
-                            <th ng-show="isAdmin==true">Workername</th>
+                            <th ng-show="isAdmin==true">workerName</th>
                             <th>Email</th>
                             <th ng-show="isAdmin==true"></th>
                             <th ng-show="isAdmin==true"></th>
@@ -329,10 +329,10 @@
                         <thead>
                         <tbody>
                         <tr ng-repeat="workerInfo in workers | filter:search_workers"
-                            ng-init="workerIsEdit = false;workername='Admin'">
+                            ng-init="workerIsEdit = false;workerName='Admin'">
                             <td ng-show="workerIsEdit==false">{{workerInfo.Role}}</td>
                             <td ng-show="workerIsEdit==false">{{workerInfo.Name}}</td>
-                            <td ng-show="workerIsEdit==false && isAdmin==true">{{workerInfo.WorkerName}}</td>
+                            <td ng-show="workerIsEdit==false && isAdmin==true">{{workerInfo.workerName}}</td>
                             <td ng-show="workerIsEdit==false">{{workerInfo.eMail}}</td>
                             <td ng-show="workerIsEdit==false && isAdmin==true"><i class="fa fa-envelope"
                                                                                 style="font-size:24px;color:#00b3b3"
@@ -342,11 +342,11 @@
                             <td ng-show="workerIsEdit==false && isAdmin==true"><i class="fa fa-users"
                                                                                 style="font-size:24px;color:#3ada82"
                                                                                 aria-hidden="true"
-                                                                                ng-click="getWorkerNameCustomers(workerInfo.WorkerName)"></i>
+                                                                                ng-click="getworkerNameCustomers(workerInfo.workerName)"></i>
                             </td>
 
 
-                            <td ng-show="workerIsEdit==false && isAdmin==true && workername!=workerInfo.WorkerName "><i
+                            <td ng-show="workerIsEdit==false && isAdmin==true && workerName!=workerInfo.workerName "><i
                                     class="fa fa-edit" style="font-size:24px;color:#008fb3" aria-hidden="true"
                                     ng-click="workerIsEdit =!workerIsEdit;updateWorkerFunction(workerInfo)"></i></td>
                             <div ng-if="workerIsEdit" class="form-group row">
@@ -367,23 +367,23 @@
                                     </div>
                                 </td>
                                 <td ng-show="workerIsEdit==true">{{workerInfo.Name}}</td>
-                                <td ng-show="workerIsEdit==true">{{workerInfo.WorkerName}}</td>
+                                <td ng-show="workerIsEdit==true">{{workerInfo.workerName}}</td>
                                 <td ng-show="workerIsEdit==true">{{workerInfo.eMail}}</td>
 
                             </div>
 
-                            <td ng-show="isAdmin==true && workername!=workerInfo.WorkerName "><i class="fa fa-trash"
+                            <td ng-show="isAdmin==true && workerName!=workerInfo.workerName "><i class="fa fa-trash"
                                                                                            style="font-size:24px;color:#003366"
                                                                                            ng-show="workerIsEdit==false"
                                                                                            aria-hidden="true"
-                                                                                           ng-click="insureDeleteWorker(workerInfo.WorkerName)"></i>
+                                                                                           ng-click="insureDeleteWorker(workerInfo.workerName)"></i>
                             </td>
-                            <td ng-show="isAdmin==true &&workername==workerInfo.WorkerName "></td>
-                            <td ng-show="isAdmin==true && workername==workerInfo.WorkerName "></td>
+                            <td ng-show="isAdmin==true &&workerName==workerInfo.workerName "></td>
+                            <td ng-show="isAdmin==true && workerName==workerInfo.workerName "></td>
                             <td ng-show="workerIsEdit==false">
                                 <div ng-if="chooseWorkerToEmail"><input type="checkbox"
                                                                          ng-show="chooseWorkerToEmail==true"
-                                                                         ng-model="selected[workerInfo.WorkerName]"/></div>
+                                                                         ng-model="selected[workerInfo.workerName]"/></div>
                             </td>
                             <td ng-show="workerIsEdit==true"><i class="fa fa-check-square-o"
                                                               style="font-size:24px;color:#00e600" aria-hidden="true"
@@ -640,6 +640,54 @@
 
 
             <form id="eventsDiv" ng-show="showWorkersEvents  == true;">
+
+                <table>
+                    <tr>
+                        <td >
+                            <div class="input-group input-group">
+									<span class="input-group-addon">
+										<span class="glyphicon glyphicon-search" style="color:#003366"
+                                              aria-hidden="true">
+										</span>
+									</span>
+                                <input class="form-control-md-6" ng-model="searchEvents" placeholder="search...">
+                            </div>
+                        </td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td style="text-align:right;">
+                            <div class="dropdown">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown" aria-haspopup="true"
+                                   aria-expanded="false">
+                                    <i class="glyphicon glyphicon-th-list"></i>
+                                    <span class="caret"></span>
+                                </a>
+                                </br>
+                                <ul class="dropdown-menu">
+                                    <li class="hover_color"
+                                        ng-click="getAllEvents()">
+                                        <a href="#"><i style=" color: rgb(50, 118, 177);" class="fa fa-user fa-fw"></i>
+                                            all events </a></li>
+                                    <li class="hover_color"
+                                        ng-click="getAllEventsWithoutCustomer()">
+                                        <a href="#"><i style=" color: rgb(50, 118, 177);" class="fa fa-user fa-fw"></i>
+                                            events without customer</a></li>
+                                    <li class="hover_color"
+                                        ng-click="getAllEventsWithCustomer()">
+                                        <a href="#"><i style=" color: rgb(50, 118, 177);" class="fa fa-user fa-fw"></i>
+                                            events with customer</a></li>
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+
+
+
+                </br>
+
                 <div class="col-lg-20">
                     <table align="right" class="table table-hover-responsive" class="text-center">
                         <thead>
@@ -654,9 +702,9 @@
                         </tr>
                         <thead>
                         <tbody>
-                        <tr ng-repeat="event in workerEvents"
+                        <tr ng-repeat="event in workerEvents "
 
-                            ng-init="workerIsEdit = false;workername='Admin'">
+                            ng-init="workerIsEdit = false;workerName='Admin'">
                             <td >{{event.start}}</td>
                             <td >{{event.end}}</td>
                             <td >{{event.title}}</td>
@@ -1602,10 +1650,10 @@
 
                     <div class="row-fluid">
                         <select class="form-control" data-show-subtext="true" data-live-search="true"
-                                ng-model="workername" ng-change="itemSelected(workername,'worker_listsss')">
+                                ng-model="workerName" ng-change="itemSelected(workerName,'worker_listsss')">
                             <option value='' disabled="disabled">-- Choose worker --</option>
                             <option ng-repeat="worker in workers">Name: {{worker.Name}} , Worker name:
-                                {{worker.WorkerName}}</style></option>
+                                {{worker.workerName}}</style></option>
                         </select>
                     </div>
                 </div>
@@ -1629,6 +1677,8 @@
               <script src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.6.3/js/bootstrap-select.min.js"></script>-->
         </div>
     </div>
+
+
 
     <div class="modal fade" id="addNewStatusToSystemModal" tabindex="-1" role="dialog"
          aria-labelledby="newStatusModalLabel" aria-hidden="true">

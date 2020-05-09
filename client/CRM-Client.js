@@ -14,7 +14,7 @@
                 const MAX_LETTERS_IN_NAME = 25;
                 const MAX_LETTERS_IN_ADDRESS = 35;
                 let category = undefined;
-                let statusRole;
+                let statusRole = undefined;
                 let loggedInWorker;
                 let incorectPassword = false;
                 let incorectNewTempPassword = false;
@@ -37,6 +37,7 @@
                 let missingDetailsEditEvent = false;
                 let missingWorkerToDelete = false;
                 let invalidTempPassword = false;
+                let deleteWorkerWithEventsAndCustomers = false;
                 let selectedItemPart1;
                 let selectedItemPart2;
                 let deletedStatus;
@@ -77,8 +78,12 @@
 
                 function refreshCalendarEvents() {
                     $log.log('refreshCalendarEvents');
-                    $http.get(SERVER_URI + '/getWorkerEvents/' + loggedInWorker.WorkerName).then(
+                    $http.get(SERVER_URI + '/getWorkerEvents/' + loggedInWorker.workerName).then(
                         function (response) {//success callback
+                            setTimeout(function () {
+                                uiCalendarConfig.calendars['myCalendar'].fullCalendar('render');
+
+                            }, 5); // Set enough time to wait until animation finishes;*/
                             $scope.retreivedCalendarEvents = response.data.workerEvents;
                             $log.log('response.data.workerEvents=' + JSON.stringify(response.data.workerEvents));
                             //$scope.retreivedCalendarEvents = Object.assign({}, response.data.workerEvents);
@@ -96,9 +101,92 @@
                     );
                 }
 
+                $scope.getAllEvents = function () {
+                    refreshCalendarEvents();
+                }
+
+                $scope.getAllEventsWithCustomer = function () {
+                    $log.log('/getAllEventsWithCustomer');
+                    $http.get(SERVER_URI + '/getAllEventsWithCustomer').then(
+                        function (response) {//success callback
+                            $log.log('in /getAllEventsWithCustomer');
+                            setTimeout(function () {
+                                uiCalendarConfig.calendars['myCalendar'].fullCalendar('render');
+
+                            }, 5); // Set enough time to wait until animation finishes;*/
+                            $scope.retreivedCalendarEvents = response.data.Events;
+                            $log.log('refreshCalendarEvent=' + JSON.stringify($scope.retreivedCalendarEvents));
+                            uiCalendarConfig.calendars.myCalendar.fullCalendar('removeEvents');
+                            uiCalendarConfig.calendars.myCalendar.fullCalendar('addEventSource', $scope.retreivedCalendarEvents);
+                            uiCalendarConfig.calendars.myCalendar.fullCalendar('rerenderEvents');
+                        },
+                        function (response) {//failure callback
+                            //if failed show error modal
+                            $scope.message = response.data.error;
+                            $scope.messageType = 'ERROR';
+                            angular.element(document.querySelector('#msgModal')).modal('show');
+                        }
+                    );
+                }
+                $scope.getAllEventsWithoutCustomer = function () {
+                    $log.log('/getAllEventsWithCustomer');
+                    $http.get(SERVER_URI + '/getAllEventsWithoutCustomer').then(
+                        function (response) {//success callback
+                            $log.log('in /getAllEventsWithCustomer');
+                            $scope.retreivedCalendarEvents = response.data.Events;
+                            $log.log('refreshCalendarEvent=' + JSON.stringify($scope.retreivedCalendarEvents));
+                            uiCalendarConfig.calendars.myCalendar.fullCalendar('removeEvents');
+                            uiCalendarConfig.calendars.myCalendar.fullCalendar('addEventSource', $scope.retreivedCalendarEvents);
+                            uiCalendarConfig.calendars.myCalendar.fullCalendar('rerenderEvents');
+                        },
+                        function (response) {//failure callback
+                            //if failed show error modal
+                            $scope.message = response.data.error;
+                            $scope.messageType = 'ERROR';
+                            angular.element(document.querySelector('#msgModal')).modal('show');
+                        }
+                    );
+                }
+
+
+                function refreshCalendarEvent(event) {
+                    $log.log('refreshCalendarEvent');
+                    $log.log('event : '+JSON.stringify(event));
+
+                    /*$log.log('CalendarEvent: before retreivedCalendarEvents=' + JSON.stringify($scope.retreivedCalendarEvents));
+                    $scope.retreivedCalendarEvents.splice(0, $scope.retreivedCalendarEvents.length);
+
+                    $scope.retreivedCalendarEvents.push(event);
+                    $log.log('CalendarEvent: after retreivedCalendarEvents=' + JSON.stringify($scope.retreivedCalendarEvents));
+                    uiCalendarConfig.calendars.myCalendar.fullCalendar('removeEvents');
+                    uiCalendarConfig.calendars.myCalendar.fullCalendar('addEventSource', $scope.retreivedCalendarEvents);
+                    uiCalendarConfig.calendars.myCalendar.fullCalendar('rerenderEvents');
+                    uiCalendarConfig.calendars.myCalendar.fullCalendar('refetchResources');*/
+                    $http.post(SERVER_URI + '/getEvent').then({
+                        my: event
+                    }).then(
+                        function (response) {//success callback
+                            $scope.retreivedCalendarEvents = response.data.Events;
+                            $log.log('refreshCalendarEvent=' + JSON.stringify($scope.retreivedCalendarEvents));
+                            uiCalendarConfig.calendars.myCalendar.fullCalendar('removeEvents');
+                            uiCalendarConfig.calendars.myCalendar.fullCalendar('addEventSource', $scope.retreivedCalendarEvents);
+                            uiCalendarConfig.calendars.myCalendar.fullCalendar('rerenderEvents');
+                        },
+                        function (response) {//failure callback
+                            //if failed show error modal
+                            $scope.message = response.data.error;
+                            $scope.messageType = 'ERROR';
+                            angular.element(document.querySelector('#msgModal')).modal('show');
+                        }
+                    );
+                }
+                function displayEventsInCalendar(){
+                    
+                }
+
                 function refreshCustomerCalendarEvents(eventId) {
                     $log.log('refreshCustomerCalendarEvents');
-                    $http.get(SERVER_URI + '/getCustomerEvents/' + loggedInWorker.WorkerName + '/' + eventId).then(
+                    $http.get(SERVER_URI + '/getCustomerEvents/' + loggedInWorker.workerName + '/' + eventId).then(
                         function (response) {//success callback
                             $scope.retreivedCalendarEvents = response.data.customerEvents;
                             $log.log('retreivedCalendarEvents=' + JSON.stringify($scope.retreivedCalendarEvents));
@@ -251,7 +339,7 @@
                         color: eventAfterUpdate.color,
                         id: eventAfterUpdate.id,
                         customerPhone:eventAfterUpdate.customerPhone,
-                        WorkerName: eventAfterUpdate.WorkerName,
+                        workerName: eventAfterUpdate.workerName,
                         editable: eventAfterUpdate.editable,
                         allDay: eventAfterUpdate.allDay
                     };
@@ -268,7 +356,7 @@
                         color: eventBeforeUpdate.color,
                         customerPhone:eventBeforeUpdate.customerPhone,
                         id: eventBeforeUpdate.id,
-                        WorkerName: eventBeforeUpdate.WorkerName,
+                        workerName: eventBeforeUpdate.workerName,
                         editable: eventBeforeUpdate.editable,
                         allDay: eventBeforeUpdate.allDay
                     };
@@ -324,7 +412,7 @@
                         function (response) {
                             if(response.data.customers) {
                                 if(response.data.customers.length == 0) {
-                                    $scope.message = 'This Customer does not exist';
+                                    $scope.message = 'This customer does not exist';
                                     $scope.messageType = 'ERROR';
                                     angular.element(document.querySelector('#msgModal')).modal('show');
                                     return;
@@ -468,7 +556,7 @@
                             color: event.color,
                             id: event.id,
                             customerPhone: event.customerPhone,
-                            WorkerName: event.WorkerName,
+                            workerName: event.workerName,
                             editable: event.editable,
                             allDay: event.allDay
                         };
@@ -614,7 +702,7 @@
                     editEventDetails.start = $scope.eventStart;
                     editEventDetails.end = $scope.eventEnd;
                     editEventDetails.color = $scope.role.Color;
-                    editEventDetails.WorkerName = evenBeforeUpdate.WorkerName;
+                    editEventDetails.workerName = evenBeforeUpdate.workerName;
                     editEventDetails.id = customer;
 
                     let eventForUpdate = {};
@@ -654,7 +742,7 @@
                     const customerPhone = customer.PhoneNumber;
                     $log.log('eventId : ' + eventId);
                     //refreshCustomerCalendarEvents();
-                    $scope.calendarFunction(customerPhone);
+                    $scope.calendarFunction('customerEvents',customerPhone);
                 };
 
                 function deleteEventFromDataBase(event, worker) {
@@ -714,7 +802,7 @@
 
                     if (workersOrCustomers === 'workers') {
                         arr = $scope.workers;
-                        id = 'WorkerName';
+                        id = 'workerName';
                     } else {
                         arr = $scope.customersInfo;
                         id = 'PhoneNumber';
@@ -722,13 +810,13 @@
 
                     for (let i = 0; i < arr.length; i++) {
                         const arrInfo = arr[i];
-                        if (id === 'WorkerName') {
-                            $scope.selected[arrInfo.WorkerName] = flag;
+                        if (id === 'workerName') {
+                            $scope.selected[arrInfo.workerName] = flag;
                         } else {
                             $scope.selected[arrInfo.PhoneNumber] = flag;
 
                         }
-                        //$log.log('id : ' +arrInfo.WorkerName);
+                        //$log.log('id : ' +arrInfo.workerName);
                     }
                 };
 
@@ -738,7 +826,7 @@
                     let id;
                     if (workersOrCustomers === 'workers') {
                         arr = $scope.workers;
-                        id = 'WorkerName';
+                        id = 'workerName';
                     } else {
                         arr = $scope.customersInfo;
                         id = 'PhoneNumber';
@@ -746,8 +834,8 @@
 
                     for (let i = 0; i < arr.length; i++) {
                         const arrInfo = arr[i];
-                        if (id === 'WorkerName') {
-                            if ($scope.selected[arrInfo.WorkerName]) {
+                        if (id === 'workerName') {
+                            if ($scope.selected[arrInfo.workerName]) {
                                 emailsListStr = getStringofAllEmails(emailsListStr, arrInfo, i);
                             }
 
@@ -955,15 +1043,8 @@
                     //  console.log($scope.pendingRequests);
                 };
                 $scope.getCalendarEvent = function (event) {
-                    $log.log('event '+  JSON.stringify(event));
-                    $scope.retreivedCalendarEvents = [];
-                    $scope.retreivedCalendarEvents.push(event);
-                    $log.log('$scope.retreivedCalendarEvents : '+ $scope.retreivedCalendarEvents);
-                    uiCalendarConfig.calendars.myCalendar.fullCalendar('removeEvents');
-                    uiCalendarConfig.calendars.myCalendar.fullCalendar('addEventSource', $scope.retreivedCalendarEvents);
-                    uiCalendarConfig.calendars.myCalendar.fullCalendar('rerenderEvents');
-                    $log.log('after $scope.retreivedCalendarEvents')
-                    $scope.calendarFunction();
+                    $log.log('event : '+JSON.stringify(event));
+                    $scope.calendarFunction('calendarEvent',event);
                 }
                 //cancel function from modal in calendar
                 $scope.cancelEvent = function () {
@@ -1210,7 +1291,7 @@
                                 $scope.newTempPasswordPage = false;
                                 $scope.tempPasswordPage = false;
                                 $scope.registerPage = true;
-                                $scope.registrationWorkerName = 'Admin';
+                                $scope.registrationworkerName = 'Admin';
                                 $scope.Admin = true;
                             } else { //not correct temprorary password
                                 console.log('validationOfTempPassword: response.data.notVerified=' + response.data.notVerified);
@@ -1284,7 +1365,7 @@
                                 }
                             }
                             $scope.registerPage = true;
-                            $scope.registrationWorkerName = 'Admin';
+                            $scope.registrationworkerName = 'Admin';
                             $scope.Admin = true;
                             $scope.newTempPasswordPage = false;
                             $scope.firstLoad = false;
@@ -1302,11 +1383,11 @@
                     and send them when all are valid to server in an http post request
                 */
                 $scope.signUp = function () {
-                    const reWorkerName = /^[a-zA-Z]{3,10}$/;
+                    const reworkerName = /^[a-zA-Z]{3,10}$/;
                     const reName = /^[a-zA-Z\s\u0590-\u05fe]{2,20}$/;
 
                     //check if worker name has been entered and if it is valid according to the matching regular expression pattern
-                    if ($scope.registrationWorkerName === undefined || !reWorkerName.test($scope.registrationWorkerName)) {
+                    if ($scope.registrationworkerName === undefined || !reworkerName.test($scope.registrationworkerName)) {
                         $scope.message = 'Worker name must contain only English letters ,minimum 3 leterrs and maximum 10 letters and no whitespace';
                         $scope.messageType = 'ERROR';
                         angular.element(document.querySelector('#msgModal')).modal('show');
@@ -1351,7 +1432,7 @@
 
                     //save workers valid details as a json object
                     const worker = {
-                        WorkerName: $scope.registrationWorkerName, Name: $scope.registrationName,
+                        workerName: $scope.registrationworkerName, Name: $scope.registrationName,
                         eMail: $scope.registrationEmail, Password: $scope.registrationPassword
                     };
                     $log.log('before call server');
@@ -1371,7 +1452,7 @@
 
                                 //clear all fields in registration page
 
-                                if (workerFromServer.WorkerName !== 'Admin') {
+                                if (workerFromServer.workerName !== 'Admin') {
                                     //show menu system components and worker profile of account
                                     $scope.message = 'Thanks for signing up, you must wait for the administrator to assign you a role so you can sign in.';
                                     $scope.messageType = 'MESSAGE';
@@ -1386,7 +1467,7 @@
                                 $scope.message = response.data.workerExists;
                                 $scope.messageType = 'ERROR';
                                 angular.element(document.querySelector('#msgModal')).modal('show');
-                                $scope.registrationWorkerName = undefined;
+                                $scope.registrationworkerName = undefined;
 
                             }
                         },
@@ -1402,10 +1483,10 @@
                     and verify details with thoes at server by sending the data in http request
                 */
                 $scope.login = function () {
-                    $log.log('WorkerNameLogin ' + $scope.WorkerNameLogin);
+                    $log.log('workerNameLogin ' + $scope.workerNameLogin);
 
                     //check if worker name has been entered -> requierd
-                    if ($scope.WorkerNameLogin === undefined || $scope.WorkerNameLogin === '') {
+                    if ($scope.workerNameLogin === undefined || $scope.workerNameLogin === '') {
                         $scope.message = 'Worker name is required';
                         $scope.messageType = 'ERROR';
                         angular.element(document.querySelector('#msgModal')).modal('show');
@@ -1424,7 +1505,7 @@
                     /*
                         a function for saving the worker that is logged in details
                     */
-                    let LoginWorker = {WorkerName: $scope.WorkerNameLogin, Password: $scope.PasswordLogin};
+                    let LoginWorker = {workerName: $scope.workerNameLogin, Password: $scope.PasswordLogin};
                     $http.post(SERVER_URI + '/login', {
                         LoginWorker: LoginWorker
                     }).then(
@@ -1458,7 +1539,7 @@
                                 }
 
                                 //clear fields in login page
-                                $scope.WorkerNameLogin = undefined;
+                                $scope.workerNameLogin = undefined;
                                 $scope.PasswordLogin = undefined;
 
                                 //show menu and worker profile in account and hide the login page
@@ -1477,7 +1558,7 @@
                                 $scope.getRolesColorsList();
                                 $scope.getCustomersList();
                                 $scope.getFilesList();
-                                $scope.getWorkersList('showWorkers');
+                                $scope.getWorkersList();
                                 refreshCalendarEvents();
 
                             } else { //if there is no match show error modal
@@ -1502,6 +1583,7 @@
                     $scope.showUpdateInput = false;
                      */
                     $scope.calendarNavColor = '#004d99';
+                    $scope.spesificCustomersNavColor = '#004d99';
                     $scope.customersNavColor = '#ff0066';
                     $scope.loginPage = false;
                     $scope.showCustomers = true;
@@ -1686,7 +1768,7 @@
                     a function for showing the calendar page
                     and hiding all other pages that are not relevant
                 */
-                $scope.calendarFunction = function (flag) {
+                $scope.calendarFunction = function (flag,value) {
                     $scope.loginPage = false;
                     $scope.showCustomers = false;
                     $scope.showCalendar = true;
@@ -1695,6 +1777,7 @@
                     $scope.showWorkersEvents = false;
                     $scope.account = false;
                     $scope.calendarNavColor = '#ff0066';
+                    $scope.calendarNavColor = '#004d99';
                     $scope.customersNavColor = '#004d99';
                    // $scope.getRolesList();
                     getAssignedRoles();
@@ -1707,13 +1790,20 @@
                         uiCalendarConfig.calendars['myCalendar'].fullCalendar('render');
 
                     }, 5); // Set enough time to wait until animation finishes;*/
-                    if(flag)
+                    if(flag=='customerEvents')
                     {
 
-                        refreshCustomerCalendarEvents(flag);
+                        refreshCustomerCalendarEvents(value);
                         return;
                     }
-                    refreshCalendarEvents()
+                    if(flag=='calendarEvent')
+                    {
+                        $log.log('event : '+JSON.stringify(value));
+                        refreshCalendarEvent(value);
+                        return;
+
+                    }
+                    refreshCalendarEvents();
                 };
 
                 /*
@@ -1757,7 +1847,7 @@
                     $scope.newEmail = '';
                     $scope.newAddress = '';
                     $scope.role = '';
-                    $scope.statusRole = '';
+                    $scope.statusRole = undefined;
                 };
 
                 /*
@@ -1857,7 +1947,7 @@
                 */
                 $scope.updateWorkerFunction = function (worker) {
                     //get all details of worker in json format
-                    workerBeforeUpdate = {Role: worker.Role, Name: worker.Name, WorkerName: worker.WorkerName, eMail: worker.eMail};
+                    workerBeforeUpdate = {Role: worker.Role, Name: worker.Name, workerName: worker.workerName, eMail: worker.eMail};
                     $scope.role = undefined;
                     if (worker.Role !== 'new in the system') {
                         $scope.role = $scope.roles[getIndexOfSelectedItem(workerBeforeUpdate.Role, 'role_list')];
@@ -2078,14 +2168,14 @@
                 /*
                     get the customers list from server with http request
                 */
-                $scope.getCustomersList = function (WorkerName = loggedInWorker.WorkerName ) {
-                    $http.get(SERVER_URI + '/getCustomers/' + WorkerName).then(
+                $scope.getCustomersList = function (workerName = loggedInWorker.workerName ) {
+                    $http.get(SERVER_URI + '/getCustomers/' + workerName).then(
                         function (response) {//success callback
 
                             //return the list of the customers
                             $scope.customersInfo = response.data.customers;
                             $scope.role = '';
-                            $scope.statusRole = '';
+                            $scope.statusRole = undefined;
                             $scope.newName = '';
                             $scope.newPhoneNumber = '';
                             $scope.newEmail = '';
@@ -2115,7 +2205,7 @@
                     );
                 };
 
-                $scope.getWorkerNameCustomers = function (workerName)
+                $scope.getworkerNameCustomers = function (workerName)
                 {
                     $scope.workersNavColor = '#004d99';
                     $scope.customersNavColor = '#ff0066';
@@ -2139,11 +2229,14 @@
 
                             //if was chosen to delete the worker
                             if (response.data.deleteWorker) {
+
+                                $log.log('deleteWorker');
                                 //show modal for deleting the worker
                                 $scope.messageType = 'Choose worker to delete';
                                 angular.element(document.querySelector('#deleteModal')).modal('show');
+                                return;
                             }
-
+                            $scope.showWorkers = true;
                         },
                         function (response) {//failure callback
 
@@ -2530,7 +2623,7 @@
                 */
                 $scope.saveUpdatedWorker = function (workerToUpdate) {
                     //regular expression for a valid worker name
-                    const reWorkerName = /^[a-zA-Z]{3,10}$/;
+                    const reworkerName = /^[a-zA-Z]{3,10}$/;
 
                     //regular expression for a valid name
                     const reName = /^[a-zA-Z\s\u0590-\u05fe]{2,20}$/;
@@ -2543,7 +2636,7 @@
                     }
 
                     //if a worker name was not entered or was invalid show an error modal
-                    if (workerToUpdate.WorkerName === undefined || !reWorkerName.test(workerToUpdate.WorkerName)) {
+                    if (workerToUpdate.workerName === undefined || !reworkerName.test(workerToUpdate.workerName)) {
                         $scope.message = 'Worker name must contain only English letters ,minimum 3 leterrs and maximum 10 letters and no whitespace';
                         $scope.messageType = 'ERROR';
                         angular.element(document.querySelector('#msgModal')).modal('show');
@@ -2571,7 +2664,7 @@
                     //save the updated details of the worker
                     const updatedWorker = {
                         Role: category,
-                        WorkerName: workerToUpdate.WorkerName,
+                        workerName: workerToUpdate.workerName,
                         Name: workerToUpdate.Name,
                         eMail: workerToUpdate.eMail
                     };
@@ -2675,6 +2768,33 @@
                         angular.element(document.querySelector('#validationCurrentTempPasswordModal')).modal('show');
                         invalidTempPassword = false;
                     }
+                    if(deleteWorkerWithEventsAndCustomers) {
+                        deleteWorkerWithEventsAndCustomersFromDb();
+                        deleteWorkerWithEventsAndCustomers = false;
+                    }
+                };
+
+                function deleteWorkerWithEventsAndCustomersFromDb() {
+                    $log.log('/deleteWorkerFinally');
+                    $http.post(SERVER_URI + '/deleteWorkerFinally', {
+                        workerName: selectedItemPart2
+                    }).then(
+                        function (response) { //success callback
+                            //$scope.workers = response.data.workers;
+                            selectedItemPart2 = undefined;
+                            $log.log(JSON.stringify(response));
+                            if (response.data.workers) {
+                                $scope.workers = response.data.workers;
+                                $scope.showWorkers = true;
+
+                            }
+                            selectedItemPart2 = undefined;
+                        },
+                        function (response) { //failure callback
+
+                        }
+                    );
+                    $log.log(selectedItemPart2);
                 };
 
                 /*
@@ -2707,7 +2827,7 @@
                     }
 
                     //save the new password in server with an hyyp request
-                    const loggedInNewPassword = {workername: loggedInWorker.WorkerName, newPassword: $scope.newPassword};
+                    const loggedInNewPassword = {workerName: loggedInWorker.workerName, newPassword: $scope.newPassword};
                     $http.post(SERVER_URI + '/changeCurrentPassword', {
                         loggedInNewPassword: loggedInNewPassword
                     }).then(
@@ -2731,17 +2851,17 @@
                     with the password in server for the current worker name
                 */
                 $scope.verifyPassword = function (currenPassword) {
-                    const loggedInCurrentPassword = {workername: loggedInWorker.WorkerName, currentPassword: currenPassword};
+                    const loggedInCurrentPassword = {workerName: loggedInWorker.workerName, currentPassword: currenPassword};
                     $http.post(SERVER_URI + '/verifyCurrentPassword', {
                         loggedInCurrentPassword: loggedInCurrentPassword
                     }).then(
                         function (response) { //success callback
                             $scope.currenPassword = undefined;
 
-                            //the current password was verified for this workername
+                            //the current password was verified for this workerName
                             if (response.data.verified) {
                                 angular.element(document.querySelector('#changePasswordModal')).modal('show');
-                            } else { //the current password was not verified for this workername
+                            } else { //the current password was not verified for this workerName
                                 console.log('verifyPassword: response.data.notVerified=' + response.data.notVerified);
                                 $scope.messageType = 'ERROR';
                                 $scope.message = response.data.notVerified;
@@ -2854,7 +2974,7 @@
 
                 //a function for showing a modal for insuring the delition of all customers from syetem
                 $scope.insureDeleteAllCustomers = function () {
-                    $scope.message = 'Are you sure you want to delede all the customers from system ? if you press OK, all customers will be deleted and the information will be lost. ';
+                    $scope.message = 'Are you sure you want to delete all the customers from the system ? if you press OK, all customers will be deleted and the information will be lost.';
                     $scope.messageType = 'WARNNING';
                     angular.element(document.querySelector('#messageModalWithCancel')).modal('show');
                     deleteAllCustomersFlag = true;
@@ -2862,7 +2982,7 @@
                 //a function for showing a modal for insuring the delition of customer from syetem
                 $scope.insureDeleteCustomer = function (customer) {
                     customerToDelete = customer;
-                    $scope.message = 'Are you sure you want to delede this customer from system ? if you press OK, the information of this customer will be lost. ';
+                    $scope.message = 'Are you sure you want to delete this customer from system ? if you press OK, the information of this customer will be lost. ';
                     $scope.messageType = 'WARNNING';
                     angular.element(document.querySelector('#messageModalWithCancel')).modal('show');
                     deleteCustomerFlag = true;
@@ -2870,7 +2990,7 @@
                 //a function for showing a modal for insuring the delition of worker from syetem
                 $scope.insureDeleteWorker = function (worker) {
                     workerToDelete = worker;
-                    $scope.message = 'Are you sure you want to delede this worker from system ? if you press OK, the information of this worker will be lost. ';
+                    $scope.message = 'Are you sure you want to delete this worker from system ? if you press OK, the information of this worker will be lost. ';
                     $scope.messageType = 'WARNNING';
                     angular.element(document.querySelector('#messageModalWithCancel')).modal('show');
                     deleteWorkerFlag = true;
@@ -2878,7 +2998,7 @@
 
                 //a function for showing a modal for insuring the delition of all workers from syetem
                 $scope.ensureDeleteAllWorkers = function () {
-                    $scope.message = 'Are you sure you want to delede all the workers from system ? if you press OK, all workers will be deleted and the information will be lost. ';
+                    $scope.message = 'Are you sure you want to delete all the workers from system ? if you press OK, all workers will be deleted and the information will be lost. ';
                     $scope.messageType = 'WARNNING';
                     angular.element(document.querySelector('#messageModalWithCancel')).modal('show');
                     deleteAllWorkersFlag = true;
@@ -2994,10 +3114,19 @@
                         selectedItemPart2 = flag;
                     }
                     $http.post(SERVER_URI + '/deleteWorker', {
-                        workername: selectedItemPart2
+                        workerName: selectedItemPart2
                     }).then(
                         function (response) { //success callback
-                            $scope.workers = response.data.workers;
+                            //$scope.workers = response.data.workers;
+
+                            $log.log(JSON.stringify(response));
+                            if (response.data.noWorkersWithThisRole) {
+                                $scope.message = response.data.noWorkersWithThisRole;
+                                $scope.messageType = 'WARNING';
+                                angular.element(document.querySelector('#msgModal')).modal('show');
+                                deleteWorkerWithEventsAndCustomers = true;
+                                return;
+                            }
                             selectedItemPart2 = undefined;
                         },
                         function (response) { //failure callback

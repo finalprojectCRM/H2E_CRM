@@ -2,6 +2,7 @@ const repo = require('../repository');
 const utils = require('../utils');
 const util = require('util');
 const config = require('config');
+const _ = require('lodash');
 const fs = require('fs');
 const logging = require('../utils/logging');
 const logger = logging.mainLogger;
@@ -37,7 +38,7 @@ module.exports = {
                 await repo.addDefaultAdminWorker();
                 status.code = 200;
                 status.message = {'adminFirstLoad': true};
-            } else if (adminWorker.WorkerName === 'Admin' && adminWorker.Name === '' && adminWorker.eMail === '' && adminWorker.Password === '') {
+            } else if (adminWorker.workerName === 'Admin' && adminWorker.Name === '' && adminWorker.eMail === '' && adminWorker.Password === '') {
                 //there is a worker in system and Admin exists = mongo db workersCollection is not empty
                 //admin did not yet change the temp password that he got from system
                 if (adminWorker.TempPassword === config.server.access.firstTempPassword) {
@@ -80,7 +81,7 @@ module.exports = {
                 logger.info('!result not a password');
                 status.code = 200;
                 status.message = {notVerified: 'You do not have a correct temporary password , Please get it from the administrator'};
-            } else if (adminWorker.WorkerName === 'Admin' && adminWorker.Name === '' && adminWorker.eMail === '' && adminWorker.Password === '') {
+            } else if (adminWorker.workerName === 'Admin' && adminWorker.Name === '' && adminWorker.eMail === '' && adminWorker.Password === '') {
                 if (adminWorker.TempPassword === config.server.access.firstTempPassword) { //admin did not yet change the temp password that he got from system
                     status.code = 200;
                     status.message = {'adminChangedTempPassword': false};
@@ -115,16 +116,16 @@ module.exports = {
                 throw new Error(status.message);
             }
             const loggedInCurrentPassword = req.body.loggedInCurrentPassword;
-            logger.info(util.format('curWorkername=%s', loggedInCurrentPassword.workername));
+            logger.info(util.format('curworkerName=%s', loggedInCurrentPassword.workerName));
             logger.info(util.format('curPassword=%s', loggedInCurrentPassword.currentPassword));
-            //try to find in worker collection a worker with a given workername and password
-            const logInInfo = await repo.getWorkerLogInInfo(loggedInCurrentPassword.workername,
+            //try to find in worker collection a worker with a given workerName and password
+            const logInInfo = await repo.getWorkerLogInInfo(loggedInCurrentPassword.workerName,
                 loggedInCurrentPassword.currentPassword);
-            if (!logInInfo) { //no such workername and password in the system
+            if (!logInInfo) { //no such workerName and password in the system
                 logger.info('notVerified');
                 status.code = 200;
                 status.message = {'notVerified': 'The current password is incorrect, please try again.'};
-            } else { //found the worker with correct workername and password
+            } else { //found the worker with correct workerName and password
                 logger.info('verified');
                 status.code = 200;
                 status.message = {'verified': true};
@@ -151,9 +152,9 @@ module.exports = {
             }
             const loggedInNewPassword = req.body.loggedInNewPassword;
             //update in workersCollection the the password of worker with a new password
-            logger.info(util.format('workername=%s', loggedInNewPassword.workername));
+            logger.info(util.format('workerName=%s', loggedInNewPassword.workerName));
             logger.info(util.format('newPassword=%s', loggedInNewPassword.newPassword));
-            const cursor = await repo.updateWorkerPassword({'WorkerName': loggedInNewPassword.workername},
+            const cursor = await repo.updateWorkerPassword({'workerName': loggedInNewPassword.workerName},
                 {'Password': loggedInNewPassword.newPassword});
             if (cursor.modifiedCount === 0) {
                 // noinspection ExceptionCaughtLocallyJS
@@ -184,7 +185,7 @@ module.exports = {
             const newTempPassword = req.body.newTempPassword;
             //update in workersCollection the the password of worker with a new password
             logger.info(util.format('newTempPassword=%s', newTempPassword));
-            await repo.updateWorkerPassword({'WorkerName': 'Admin'}, {TempPassword: newTempPassword.TempPassword});
+            await repo.updateWorkerPassword({'workerName': 'Admin'}, {TempPassword: newTempPassword.TempPassword});
             status.code = 200;
             status.message = {'success': 'The temporary password has been changed successfully'};
         } catch (err) {
@@ -203,9 +204,9 @@ module.exports = {
         let status = {code: 200, message: 'OK'};
         try {
             const worker = req.body.LoginWorker;
-            logger.info(util.format('workerName=%s', worker.WorkerName));
-            //check if the workername and the password exist
-            const logInInfo = await repo.getWorkerLogInInfo(worker.WorkerName, worker.Password);
+            logger.info(util.format('workerName=%s', worker.workerName));
+            //check if the workerName and the password exist
+            const logInInfo = await repo.getWorkerLogInInfo(worker.workerName, worker.Password);
             //if no match
             if (!logInInfo) {
                 logger.info('no match!');
@@ -215,13 +216,13 @@ module.exports = {
                 //if there is matching
                 logger.info(util.format('logInInfo.Name=%s', logInInfo.Name));
                 //check if the worker is admin and return a worker details with 'adminWorker':true
-                if (logInInfo.WorkerName === 'Admin') {
+                if (logInInfo.workerName === 'Admin') {
                     status.code = 200;
                     status.message = {
                         workerLogin: {
                             'adminWorker': true,
                             'Role': logInInfo.Role,
-                            'WorkerName': logInInfo.WorkerName,
+                            'workerName': logInInfo.workerName,
                             'Name': logInInfo.Name,
                             'eMail': logInInfo.eMail,
                             'Password': logInInfo.Password,
@@ -275,8 +276,8 @@ module.exports = {
     getCustomers: async function (req, res) {
         logger.info('getCustomers');
         let condition = {};
-        if (req.params.WorkerName !== 'Admin') {
-            condition = {WorkerName: req.params.WorkerName};
+        if (req.params.workerName !== 'Admin') {
+            condition = {workerName: req.params.workerName};
         }
         await repo.getItems(req, res, 'customer', 'customers', condition);
     },
@@ -295,15 +296,32 @@ module.exports = {
         await repo.getAssignedRoles(req, res);
     },
     getCustomerEvents: async function (req, res) {
-        logger.info(util.format('/getCustomerEvents/%s/%s', req.params.WorkerName, req.params.eventId));
-        const workerName = req.params.WorkerName;
-        let condition = {WorkerName: req.params.WorkerName,customerPhone:req.params.eventId};
+        logger.info(util.format('/getCustomerEvents/%s/%s', req.params.workerName, req.params.eventId));
+        const workerName = req.params.workerName;
+        let condition = {workerName: req.params.workerName,customerPhone:req.params.eventId};
         logger.info(util.format('/getWorkerEvents/%s', workerName));
         if (workerName === 'Admin') {
             condition = {customerPhone:req.params.eventId};
         }
         await repo.getItems(req, res, 'event', 'customerEvents', condition);
-        //await repo.getCustomerEvents(req, res, 'event');
+    },
+    getEvent: async function (req, res) {
+        logger.info(util.format('/getEvent'));
+        const event = req.body.my;
+        logger.info(util.format('event=%s', JSON.stringify(event)));
+        await repo.getItems(req, res, 'event', 'event', event);
+
+    },
+    getAllEventsWithCustomer: async function (req, res) {
+        logger.info(util.format('/getAllEventsWithCustomer'));
+        await repo.getItems(req, res, 'event', 'Events',{ customerPhone: { $ne: -1 } });
+        logger.info(util.format('/getAllEventsWithCustomer'));
+
+    }, getAllEventsWithoutCustomer: async function (req, res) {
+        logger.info(util.format('/getAllEventsWithoutCustomer'));
+        await repo.getItems(req, res, 'event', 'Events',{ customerPhone: -1 });
+        logger.info(util.format('/getAllEventsWithoutCustomer'));
+
     },
     uploadFile: async function (req, res) {
         logger.info('/uploadFile');
@@ -339,11 +357,30 @@ module.exports = {
     },
     deleteWorker: async function (req, res) {
         logger.info('deleteWorker');
-        //the customer to delete with its details
-        const workerToDelete = req.body.workername;
-        logger.info('statusToDelete :' + workerToDelete);
-        await repo.deleteItemAndReturnUpdatedList(req, res, {'WorkerName': workerToDelete}, 'worker',
-            {'showWorkers': true, 'workers': {}}, 'workers');
+        const workerToDelete = req.body.workerName;
+        const warningMessage = {
+            'noWorkersWithThisRole': 'There are no more workers with such role, so all tasks and customers under his care will be deleted,\n' +
+                'Are you sure that you want to delete this worker? '
+        };
+        logger.info(util.format('workerToDelete: %s', workerToDelete));
+        await repo.handleWorker(req, res, workerToDelete, warningMessage, true);
+    },
+
+    deleteWorkerFinally: async function (req, res) {
+        logger.info('deleteWorker');
+        const workerToDelete = req.body.workerName;
+        logger.info(util.format('workerToDelete: %s', workerToDelete));
+
+        await repo.deleteItemAndReturnUpdatedList(req, res, {'workerName': workerToDelete}, 'customer',
+            {'customers': {}}, 'customers', undefined, false, false);
+
+        await repo.deleteItemAndReturnUpdatedList(req, res, {'workerName': workerToDelete}, 'event',
+            {'events': {}}, 'events', undefined, false ,false);
+
+        await repo.deleteItemAndReturnUpdatedList(req, res, {'workerName': workerToDelete}, 'worker',
+            {'workers': {}}, 'workers', undefined, false);
+        logger.info(util.format('workerToDelete: %s', workerToDelete));
+
     },
     getCustomer: async function (req, res) {
         logger.info('getCustomer');
@@ -353,7 +390,7 @@ module.exports = {
     addCustomer: async function (req, res) {
         logger.info('addCustomer');
         const customer = req.body.customer;
-        customer.WorkerName = await repo.assignWorker({Role: customer.Category.Role}, 'customer');
+        customer.workerName = await repo.assignWorker({Role: customer.Category.Role}, 'customer');
         await repo.insertItemByCondition(req, res, {'PhoneNumber': customer.PhoneNumber}, customer,
             {'phoneExists': 'ERROR : this phone number already exists, change it or search for this worker.'}, 'customer');
     },
@@ -366,8 +403,17 @@ module.exports = {
             const history = customerAfterUpdate.History;
             delete customerAfterUpdate.History;
             if (customerBeforeUpdate.Category.Role !== customerAfterUpdate.Category.Role) {
-                customerAfterUpdate.WorkerName = await repo.assignWorker({Role: customerAfterUpdate.Category.Role}, 'customer');
+                customerAfterUpdate.workerName = await repo.assignWorker({Role: customerAfterUpdate.Category.Role}, 'customer');
             }
+            if (customerBeforeUpdate.PhoneNumber !== customerAfterUpdate.PhoneNumber || customerBeforeUpdate.Name !== customerAfterUpdate.Name) {
+                const eventIdBeforeUpdate = customerBeforeUpdate.Name+' '+ customerBeforeUpdate.PhoneNumber;
+                const eventIdAfterUpdate = customerAfterUpdate.Name+' '+ customerAfterUpdate.PhoneNumber;
+                await repo.updateItem(req, res, {id: eventIdBeforeUpdate ,customerPhone: customerBeforeUpdate.PhoneNumber}, {
+                    $set: {id: eventIdAfterUpdate , customerPhone: customerAfterUpdate.PhoneNumber }
+                }, 'event');
+
+            }
+
             const foundItems = await repo.getAllCollectionItems('customer', {PhoneNumber: customerAfterUpdate.PhoneNumber});
             if (foundItems.length === 0 || foundItems.length === 1 && foundItems[0].PhoneNumber === customerBeforeUpdate.PhoneNumber) {
                 await repo.updateItem(req, res, {PhoneNumber: customerBeforeUpdate.PhoneNumber}, {
@@ -394,8 +440,8 @@ module.exports = {
             logger.info(util.format('statusFlag: %s', statusFlag));
             //if request is to get the workers for the delete worker
             if (statusFlag === 'deleteWorker') {
-                await repo.getItems(req, res, 'worker', 'workers', {WorkerName: {$ne: 'Admin'}}, '', {
-                    'showWorkers': true,
+                await repo.getItems(req, res, 'worker', 'workers', {workerName: {$ne: 'Admin'}}, '', {
+                    'deleteWorker': true,
                     'workers': {}
                 });
             } else if (statusFlag === 'showWorkers') {
@@ -416,7 +462,7 @@ module.exports = {
     },
     deleteAllWorkers: async function (req, res) {
         logger.info(util.format('deleteAllWorkers'));
-        await repo.deleteAllItems(req, res, 'worker', {'message': 'All workers have been deleted from the system'}, {WorkerName: {$ne: 'Admin'}});
+        await repo.deleteAllItems(req, res, 'worker', {'message': 'All workers have been deleted from the system'}, {workerName: {$ne: 'Admin'}});
     },
     addStatus: async function (req, res) {
         logger.info('addStatus');
@@ -539,14 +585,14 @@ module.exports = {
     addWorker: async function (req, res) {
         logger.info('addWorker');
         const worker = req.body.worker;
-        //worker with his details : Role , WorkerName ,Name ,eMail,Password
-        if (worker.WorkerName === 'Admin') {
+        //worker with his details : Role , workerName ,Name ,eMail,Password
+        if (worker.workerName === 'Admin') {
             //worker.isAdmin = true;
             worker.Role = 'Administrator';
             const adminWorker = await repo.getAdminWorker();
-            if (adminWorker.WorkerName === 'Admin' && adminWorker.Name === '' &&
+            if (adminWorker.workerName === 'Admin' && adminWorker.Name === '' &&
                 adminWorker.eMail === '' && adminWorker.Password === '') {
-                await repo.addOrUpdateItem(req, res, {'WorkerName': 'Admin'},
+                await repo.addOrUpdateItem(req, res, {'workerName': 'Admin'},
                     'worker', worker, false, true, false, false, {"worker": worker});
             } else {
                 res.writeHead(200, {'Content-Type': 'application/json'});
@@ -555,7 +601,7 @@ module.exports = {
         } else {
             //check whether such worker name exists in the system and if not, so add it
             worker.Role = 'new in the system';
-            await repo.insertItemByCondition(req, res, {'WorkerName': worker.WorkerName}, worker,
+            await repo.insertItemByCondition(req, res, {'workerName': worker.workerName}, worker,
                 {workerExists: 'This worker name already exists.'}, 'worker', true, {"worker": worker});
         }
     },
@@ -564,8 +610,10 @@ module.exports = {
     */
     updateWorker: async function (req, res) {
         logger.info('updateWorker');
+
         const workerBeforeUpdate = req.body.workerBeforeUpdate;
         const workerAfterUpdate = req.body.updatedWorker;
+
         await repo.updateItem(req, res, workerBeforeUpdate, {$set: workerAfterUpdate}, 'worker', undefined,
             {'showWorkers': true, 'workers': {}}, 'workers');
     },
@@ -573,8 +621,8 @@ module.exports = {
     get list of all events for specific worker
 */
     getWorkerEvents: async function (req, res) {
-        const workerName = req.params.WorkerName;
-        let condition = {WorkerName: workerName};
+        const workerName = req.params.workerName;
+        let condition = {workerName: workerName};
         logger.info(util.format('/getWorkerEvents/%s', workerName));
         if (workerName === 'Admin') {
             condition = {};
@@ -591,15 +639,15 @@ module.exports = {
         const responseData = {};
         const eventExists = {'eventExists': 'The task already exists on this date, please select another time for this task'};
         let result = {};
-        let condition = {WorkerName: eventWorker.WorkerName};
+        let condition = {workerName: eventWorker.workerName};
         const eventRole = await repo.getItem({Color: event.color}, 'rolesWithStatus');
-        event.WorkerName = await repo.assignWorker({Role: eventRole.Role}, 'event');
-        const eventAlreadyExists = await repo.getItem({WorkerName: event.WorkerName,
+        event.workerName = await repo.assignWorker({Role: eventRole.Role}, 'event');
+        const eventAlreadyExists = await repo.getItem({workerName: event.workerName,
             start: event.start, end: event.end}, 'event');
         if (!eventAlreadyExists) {
             result = await repo.insertItemByCondition(req, res, event, event, eventExists, 'event', false);
         }
-        if (eventWorker.WorkerName === 'Admin') {
+        if (eventWorker.workerName === 'Admin') {
             condition = {};
         }
         responseData.Events = await repo.getAllCollectionItems('event', condition);
@@ -625,29 +673,22 @@ module.exports = {
             const eventAfterUpdate = req.body.updatedEvent.eventAfterUpdate;
             if (eventBeforeUpdate.color !== eventAfterUpdate.color) {
                 const eventRole = await repo.getItem({Color: eventAfterUpdate.color}, 'rolesWithStatus');
-                eventAfterUpdate.WorkerName = await repo.assignWorker({Role: eventRole.Role}, 'event');
+                eventAfterUpdate.workerName = await repo.assignWorker({Role: eventRole.Role}, 'event');
             }
-
-            /*if (eventBeforeUpdate.WorkerName === eventAfterUpdate.WorkerName ||
-                eventBeforeUpdate.start !== eventAfterUpdate.start ||
-                eventBeforeUpdate.end !== eventAfterUpdate.end) {
-                status.message = eventExists.eventExists;
-            } else {*/
             const foundItems = await repo.getAllCollectionItems('event',
                 {
-                    WorkerName: eventAfterUpdate.WorkerName,
+                    workerName: eventAfterUpdate.workerName,
                     start: eventAfterUpdate.start,
                     end: eventAfterUpdate.end
                 });
-            if (foundItems.length === 0 ||( foundItems.length === 1 && foundItems[0].WorkerName === eventBeforeUpdate.WorkerName && foundItems[0].start === eventBeforeUpdate.start && foundItems[0].end === eventBeforeUpdate.end)) {
-                await repo.updateItem(req, res, eventBeforeUpdate, {$set: eventAfterUpdate},
-                    'event');
+            if (foundItems.length === 0 || foundItems.length === 1 &&
+                foundItems[0].workerName === eventBeforeUpdate.workerName &&
+                foundItems[0].start === eventBeforeUpdate.start &&
+                foundItems[0].end === eventBeforeUpdate.end) {
+                await repo.updateItem(req, res, eventBeforeUpdate, {$set: eventAfterUpdate}, 'event');
                 return;
             }
             status.message = eventExists;
-
-
-            //}
         } catch (err) {
             logger.error(util.format('happened error[%s]', err));
             status = module.exports.getErrorStatus(err);

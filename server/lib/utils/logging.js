@@ -6,7 +6,6 @@ const expressWinston = require('express-winston');
 const {obj2Props} = require("./index");
 const isHumanReadable = config.logging.humanReadable;
 
-
 // App main logger.
 const jsonFormater = printf(({ level, message, timestamp, metadata }) => {
     const meta = metadata.meta || metadata;

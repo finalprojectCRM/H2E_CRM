@@ -96,7 +96,7 @@ router.route('/getRolesColors')
 router.route('/getFiles')
     .get(serverApiRequestHandler.getFiles);
 
-router.route('/getCustomers/:WorkerName')
+router.route('/getCustomers/:workerName')
     .get(serverApiRequestHandler.getCustomers);
 
 router.route('/getRoles')
@@ -105,11 +105,15 @@ router.route('/getRoles')
 router.route('/getAssignedRoles')
     .get(serverApiRequestHandler.getAssignedRoles);
 
-router.route('/getWorkerEvents/:WorkerName')
+router.route('/getWorkerEvents/:workerName')
     .get(serverApiRequestHandler.getWorkerEvents);
 
-router.route('/getCustomerEvents/:WorkerName/:eventId')
+router.route('/getCustomerEvents/:workerName/:eventId')
     .get(serverApiRequestHandler.getCustomerEvents);
+
+router.route('/getEvent')
+    .post(serverApiRequestHandler.getEvent);
+
 
 router.route('/deleteAllCustomers')
     .get(serverApiRequestHandler.deleteAllCustomers);
@@ -119,6 +123,12 @@ router.route('/deleteAllWorkers')
 
 router.route('/getCustomer/:PhoneNumber')
     .get(serverApiRequestHandler.getCustomer);
+
+router.route('/getAllEventsWithCustomer')
+    .get(serverApiRequestHandler.getAllEventsWithCustomer);
+
+router.route('/getAllEventsWithoutCustomer')
+    .get(serverApiRequestHandler.getAllEventsWithoutCustomer);
 
 router.route('/uploadFile')
     .post(serverApiRequestHandler.uploadFile);
@@ -197,6 +207,9 @@ router.route('/deleteEvent')
 
 router.route('/updateEvent')
     .post(serverApiRequestHandler.updateEvent);
+
+router.route('/deleteWorkerFinally')
+    .post(serverApiRequestHandler.deleteWorkerFinally);
 
 router.route('*')
     .get(utils.handleInvalidRequest);

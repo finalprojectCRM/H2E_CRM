@@ -77,9 +77,14 @@
                 $scope.retreivedCalendarEvents = [];
                 $scope.assignedRoles = [];
 
-                function refreshCalendarEvents() {
+                function refreshCalendarEvents(workerName) {
                     $log.log('refreshCalendarEvents');
-                    $http.get(SERVER_URI + '/getWorkerEvents/' + loggedInWorker.workerName).then(
+                    let calendarWorker = loggedInWorker.workerName;
+                    if(workerName) {
+                        calendarWorker = workerName;
+                    }
+                    $log.log('workerName : '+ calendarWorker);
+                    $http.get(SERVER_URI + '/getWorkerEvents/' + calendarWorker).then(
                         function (response) {//success callback
                             setTimeout(function () {
                                 uiCalendarConfig.calendars['myCalendar'].fullCalendar('render');
@@ -478,7 +483,7 @@
                     a modal that pops up when press on delete file,
                     delete file by running over file list
                 */
-                $scope.getSpecificEvents = function () {
+                $scope.getSpecificEvents = function (flag) {
                     $log.log('$scope.getSpecificEvents');
                     $scope.loginPage = false;
                     $scope.showCustomers = false;
@@ -488,8 +493,10 @@
                     $scope.click = true;
                     $scope.showCalendar = false;
                     $scope.account = true;
+                    $scope.workersNavColor = '#004d99';
+                    $scope.spesificCustomersNavColor = '#ff0066';
 
-                    refreshCalendarEvents();
+                    refreshCalendarEvents(flag);
                     $scope.workerEvents = { ...$scope.retreivedCalendarEvents};
                     /*$scope.retreivedCalendarEvents.forEach(function(event, index) {
                         let title = event.title;
@@ -1805,8 +1812,9 @@
                     $scope.showWorkersEvents = false;
                     $scope.account = false;
                     $scope.calendarNavColor = '#ff0066';
-                    $scope.calendarNavColor = '#004d99';
+                    $scope.workersNavColor = '#004d99';
                     $scope.customersNavColor = '#004d99';
+                    $scope.spesificCustomersNavColor = '#004d99';
                     // $scope.getRolesList();
                     getAssignedRoles();
 
@@ -1829,7 +1837,7 @@
                         return;
 
                     }
-                    refreshCalendarEvents();
+                    refreshCalendarEvents(flag);
                 };
 
                 /*

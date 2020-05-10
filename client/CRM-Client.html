@@ -324,6 +324,8 @@
                             <th ng-show="isAdmin==true"></th>
                             <th ng-show="isAdmin==true"></th>
                             <th ng-show="isAdmin==true"></th>
+                            <th ng-show="isAdmin==true"></th>
+                            <th ng-show="isAdmin==true"></th>
                             <th ng-show="isAdmin==false"></th>
                         </tr>
                         <thead>
@@ -334,15 +336,27 @@
                             <td ng-show="workerIsEdit==false">{{workerInfo.Name}}</td>
                             <td ng-show="workerIsEdit==false && isAdmin==true">{{workerInfo.workerName}}</td>
                             <td ng-show="workerIsEdit==false">{{workerInfo.eMail}}</td>
-                            <td ng-show="workerIsEdit==false && isAdmin==true"><i class="fa fa-envelope"
-                                                                                style="font-size:24px;color:#00b3b3"
-                                                                                aria-hidden="true"
-                                                                                ng-click="sendMailModal(workerInfo.eMail)"></i>
-                            </td>
+
                             <td ng-show="workerIsEdit==false && isAdmin==true"><i class="fa fa-users"
-                                                                                style="font-size:24px;color:#3ada82"
+                                                                                style="font-size:24px;color:#7fdcaa"
                                                                                 aria-hidden="true"
                                                                                 ng-click="getworkerNameCustomers(workerInfo.workerName)"></i>
+                            </td>
+                            <td ng-show="workerIsEdit==false && isAdmin==true"><i class="fa fa-calendar"
+                                                                                style="font-size:24px;color:#cc99ff"
+                                                                                aria-hidden="true"
+                                                                                ng-click="calendarFunction(workerInfo.workerName)"></i>
+                            </td>
+                            <td ng-show="workerIsEdit==false && isAdmin==true"><i class="glyphicon glyphicon-list-alt"
+                                                                                style="font-size:24px;color:#e9c9ea"
+                                                                                aria-hidden="true"
+                                                                                ng-click="getSpecificEvents(workerInfo.workerName)"></i>
+                            </td>
+
+                            <td ng-show="workerIsEdit==false && isAdmin==true"><i class="fa fa-envelope"
+                                                                                  style="font-size:24px;color:#00b3b3"
+                                                                                  aria-hidden="true"
+                                                                                  ng-click="(workerInfo.eMail)"></i>
                             </td>
 
 

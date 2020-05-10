@@ -50,7 +50,7 @@
                 let evenBeforeUpdate;
                 let workerToDelete;
                 let customersPhone = [];
-                const SERVER_URI = 'http://localhost:5000';
+                const SERVER_URI = 'http://3.248.187.65:5000/';
 
                 $scope.account = false;
                 $scope.click = false;

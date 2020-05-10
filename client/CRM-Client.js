@@ -86,6 +86,7 @@
 
                             }, 5); // Set enough time to wait until animation finishes;*/
                             $scope.retreivedCalendarEvents = response.data.workerEvents;
+                            $scope.workerEvents = response.data.workerEvents;
                             // $scope.workerEvents = response.data.workerEvents;
 
                             $log.log('response.data.workerEvents=' + JSON.stringify(response.data.workerEvents));
@@ -105,7 +106,26 @@
                 }
 
                 $scope.getAllEvents = function () {
-                    refreshCalendarEvents();
+                    $log.log('/getAllEvents');
+                    $http.get(SERVER_URI + '/getWorkerEvents/' + loggedInWorker.workerName).then(
+                        function (response) {//success callback
+                            $log.log('in /getAllEvents');
+                            /*setTimeout(function () {
+                                uiCalendarConfig.calendars['myCalendar'].fullCalendar('render');
+                            }, 5);*/
+                            $scope.workerEvents = response.data.workerEvents;
+                            $log.log('workerEvents=' + JSON.stringify($scope.workerEvents));
+                            uiCalendarConfig.calendars.myCalendar.fullCalendar('removeEvents');
+                            uiCalendarConfig.calendars.myCalendar.fullCalendar('addEventSource', $scope.workerEvents);
+                            uiCalendarConfig.calendars.myCalendar.fullCalendar('rerenderEvents');
+                        },
+                        function (response) {//failure callback
+                            //if failed show error modal
+                            $scope.message = response.data.error;
+                            $scope.messageType = 'ERROR';
+                            angular.element(document.querySelector('#msgModal')).modal('show');
+                        }
+                    );
                 };
 
                 $scope.getAllEventsWithCustomer = function () {
@@ -117,7 +137,7 @@
                                 uiCalendarConfig.calendars['myCalendar'].fullCalendar('render');
                             }, 5);*/
                             $scope.workerEvents = response.data.Events;
-                            $log.log('retreivedCalendarEvents=' + JSON.stringify($scope.workerEvents));
+                            $log.log('workerEvents=' + JSON.stringify($scope.workerEvents));
                             uiCalendarConfig.calendars.myCalendar.fullCalendar('removeEvents');
                             uiCalendarConfig.calendars.myCalendar.fullCalendar('addEventSource', $scope.workerEvents);
                             uiCalendarConfig.calendars.myCalendar.fullCalendar('rerenderEvents');
@@ -131,14 +151,14 @@
                     );
                 };
                 $scope.getAllEventsWithoutCustomer = function () {
-                    $log.log('/getAllEventsWithCustomer');
+                    $log.log('/getAllEventsWithoutCustomer');
                     $http.get(SERVER_URI + '/getAllEventsWithoutCustomer').then(
                         function (response) {//success callback
-                            $log.log('in /getAllEventsWithCustomer');
-                            $scope.retreivedCalendarEvents = response.data.Events;
-                            $log.log('refreshCalendarEvent=' + JSON.stringify($scope.retreivedCalendarEvents));
+                            $log.log('in /getAllEventsWithoutCustomer');
+                            $scope.workerEvents = response.data.Events;
+                            $log.log('workerEvents=' + JSON.stringify($scope.workerEvents));
                             uiCalendarConfig.calendars.myCalendar.fullCalendar('removeEvents');
-                            uiCalendarConfig.calendars.myCalendar.fullCalendar('addEventSource', $scope.retreivedCalendarEvents);
+                            uiCalendarConfig.calendars.myCalendar.fullCalendar('addEventSource', $scope.workerEvents);
                             uiCalendarConfig.calendars.myCalendar.fullCalendar('rerenderEvents');
                         },
                         function (response) {//failure callback

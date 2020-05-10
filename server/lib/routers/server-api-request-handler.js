@@ -377,11 +377,13 @@ module.exports = {
         logger.info('addCustomer');
         const customer = req.body.customer;
         customer.workerName = await repo.assignWorker({Role: customer.Category.Role}, 'customer');
+	    const worker = await repo.getItem({workerName: customer.workerName}, 'worker',false);
+
         await repo.insertItemByCondition(req, res, {'PhoneNumber': customer.PhoneNumber}, customer,
             {'phoneExists': 'ERROR : this phone number already exists, change it or search for this worker.'},
             'customer', true,
             {'message': util.format('This customer has been assigned to a worker %s with role %s',
-                customer.workerName, customer.Category.Role)});
+                worker.Name, customer.Category.Role)});
     },
     updateCustomer: async function (req, res) {
         logger.info('updateCustomer');
@@ -391,10 +393,13 @@ module.exports = {
             const customerAfterUpdate = req.body.updatedCustomer;
             const history = customerAfterUpdate.History;
             let workerName = customerBeforeUpdate.workerName;
+			let worker = await repo.getItem({workerName: workerName}, 'worker',false);
+
             delete customerAfterUpdate.History;
             if (customerBeforeUpdate.Category.Role !== customerAfterUpdate.Category.Role) {
                 customerAfterUpdate.workerName = await repo.assignWorker({Role: customerAfterUpdate.Category.Role}, 'customer');
-                workerName = customerAfterUpdate.workerName;
+                worker = await repo.getItem({workerName: customerAfterUpdate.workerName}, 'worker',false);
+
             }
             if (customerBeforeUpdate.PhoneNumber !== customerAfterUpdate.PhoneNumber || customerBeforeUpdate.Name !== customerAfterUpdate.Name) {
                 const eventIdBeforeUpdate = customerBeforeUpdate.Name + ' ' + customerBeforeUpdate.PhoneNumber;
@@ -409,7 +414,7 @@ module.exports = {
                     $addToSet: {History: history},
                     $set: customerAfterUpdate
                 }, 'customer', {'message': util.format('This customer has been assigned to a worker %s with role %s',
-                        workerName, customerAfterUpdate.Category.Role)});
+                        worker.Name, customerAfterUpdate.Category.Role)});
                 return;
             }
             status.message = {'phoneExists': 'This phone number already exists, change it or search for this worker.'};
@@ -651,6 +656,9 @@ module.exports = {
         let condition = {workerName: eventWorker.workerName};
         const eventRole = await repo.getItem({Color: event.color}, 'rolesWithStatus');
         event.workerName = await repo.assignWorker({Role: eventRole.Role}, 'event');
+	    const worker = await repo.getItem({workerName: event.workerName}, 'worker',false);
+
+		
         const eventAlreadyExists = await repo.getItem({workerName: event.workerName,
             start: event.start, end: event.end}, 'event');
         if (!eventAlreadyExists) {
@@ -661,7 +669,7 @@ module.exports = {
         }
         responseData.Events = await repo.getAllCollectionItems('event', condition);
         responseData.assignedWorker = {'message': util.format('This event has been assigned to a worker %s with role %s',
-            event.workerName, eventRole.Role)};
+            worker.Name, eventRole.Role)};
         if (!result.success) {
             responseData.eventExists = eventExists.eventExists;
         }
@@ -682,9 +690,13 @@ module.exports = {
             const eventExists = {'eventExists': 'The task already exists on this date, please select another time for this task'};
             const eventBeforeUpdate = req.body.updatedEvent.eventBeforeUpdate;
             const eventAfterUpdate = req.body.updatedEvent.eventAfterUpdate;
-            const eventRole = await repo.getItem({Color: eventAfterUpdate.color}, 'rolesWithStatus');
+            const eventRole = await repo.getItem({Color: eventAfterUpdate.color}, 'rolesWithStatus',false);
+			let worker = await repo.getItem({workerName: eventAfterUpdate.workerName}, 'worker',false);
+
             if (eventBeforeUpdate.color !== eventAfterUpdate.color) {
                 eventAfterUpdate.workerName = await repo.assignWorker({Role: eventRole.Role}, 'event');
+			    worker = await repo.getItem({workerName: eventAfterUpdate.workerName}, 'worker',false);
+
             }
             const foundItems = await repo.getAllCollectionItems('event',
                 {
@@ -698,7 +710,7 @@ module.exports = {
                 foundItems[0].end === eventBeforeUpdate.end) {
                 await repo.updateItem(req, res, eventBeforeUpdate, {$set: eventAfterUpdate}, 'event',
                     {'message': util.format('This event has been assigned to a worker %s with role %s',
-                        eventAfterUpdate.workerName, eventRole.Role)});
+                        worker.Name, eventRole.Role)});
                 return;
             }
             status.message = eventExists;

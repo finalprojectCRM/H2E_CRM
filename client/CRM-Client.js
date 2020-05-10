@@ -39,6 +39,7 @@
                 let invalidTempPassword = false;
                 let deleteWorkerEventsAndCustomers = false;
                 let deleteWorkerWithEventsAndCustomers = false;
+                let newSignUp = false;
                 let selectedItemPart1;
                 let selectedItemPart2;
                 let deletedStatus;
@@ -267,6 +268,8 @@
                             historyArray = [];
                             customersPhone = [];
                             $scope.getCustomersList();
+						    selectedItemPart2 = undefined;
+
                         }, function (response) { //failure callback
                         }
                     );
@@ -410,12 +413,19 @@
                                 $scope.message = response.data.eventExists;
                                 $scope.messageType = 'ERROR';
                                 angular.element(document.querySelector('#msgModal')).modal('show');
+                                missingDetailsEditEvent = true;
                                 return;
+                            }
+							$log.log('selectedItemPart2 : '+selectedItemPart2);
+							if (selectedItemPart2 !== undefined) {
+                                customersPhone.push(selectedItemPart2);
+                                updateCustomerHistory(historyArray ,customersPhone);
                             }
                             $scope.message = response.data.message;
                             $scope.messageType = 'INFO';
                             angular.element(document.querySelector('#msgModal')).modal('show');
                             refreshCalendarEvents();
+							
                         },
                         function (response) { //failure callback
                             editEventDetails = {};
@@ -717,7 +727,6 @@
                             missingDetailsEditEvent = true;
 
                             selectedItemPart1 = undefined;
-                            selectedItemPart2 = undefined;
                             return;
                         } else {
                             editEventDetails.customerPhone = selectedItemPart2;
@@ -725,7 +734,6 @@
                             description = 'Task for customer ' + selectedItemPart1 + ' ' + selectedItemPart2 + ' : ' + $scope.eventTitle;
                             customer = selectedItemPart1 + ' ' + selectedItemPart2;
                             selectedItemPart1 = undefined;
-                            selectedItemPart2 = undefined;
                         }
                     } else { //if the task is not for a spesific customer -> id of customer = '-1'
                         description = $scope.eventTitle;
@@ -898,7 +906,7 @@
                 };
 
 
-                function addEventToDataBase(event, worker) {
+                function addEventToDataBase(event, worker,outsideModal) {
                     const newEvent = {event: event, worker: worker};
                     $http.post(SERVER_URI + '/addEvent', {
                         newEvent: newEvent
@@ -906,7 +914,19 @@
                         function (response) {
                             $log.log('response.data.Events: '+ JSON.stringify(response.data.Events));
                             $scope.retreivedCalendarEvents = response.data.Events;
-                            $scope.role = '';
+                            
+                            if (response.data.eventExists) {
+                                $scope.message = response.data.eventExists;
+                                $scope.messageType = 'ERROR';
+                                angular.element(document.querySelector('#msgModal')).modal('show');
+								if (outsideModal) {
+									missingDetailsOutsideAddEvent = true;
+								} else {	
+									missingDetailInsideAddEvent = true;
+								}
+                                return;
+                            }
+							$scope.role = '';
                             $scope.customerTask = false;
                             $scope.customer = undefined;
                             $scope.title = '';
@@ -915,23 +935,17 @@
                             $scope.date = '';
                             category = undefined;
                             selectedItemPart1 = undefined;
-                            selectedItemPart2 = undefined;
                             $scope.selectedCustomer = '';
-                            if (response.data.eventExists) {
-                                $scope.message = response.data.eventExists;
-                                $scope.messageType = 'ERROR';
-                                angular.element(document.querySelector('#msgModal')).modal('show');
-                                return;
+							$log.log('selectedItemPart2: '+ selectedItemPart2);
+                            if (selectedItemPart2 !== undefined) {
+                                customersPhone.push(selectedItemPart2);
+                                updateCustomerHistory(historyArray ,customersPhone);
                             }
                             $scope.message = response.data.assignedWorker.message;
                             $scope.messageType = 'INFO';
                             angular.element(document.querySelector('#msgModal')).modal('show');
 
-                            $log.log('selectedItemPart2: '+ selectedItemPart2);
-                            if (selectedItemPart2 !== undefined) {
-                                customersPhone.push(selectedItemPart2);
-                                updateCustomerHistory(historyArray ,customersPhone);
-                            }
+                            
                             refreshCalendarEvents();
                         },
                         function (response) { //failure callback
@@ -940,7 +954,7 @@
                 }
                 function addHistoryToCustomerEvent(description,startDate,endDate,color,customer){
                     let history='';
-                    history = 'New Task\n\n'+'Start Date : '+ startDate+'\n' +'End Date : '+endDate+'\n';
+                    history = 'New Task\n\n'+'Start Date : '+ startDate+'\n' +'End Date : '+endDate+'\n\nHandled by worker : '+ loggedInWorker.Name +' in role : '+ loggedInWorker.Role+' \n';
                     history = history+'Category : '+$scope.assignedRoles[getIndexOfSelectedItem(color,'color_of_role')].Role+'\n';
                     history = history+description+'\n';
                     $log.log(history);
@@ -1005,7 +1019,7 @@
                     }
                     //$log.log('end date : ' + formatDate(date[1]));
                     //check if the role category was selected in the task modal - this is a must field
-                    if ($scope.role === undefined || $scope.role === '' || $scope.role.Role === undefined) {
+                    if ($scope.role === undefined || $scope.role === '' || $scope.role.Role === undefined || category === undefined) {
                         $scope.message = 'Category is a must field, please select one';
                         $scope.messageType = 'ERROR';
                         angular.element(document.querySelector('#msgModal')).modal('show');
@@ -1078,7 +1092,7 @@
                     };
                     $scope.selections = [];
                     //uiCalendarConfig.calendars['myCalendar'].fullCalendar('renderEvent', eventToAdd, true);
-                    addEventToDataBase(eventToAdd, loggedInWorker);
+                    addEventToDataBase(eventToAdd, loggedInWorker,outsideModal);
                     //uiCalendarConfig.calendars['myCalendar'].fullCalendar('refetchEvents');
                     //  console.log($scope.pendingRequests);
                 };
@@ -1102,21 +1116,25 @@
                 };
 
                 function updateCustomerHistoryEmail(){
-                    const history = 'Date : '+moment().format('DD/MM/YYYY HH:mm')+'\n\nMail has sent\n';
+                    const history = 'Date : '+moment().format('DD/MM/YYYY HH:mm')+'\n\nHandled by worker : '+ loggedInWorker.Name +' in role : '+ loggedInWorker.Role+'\n\nMail has sent\n';
                     historyArray.push(history);
                     updateCustomerHistory(historyArray, customersPhone);
                 }
 
                 //modal for sending mail to a customer
-                $scope.sendMailModal = function (customerEmail) {
-                    $log.log('customerEmail :' + customerEmail.eMail);
-                    customersPhone.push(customerEmail.PhoneNumber);
-                    //check if the customer that was pressed on has an email address
-                    if (customerEmail.eMail === undefined || customerEmail.eMail === '') {
-                        toaster.pop('error', 'No email for this customer');
-                        return;
-                    }
+                $scope.sendMailModal = function (customerEmail,flag) {
+					
+					if (flag === 'customer') {
+						$log.log('customerEmail :' + customerEmail.eMail);
+                        customersPhone.push(customerEmail.PhoneNumber);
+						//check if the customer that was pressed on has an email address
+						if (customerEmail.eMail === undefined || customerEmail.eMail === '') {
+							toaster.pop('error', 'No email for this customer');
+							return;
+						}
 
+					}
+            
                     $scope.getFilesList();
                     //save the chosen customers email
                     $scope.customerEmail = customerEmail.eMail;
@@ -1494,6 +1512,7 @@
                                     $scope.message = 'Thanks for signing up, you must wait for the administrator to assign you a role so you can sign in.';
                                     $scope.messageType = 'MESSAGE';
                                     angular.element(document.querySelector('#msgModal')).modal('show');
+									newSignUp = true;
                                     setTimeout(function () {
                                         $window.location.reload();
                                     }, 7000); // Set enough time to wait until animation finishes;*/
@@ -2417,7 +2436,7 @@
                 */
                 $scope.addNewCustomer = function () {
                     //save the current date
-                    const customerHistory = 'Date : ' + moment().format('MM/DD/YYYY HH:mm') + '\n\nCustomer Addition\n ';
+                    const customerHistory = 'Date : ' + moment().format('MM/DD/YYYY HH:mm') +'\n\nHandled by worker : '+ loggedInWorker.Name +' in role : '+ loggedInWorker.Role+' \n\nCustomer Addition\n ';
 
                     //add to history the action
                     historyArray.push(customerHistory);
@@ -2523,7 +2542,7 @@
                     }
 
                     if (change === 0) {
-                        customerHistory = 'Date: ' + moment().format('MM/DD/YYYY HH:mm') + '\n\nCustomer Edit\n\n' + updatedCustomerHistory + '\n';
+                        customerHistory = 'Date: ' + moment().format('MM/DD/YYYY HH:mm') +'\n\nHandled by worker : '+ loggedInWorker.Name +' in role : '+ loggedInWorker.Role+' \n\nCustomer Edit\n\n' + updatedCustomerHistory + '\n';
 
                     }
                     return customerHistory;
@@ -2866,13 +2885,17 @@
                         angular.element(document.querySelector('#addFileModal')).modal('show');
                         problemWithFileSelection = false;
                     }
-                    if (missingFileToDelete) {
+                    if (missingFileToDelete){ 	
                         angular.element(document.querySelector('#deleteFileModal')).modal('show');
                         missingFileToDelete = false;
                     }
                     if (invalidTempPassword) {
                         angular.element(document.querySelector('#validationCurrentTempPasswordModal')).modal('show');
                         invalidTempPassword = false;
+                    }
+					if (newSignUp) {
+						$window.location.reload();
+                        newSignUp = false;
                     }
                     if (deleteWorkerWithEventsAndCustomers) {
                         deleteWorkerWithEventsAndCustomersFromDb();

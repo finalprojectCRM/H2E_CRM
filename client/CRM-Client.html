@@ -359,7 +359,7 @@
                             <td ng-show="workerIsEdit==false && isAdmin==true"><i class="fa fa-envelope"
                                                                                   style="font-size:24px;color:#00b3b3"
                                                                                   aria-hidden="true"
-                                                                                  ng-click="(workerInfo.eMail)"></i>
+                                                                                  ng-click="sendMailModal(workerInfo)"></i>
                             </td>
 
 
@@ -507,7 +507,7 @@
                             <td ng-show="customerIsEdit==false"><i class="fa fa-envelope"
                                                                   style="font-size:24px;color:#00b3b3"
                                                                   aria-hidden="true"
-                                                                  ng-click="sendMailModal(customerInfo)"></i></td>
+                                                                  ng-click="sendMailModal(customerInfo,'customer')"></i></td>
 
                             <td ng-show="customerIsEdit==false"><i class="fa fa-edit"
                                                                   style="font-size:25px;color:#008fb3"

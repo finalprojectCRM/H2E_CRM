@@ -90,7 +90,7 @@ form {
 .navbar {
     background-color: #004d99;
     padding-right: 5%;
-    padding-top: 10%;
+    padding-top: 5%;
     overflow: auto;
     width: 50%;
 }
@@ -101,7 +101,7 @@ form {
     text-decoration: none;
     text-align: center;
     font-size: 17px;
-    padding: 12px;
+    padding: 5px;
     color: white;
     float: left;
     width: 100px;

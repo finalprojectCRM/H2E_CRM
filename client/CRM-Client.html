@@ -251,21 +251,24 @@
 
         <div ng-show="menu==true" id="div-vertical" class="navbar">
             <ul>
-                <li ng-click="getWorkersFunction('showWorkers');workersNavColor='#ff0066';customersNavColor='#004d99';spesificCustomersNavColor='#004d99';calendarNavColor='#004d99';settingsNavColor='#004d99'"
+                <li ng-click="getWorkersFunction('showWorkers');videosNavColor='#004d99';workersNavColor='#ff0066';customersNavColor='#004d99';spesificCustomersNavColor='#004d99';calendarNavColor='#004d99';settingsNavColor='#004d99'"
                     ng-style="{'background-color': workersNavColor}"><a><i class="fa fa-fw fa-user"></i></p>Workers</a>
                 </li>
-                <li ng-click="getCustomersFunction();customersNavColor='#ff0066';workersNavColor='#004d99';spesificCustomersNavColor='#004d99';calendarNavColor='#004d99';settingsNavColor='#004d99'"
+                <li ng-click="getCustomersFunction();videosNavColor='#004d99';customersNavColor='#ff0066';workersNavColor='#004d99';spesificCustomersNavColor='#004d99';calendarNavColor='#004d99';settingsNavColor='#004d99'"
                     ng-style="{'background-color': customersNavColor}"><a><i class="fa fa-fw fa-user"></i></p>
                     Customers</a></li>
-                <li ng-click="getSpecificEvents();spesificCustomersNavColor='#ff0066';customersNavColor='#004d99';workersNavColor='#004d99';calendarNavColor='#004d99';settingsNavColor='#004d99'"
+                <li ng-click="getSpecificEvents();videosNavColor='#004d99';spesificCustomersNavColor='#ff0066';customersNavColor='#004d99';workersNavColor='#004d99';calendarNavColor='#004d99';settingsNavColor='#004d99'"
                     ng-style="{'background-color': spesificCustomersNavColor}"><a><i class="glyphicon glyphicon-list-alt"></i></p>
                     Events</a></li>
-                <li ng-click="calendarFunction() ;calendarNavColor='#ff0066';customersNavColor='#004d99';spesificCustomersNavColor='#004d99';workersNavColor='#004d99';settingsNavColor='#004d99'"
+                <li ng-click="calendarFunction() ;videosNavColor='#004d99';calendarNavColor='#ff0066';customersNavColor='#004d99';spesificCustomersNavColor='#004d99';workersNavColor='#004d99';settingsNavColor='#004d99'"
                     ng-style="{'background-color': calendarNavColor}" id="display_calendar"><a><i
                         class="fa fa-calendar"></i></p>Calendar</a></li>
-                <li ng-click="settingsFunction();settingsNavColor='#ff0066';customersNavColor='#004d99';spesificCustomersNavColor='#004d99';calendarNavColor='#004d99';workersNavColor='#004d99'"
+                <li ng-click="settingsFunction();videosNavColor='#004d99';settingsNavColor='#ff0066';customersNavColor='#004d99';spesificCustomersNavColor='#004d99';calendarNavColor='#004d99';workersNavColor='#004d99'"
                     ng-style="{'background-color': settingsNavColor}" ng-show="adminPage==true"><a><i
                         class="fa fa-gear"></i></p>Settings </a></li>
+                <li ng-click="videosFunction();videosNavColor='#ff0066';settingsNavColor='#004d99';customersNavColor='#004d99';spesificCustomersNavColor='#004d99';calendarNavColor='#004d99';workersNavColor='#004d99'"
+                    ng-style="{'background-color': videosNavColor}" ng-show="adminPage==true"><a><i
+                        class="fa fa-play-circle-o"></i></p>Videos</a></li>
             </ul>
         </div>
 

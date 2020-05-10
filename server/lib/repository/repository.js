@@ -7,19 +7,19 @@ const _ = require('lodash');
 const mediator = new EventEmitter();
 const logging = require('../utils/logging');
 const logger = logging.mainLogger;
-let status = {};
+let dbConnStatus = {};
 
 module.exports = {
     setDBConnectionStatus: async function (connStatus, isLogMessage = true) {
-        status = connStatus;
+        dbConnStatus = connStatus;
         if (isLogMessage) {
-            logger.info(status.message);
+            logger.info(dbConnStatus.message);
         }
     },
     getDBConnectionStatus: async function () {
-        logger.info(util.format('DB Connection Status Code: [%s]', status.code));
-        logger.info(util.format('DB Connection Status Message: [%s]', status.message));
-        return status;
+        logger.info(util.format('DB Connection Status Code: [%s]', dbConnStatus.code));
+        logger.info(util.format('DB Connection Status Message: [%s]', dbConnStatus.message));
+        return dbConnStatus;
     },
     init: async function () {
         let connStatus = {};
@@ -113,12 +113,12 @@ module.exports = {
             logger.info(util.format('Response Data: %s', response));
             res.writeHead(status.code, {'Content-Type': 'application/json'});
             res.end(response);
-        } {
+        } else {
             return status.message;
         }
     },
-    handleWorker: async function (req, res, workerName, warningMessage, isDelete = false ) {
-        logger.info('deleteWorker');
+    handleWorker: async function (req, res, workerName, warningMessage, isDelete = false ,workerBeforeUpdate = undefined , workerAfterUpdate = undefined) {
+        logger.info('handleWorker');
         //the customer to delete with its details
         let status = {code: 200, message: 'OK'};
         try {
@@ -130,8 +130,10 @@ module.exports = {
                     const updatedWorkers = await module.exports.deleteItemAndReturnUpdatedList(req, res, {'workerName': workerName}, 'worker',
                         {'workers': {}}, 'workers', undefined, false, false);
                     logger.info(util.format('updatedWorkers=%s', JSON.stringify(updatedWorkers)));
+                } else {
+                    await module.exports.updateItem(req, res, workerBeforeUpdate, {$set: workerAfterUpdate}, 'worker', undefined,
+                        {'showWorkers': true, 'workers': {}}, 'workers', false);
                 }
-                
                 const eventsItems = await module.exports.getItems(req, res, 'event', 'events',
                     {'workerName': worker.workerName}, '', {'events': {}}, false);
                 for (let i = 0; i < eventsItems.events.length; i++) {
@@ -142,24 +144,31 @@ module.exports = {
                 }
                 const customersItems = await module.exports.getItems(req, res, 'customer', 'customers',
                     {'workerName': worker.workerName}, '', {'customers': {}}, false);
-                for (let i = 0; i < customersItems.events.length; i++) {
-                    const customerBeforeUpdate = _.clone(customersItems.events[i], true);
-                    const customerAfterUpdate = _.clone(customersItems.events[i], true);
+                for (let i = 0; i < customersItems.customers.length; i++) {
+                    const customerBeforeUpdate = _.clone(customersItems.customers[i], true);
+                    const customerAfterUpdate = _.clone(customersItems.customers[i], true);
                     customerAfterUpdate.workerName = await module.exports.assignWorker({Role: worker.Role}, 'customer');
                     await module.exports.updateItem(req, res, customerBeforeUpdate, {$set: customerAfterUpdate}, 'customer', undefined, undefined, undefined, false);
                 }
                 await module.exports.getItems(req, res, 'worker', 'workers', {}, '', {'workers': {}});
-            } else {
-                status.message = warningMessage;
+                return;
             }
+            status.message = warningMessage;
         } catch (err) {
             logger.error(util.format('happened error[%s]', err));
-            status = module.exports.getErrorStatus(err);
+            status = utils.getErrorStatus(err);
         }
         const response = status.code === 200 ? JSON.stringify(status.message) : JSON.stringify(status);
         logger.info(util.format('Response Data: %s', response));
         res.writeHead(status.code, {'Content-Type': 'application/json'});
         res.end(response);
+    },
+
+    deleteWorkerEventsAndCustomers: async function (req, res, workerName) {
+        logger.info('deleteWorkerEventsAndCustomers');
+        logger.info(util.format('workerName: %s', workerName));
+        await module.exports.deleteAllItems(req, res, 'customer', {}, {'workerName': workerName}, false);
+        await module.exports.deleteAllItems(req, res, 'event', {}, {'workerName': workerName}, false);
     },
 
     getCustomerEvents: async function (req, res, collectionName) {
@@ -213,7 +222,6 @@ module.exports = {
                 cursor = await storage.deleteItem(item, collectionName);
                 logger.info(util.format('deleted %s %s', cursor.deletedCount, collectionName));
             }
-
             const itemArray = await module.exports.getAllCollectionItems(collectionName, {});
             status.code = 200;
             if (desc) {
@@ -226,7 +234,7 @@ module.exports = {
         }
         if (isResponse) {
             const response = status.code === 200 ? JSON.stringify(status.message) : JSON.stringify(status);
-            logger.info(util.format("Response Data: %s", response));
+            logger.info(util.format('Response Data: %s', response));
             res.writeHead(status.code, {'Content-Type': 'application/json'});
             res.end(response);
         } else {
@@ -275,8 +283,7 @@ module.exports = {
                 status.message = {'success': item};
             }
             if (jsonObj) {
-                const itemArray = await module.exports.getAllCollectionItems(type, {});
-                jsonObj[desc] = itemArray;
+                jsonObj[desc] = await module.exports.getAllCollectionItems(type, {});
                 status.message = jsonObj;
             }
         } catch (err) {
@@ -317,7 +324,7 @@ module.exports = {
             return status.message;
         }
     },
-    deleteAllItems: async function (req, res, type, jsonObj, condition = {}) {
+    deleteAllItems: async function (req, res, type, jsonObj, condition = {}, isResponse = true) {
         let status = {code: 200, message: 'OK'};
         try {
             await storage.deleteAllItems(type, condition);
@@ -326,10 +333,14 @@ module.exports = {
             logger.error(util.format('happened error[%s]', err));
             status = utils.getErrorStatus(err);
         }
-        const response = status.code === 200 ? JSON.stringify(status.message) : JSON.stringify(status);
-        logger.info(util.format('Response Data: %s', response));
-        res.writeHead(status.code, {'Content-Type': 'application/json'});
-        res.end(response);
+        if(isResponse) {
+            const response = status.code === 200 ? JSON.stringify(status.message) : JSON.stringify(status);
+            logger.info(util.format('Response Data: %s', response));
+            res.writeHead(status.code, {'Content-Type': 'application/json'});
+            res.end(response);
+        } else {
+            return status.message;
+        }
     },
     assignWorker: async function (condition, assignedCollection) {
         const assignedItems = [];

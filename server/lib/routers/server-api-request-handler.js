@@ -2,7 +2,6 @@ const repo = require('../repository');
 const utils = require('../utils');
 const util = require('util');
 const config = require('config');
-const _ = require('lodash');
 const fs = require('fs');
 const logging = require('../utils/logging');
 const logger = logging.mainLogger;
@@ -58,7 +57,7 @@ module.exports = {
             status = utils.getErrorStatus(err);
         }
         const response = status.code === 200 ? JSON.stringify(status.message) : JSON.stringify(status);
-        logger.info(util.format("Response Data: %s", response));
+        logger.info(util.format('Response Data: %s', response));
         res.writeHead(status.code, {'Content-Type': 'application/json'});
         res.end(response);//Admin has been loaded first time to mongodb
     },
@@ -100,7 +99,7 @@ module.exports = {
             status = utils.getErrorStatus(err);
         }
         const response = status.code === 200 ? JSON.stringify(status.message) : JSON.stringify(status);
-        logger.info(util.format("Response Data: %s", response));
+        logger.info(util.format('Response Data: %s', response));
         res.writeHead(status.code, {'Content-Type': 'application/json'});
         res.end(response);//Admin has been loaded first time to mongodb
     },
@@ -135,7 +134,7 @@ module.exports = {
             status = utils.getErrorStatus(err);
         }
         const response = status.code === 200 ? JSON.stringify(status.message) : JSON.stringify(status);
-        logger.info(util.format("Response Data: %s", response));
+        logger.info(util.format('Response Data: %s', response));
         res.writeHead(status.code, {'Content-Type': 'application/json'});
         res.end(response);
     },
@@ -167,7 +166,7 @@ module.exports = {
             status = utils.getErrorStatus(err);
         }
         const response = status.code === 200 ? JSON.stringify(status.message) : JSON.stringify(status);
-        logger.info(util.format("Response Data: %s", response));
+        logger.info(util.format('Response Data: %s', response));
         res.writeHead(status.code, {'Content-Type': 'application/json'});
         res.end(response);
     },
@@ -193,7 +192,7 @@ module.exports = {
             status = utils.getErrorStatus('Error happened during the temporary password change');
         }
         const response = JSON.stringify(status.message);
-        logger.info(util.format("Response Data: %s", response));
+        logger.info(util.format('Response Data: %s', response));
         res.writeHead(status.code, {'Content-Type': 'application/json'});
         res.end(response);
     },
@@ -239,7 +238,7 @@ module.exports = {
             status = utils.getErrorStatus(err);
         }
         const response = status.code === 200 ? JSON.stringify(status.message) : JSON.stringify(status);
-        logger.info(util.format("Response Data: %s", response));
+        logger.info(util.format('Response Data: %s', response));
         res.writeHead(status.code, {'Content-Type': 'application/json'});
         res.end(response);//Admin has been loaded first time to mongodb
     },
@@ -370,17 +369,9 @@ module.exports = {
         logger.info('deleteWorker');
         const workerToDelete = req.body.workerName;
         logger.info(util.format('workerToDelete: %s', workerToDelete));
-
-        await repo.deleteItemAndReturnUpdatedList(req, res, {'workerName': workerToDelete}, 'customer',
-            {'customers': {}}, 'customers', undefined, false, false);
-
-        await repo.deleteItemAndReturnUpdatedList(req, res, {'workerName': workerToDelete}, 'event',
-            {'events': {}}, 'events', undefined, false ,false);
-
+        await repo.deleteWorkerEventsAndCustomers(req, res, req.body.workerName);
         await repo.deleteItemAndReturnUpdatedList(req, res, {'workerName': workerToDelete}, 'worker',
             {'workers': {}}, 'workers', undefined, false);
-        logger.info(util.format('workerToDelete: %s', workerToDelete));
-
     },
     getCustomer: async function (req, res) {
         logger.info('getCustomer');
@@ -593,7 +584,7 @@ module.exports = {
             if (adminWorker.workerName === 'Admin' && adminWorker.Name === '' &&
                 adminWorker.eMail === '' && adminWorker.Password === '') {
                 await repo.addOrUpdateItem(req, res, {'workerName': 'Admin'},
-                    'worker', worker, false, true, false, false, {"worker": worker});
+                    'worker', worker, false, true, false, false, {'worker': worker});
             } else {
                 res.writeHead(200, {'Content-Type': 'application/json'});
                 res.end(JSON.stringify({workerExists: 'This worker name already exists.'}));
@@ -602,7 +593,7 @@ module.exports = {
             //check whether such worker name exists in the system and if not, so add it
             worker.Role = 'new in the system';
             await repo.insertItemByCondition(req, res, {'workerName': worker.workerName}, worker,
-                {workerExists: 'This worker name already exists.'}, 'worker', true, {"worker": worker});
+                {workerExists: 'This worker name already exists.'}, 'worker', true, {'worker': worker});
         }
     },
     /*
@@ -610,17 +601,26 @@ module.exports = {
     */
     updateWorker: async function (req, res) {
         logger.info('updateWorker');
-
         const workerBeforeUpdate = req.body.workerBeforeUpdate;
         const workerAfterUpdate = req.body.updatedWorker;
 
-        await repo.updateItem(req, res, workerBeforeUpdate, {$set: workerAfterUpdate}, 'worker', undefined,
-            {'showWorkers': true, 'workers': {}}, 'workers');
+        logger.info(util.format('workerBeforeUpdate.Role: %s', workerBeforeUpdate.Role));
+        if (workerBeforeUpdate.Role === 'new in the system') {
+            await repo.updateItem(req, res, workerBeforeUpdate, {$set: workerAfterUpdate}, 'worker', undefined,
+                {'showWorkers': true, 'workers': {}}, 'workers', true);
+        } else {
+            const warningMessage = {
+                'noWorkersWithThisRole': 'There are no more workers with existing role, so all tasks and customers under his care will be deleted,\n' +
+                    'Are you sure that you want to change the role of this worker? '
+            };
+            await repo.handleWorker(req, res, workerBeforeUpdate.workerName, warningMessage, false ,workerBeforeUpdate,workerAfterUpdate);
+        }
     },
     /*
-    get list of all events for specific worker
-*/
+        get list of all events for specific worker
+    */
     getWorkerEvents: async function (req, res) {
+        logger.info('getWorkerEvents');
         const workerName = req.params.workerName;
         let condition = {workerName: workerName};
         logger.info(util.format('/getWorkerEvents/%s', workerName));
@@ -628,6 +628,16 @@ module.exports = {
             condition = {};
         }
         await repo.getItems(req, res, 'event', 'workerEvents', condition);
+    },
+
+    /*
+        delete worker's events and customers
+     */
+    deleteWorkerEventsAndCustomers: async function (req, res) {
+        logger.info('deleteWorkerEventsAndCustomers');
+        await repo.deleteWorkerEventsAndCustomers(req, res, req.body.workerBeforeUpdate.workerName);
+        await repo.updateItem(req, res, req.body.workerBeforeUpdate, {$set: req.body.workerAfterUpdate},
+            'worker', undefined, {'showWorkers': true, 'workers': {}}, 'workers', true);
     },
     /*
 	    add a new Event to calendar

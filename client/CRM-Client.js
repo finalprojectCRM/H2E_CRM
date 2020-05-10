@@ -37,6 +37,7 @@
                 let missingDetailsEditEvent = false;
                 let missingWorkerToDelete = false;
                 let invalidTempPassword = false;
+                let deleteWorkerEventsAndCustomers = false;
                 let deleteWorkerWithEventsAndCustomers = false;
                 let selectedItemPart1;
                 let selectedItemPart2;
@@ -2676,12 +2677,75 @@
                         function (response) { //success callback
 
                             $scope.workers = response.data.workers;
+
+                            if (response.data.noWorkersWithThisRole) {
+                                $scope.message = response.data.noWorkersWithThisRole;
+                                $scope.messageType = 'WARNING';
+                                angular.element(document.querySelector('#msgModal')).modal('show');
+                                deleteWorkerEventsAndCustomers = true;
+                                return;
+                            }
                             category = undefined;
                         },
                         function (response) { //failure callback
 
                         }
                     );
+                };
+
+                function deleteWorkerEventsAndCustomersFromDb() {
+                    $log.log('/deleteWorkerEventsAndCustomersFromDb');
+                    const workerAfterUpdate = {
+                        Role: category,
+                        Name: workerBeforeUpdate.Name,
+                        workerName: workerBeforeUpdate.workerName,
+                        eMail: workerBeforeUpdate.eMail
+                    };
+                    $log.log('category=' + category);
+                    $log.log('workerAfterUpdate=' + JSON.stringify(workerAfterUpdate));
+                    $http.post(SERVER_URI + '/deleteWorkerEventsAndCustomers', {
+                        workerBeforeUpdate: workerBeforeUpdate,
+                        workerAfterUpdate: workerAfterUpdate
+                    }).then(
+                        function (response) { //success callback
+                            //$scope.workers = response.data.workers;
+                            selectedItemPart2 = undefined;
+                            $log.log(JSON.stringify(response));
+                            if (response.data.workers) {
+                                $scope.workers = response.data.workers;
+                                $scope.showWorkers = true;
+
+                            }
+                            selectedItemPart2 = undefined;
+                        },
+                        function (response) { //failure callback
+
+                        }
+                    );
+                    $log.log(selectedItemPart2);
+                };
+
+                function deleteWorkerWithEventsAndCustomersFromDb() {
+                    $log.log('/deleteWorkerWithEventsAndCustomersFromDb');
+                    $http.post(SERVER_URI + '/deleteWorkerFinally', {
+                        workerName: selectedItemPart2
+                    }).then(
+                        function (response) { //success callback
+                            //$scope.workers = response.data.workers;
+                            selectedItemPart2 = undefined;
+                            $log.log(JSON.stringify(response));
+                            if (response.data.workers) {
+                                $scope.workers = response.data.workers;
+                                $scope.showWorkers = true;
+
+                            }
+                            selectedItemPart2 = undefined;
+                        },
+                        function (response) { //failure callback
+
+                        }
+                    );
+                    $log.log(selectedItemPart2);
                 };
 
                 /*
@@ -2768,33 +2832,14 @@
                         angular.element(document.querySelector('#validationCurrentTempPasswordModal')).modal('show');
                         invalidTempPassword = false;
                     }
-                    if(deleteWorkerWithEventsAndCustomers) {
+                    if (deleteWorkerWithEventsAndCustomers) {
                         deleteWorkerWithEventsAndCustomersFromDb();
                         deleteWorkerWithEventsAndCustomers = false;
                     }
-                };
-
-                function deleteWorkerWithEventsAndCustomersFromDb() {
-                    $log.log('/deleteWorkerFinally');
-                    $http.post(SERVER_URI + '/deleteWorkerFinally', {
-                        workerName: selectedItemPart2
-                    }).then(
-                        function (response) { //success callback
-                            //$scope.workers = response.data.workers;
-                            selectedItemPart2 = undefined;
-                            $log.log(JSON.stringify(response));
-                            if (response.data.workers) {
-                                $scope.workers = response.data.workers;
-                                $scope.showWorkers = true;
-
-                            }
-                            selectedItemPart2 = undefined;
-                        },
-                        function (response) { //failure callback
-
-                        }
-                    );
-                    $log.log(selectedItemPart2);
+                    if (deleteWorkerEventsAndCustomers) {
+                        deleteWorkerEventsAndCustomersFromDb();
+                        deleteWorkerEventsAndCustomers = false;
+                    }
                 };
 
                 /*

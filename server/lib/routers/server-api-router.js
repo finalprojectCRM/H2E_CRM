@@ -211,6 +211,9 @@ router.route('/updateEvent')
 router.route('/deleteWorkerFinally')
     .post(serverApiRequestHandler.deleteWorkerFinally);
 
+router.route('/deleteWorkerEventsAndCustomers')
+    .post(serverApiRequestHandler.deleteWorkerEventsAndCustomers);
+
 router.route('*')
     .get(utils.handleInvalidRequest);
 

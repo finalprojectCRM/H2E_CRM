@@ -9,7 +9,7 @@ const logging = require('../utils/logging');
 const logger = logging.mainLogger;
 
 module.exports = {
-    obj2Props: function (obj, sep = " ", escapeAll = false) {
+    obj2Props: function (obj, sep = ' ', escapeAll = false) {
         const escaped = {};
         const arr = [];
         Object.entries(obj).forEach(([key, value]) => {

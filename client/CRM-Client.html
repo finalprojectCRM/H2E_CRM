@@ -266,7 +266,7 @@
                 <li ng-click="settingsFunction();videosNavColor='#004d99';settingsNavColor='#ff0066';customersNavColor='#004d99';spesificCustomersNavColor='#004d99';calendarNavColor='#004d99';workersNavColor='#004d99'"
                     ng-style="{'background-color': settingsNavColor}" ng-show="adminPage==true"><a><i
                         class="fa fa-gear"></i></p>Settings </a></li>
-                <li ng-click="videosFunction();videosNavColor='#ff0066';settingsNavColor='#004d99';customersNavColor='#004d99';spesificCustomersNavColor='#004d99';calendarNavColor='#004d99';workersNavColor='#004d99'"
+                <li ng-click="playVideoFunction();videosNavColor='#ff0066';settingsNavColor='#004d99';customersNavColor='#004d99';spesificCustomersNavColor='#004d99';calendarNavColor='#004d99';workersNavColor='#004d99'"
                     ng-style="{'background-color': videosNavColor}" ng-show="adminPage==true"><a><i
                         class="fa fa-play-circle-o"></i></p>Videos</a></li>
             </ul>
@@ -916,6 +916,17 @@
 
         </div>
     </div>
+	
+	
+	<div ng-show='showVideos==true'>
+		<iframe id="firsLoginVideo" style="position:fixed;top:150px;right:300px;" width="200" height="200" ng-src="{{videoSourceFirsLogin}}" frameborder="0" allowfullscreen></iframe>
+		<iframe id="registrationVideo" style="position:fixed;top:150px;right:550px;" width="200" height="200" ng-src="{{videoSourceRegistration}}" frameborder="0" allowfullscreen></iframe>
+		<iframe id="workersVideo" style="position:fixed;top:150px;right:800px;" width="200" height="200" ng-src="{{videoSourceWorkers}}" frameborder="0" allowfullscreen></iframe>
+		<iframe id="customersVideo" style="position:fixed;top:150px;right:1050px;" width="200" height="200" ng-src="{{videoSourceCustomers}}" frameborder="0" allowfullscreen></iframe>
+		<iframe id="eventsVideo" style="position:fixed;top:400px;right:450px;" width="200" height="200" ng-src="{{videoSourceEvents}}" frameborder="0" allowfullscreen></iframe>
+		<iframe id="calendarVideo" style="position:fixed;top:400px;right:700px;" width="200" height="200" ng-src="{{videoSourceCalendar}}" frameborder="0" allowfullscreen></iframe>
+		<iframe id="settingsVideo" style="position:fixed;top:400px;right:950px;" width="200" height="200" ng-src="{{videoSourceSettings}}" frameborder="0" allowfullscreen></iframe>
+	</div>
 
     <div class="modal fade" id="msgModal" tabindex="-1" role="dialog" aria-labelledby="messageModalLabel"
          aria-hidden="true">

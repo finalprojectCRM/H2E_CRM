@@ -7,8 +7,8 @@
 (function () {
     'use strict';
     const app = angular.module('CRM', ['ngResource', 'ui.calendar', 'ui.bootstrap', 'ui.bootstrap.datetimepicker', 'ngSanitize', 'ui.select', 'ngAnimate', 'toaster', 'ngFileUpload'])
-        .controller('CRM_controller', ['$scope','$compile', '$http', '$log', '$timeout', 'uiCalendarConfig', 'toaster', 'Upload', '$filter', '$window',
-            function ($scope, $compile, $http, $log, $timeout, uiCalendarConfig, toaster, Upload, $filter, $window) {
+        .controller('CRM_controller', ['$scope','$sce','$compile', '$http', '$log', '$timeout', 'uiCalendarConfig', 'toaster', 'Upload', '$filter', '$window',
+            function ($scope,$sce, $compile, $http, $log, $timeout, uiCalendarConfig, toaster, Upload, $filter, $window) {
                 let customerBeforeUpdate;
                 let workerBeforeUpdate;
                 const MAX_LETTERS_IN_NAME = 25;
@@ -50,7 +50,7 @@
                 let evenBeforeUpdate;
                 let workerToDelete;
                 let customersPhone = [];
-                const SERVER_URI = 'http://3.248.187.65:5000/';
+                const SERVER_URI = 'http://3.248.187.65:5000';
 
                 $scope.account = false;
                 $scope.click = false;
@@ -496,6 +496,7 @@
                 $scope.getSpecificEvents = function (flag) {
                     $log.log('$scope.getSpecificEvents');
                     $scope.loginPage = false;
+					$scope.showVideos = false;
                     $scope.showCustomers = false;
                     $scope.showWorkers = false;
                     $scope.showSettings = false;
@@ -632,7 +633,7 @@
                             $scope.selectedCustomer = event.id;
                             $log.log('$scope.customer :' + $scope.customer);
                             //save the event title
-                            $scope.eventTitle = title[1];
+                            $scope.eventTitle = event.title;
                             //when customerSelected = true then there is a customer selected
                             $scope.customerSelected = true;
                             $scope.taskIsEdit = true;
@@ -731,7 +732,7 @@
                         } else {
                             editEventDetails.customerPhone = selectedItemPart2;
 
-                            description = 'Task for customer ' + selectedItemPart1 + ' ' + selectedItemPart2 + ' : ' + $scope.eventTitle;
+                            description = $scope.eventTitle;
                             customer = selectedItemPart1 + ' ' + selectedItemPart2;
                             selectedItemPart1 = undefined;
                         }
@@ -1066,7 +1067,7 @@
                             selectedItemPart2 = undefined;
                             return;
                         } else {
-                            description = 'Task for customer ' + selectedItemPart1 + ' ' + selectedItemPart2 + ' : ' + $scope.title;
+                            description = $scope.title;
                             customerId = selectedItemPart2;
                             customer = selectedItemPart1 + ' ' + selectedItemPart2;
                             customerHistory = addHistoryToCustomerEvent(description,startDate,endDate,$scope.role.Color,customer);
@@ -1431,6 +1432,22 @@
                         }
                     );
                 };
+				
+				$scope.playVideoFunction = function () {
+					$scope.showVideos = true;
+					$scope.showSettings = false;
+                    $scope.loginPage = false;
+                    $scope.showCustomers = false;
+                    $scope.showWorkers = false;
+                    $scope.showCalendar = false;
+					$scope.videoSourceFirsLogin = $sce.trustAsResourceUrl("//www.youtube.com/embed/ckFO5BNTGUE?rel=0");
+					$scope.videoSourceRegistration = $sce.trustAsResourceUrl("//www.youtube.com/embed/bFOGfL-HiUQ?rel=0");
+					$scope.videoSourceWorkers = $sce.trustAsResourceUrl("//www.youtube.com/embed/6DnCbGH7VPg?rel=0");
+					$scope.videoSourceCustomers = $sce.trustAsResourceUrl("//www.youtube.com/embed/2tyhh8fZE74?rel=0");
+					$scope.videoSourceEvents = $sce.trustAsResourceUrl("//www.youtube.com/embed/VnCHYB5odTs?rel=0");
+					$scope.videoSourceCalendar = $sce.trustAsResourceUrl("//www.youtube.com/embed/vOSHSZ5RQTk?rel=0");
+					$scope.videoSourceSettings = $sce.trustAsResourceUrl("//www.youtube.com/embed/VleTgaKDKp4?rel=0");
+				}
 
                 /*
                     when a worker signes up / registers to the system
@@ -1648,6 +1665,7 @@
                     $scope.showCalendar = false;
                     $scope.account = true;
                     $scope.showWorkersEvents = false;
+                    $scope.showVideos = false;
 
 
                     if (!flag) {
@@ -1829,6 +1847,7 @@
                     $scope.showWorkers = false;
                     $scope.showSettings = false;
                     $scope.showWorkersEvents = false;
+                    $scope.showVideos = false;
                     $scope.account = false;
                     $scope.calendarNavColor = '#ff0066';
                     $scope.workersNavColor = '#004d99';
@@ -1871,6 +1890,7 @@
                     $scope.showWorkers = false;
                     $scope.showCalendar = false;
                     $scope.showWorkersEvents = false;
+                    $scope.showVideos = false;
 
 
                     //clearing the search field
@@ -2311,6 +2331,7 @@
 
                     //hide the parts in html that are not relevant to workers tab
                     $scope.showSettings = false;
+                    $scope.showVideos = false;
                     $scope.showCustomers = false;
                     $scope.showCalendar = false;
                     $scope.showWorkersEvents = false;

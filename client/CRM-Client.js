@@ -387,6 +387,9 @@
                                 angular.element(document.querySelector('#msgModal')).modal('show');
                                 return;
                             }
+                            $scope.message = response.data.message;
+                            $scope.messageType = 'INFO';
+                            angular.element(document.querySelector('#msgModal')).modal('show');
                             refreshCalendarEvents();
                         },
                         function (response) { //failure callback
@@ -893,6 +896,10 @@
                                 angular.element(document.querySelector('#msgModal')).modal('show');
                                 return;
                             }
+                            $scope.message = response.data.assignedWorker.message;
+                            $scope.messageType = 'INFO';
+                            angular.element(document.querySelector('#msgModal')).modal('show');
+
                             $log.log('selectedItemPart2: '+ selectedItemPart2);
                             if (selectedItemPart2 !== undefined) {
                                 customersPhone.push(selectedItemPart2);
@@ -1921,6 +1928,7 @@
                     a function for saving the deatailes of customer before update
                 */
                 $scope.updateCustomerFunction = function (customer) {
+                    $log.log('customer=' + JSON.stringify(customer));
                     //get all details of customer in json format
                     customerBeforeUpdate = {
                         Category: customer.Category,
@@ -1928,7 +1936,8 @@
                         Status: customer.Status,
                         PhoneNumber: customer.PhoneNumber,
                         eMail: customer.eMail,
-                        Address: customer.Address
+                        Address: customer.Address,
+                        workerName: customer.workerName
                     };
                     const indexRole = getIndexOfSelectedItem(customerBeforeUpdate.Category.Role, 'role_list');
                     console.log('indexRole=' + indexRole);
@@ -2408,6 +2417,9 @@
                                 $scope.newEmail = undefined;
                                 $scope.newAddress = undefined;
                                 historyArray = [];
+                                $scope.message = response.data.message;
+                                $scope.messageType = 'INFO';
+                                angular.element(document.querySelector('#msgModal')).modal('show');
                             } else { //if exists show error modal
                                 $scope.messageType = 'ERROR';
                                 $scope.message = response.data.phoneExists;
@@ -2592,7 +2604,8 @@
 
                     //call server with an http request
                     $http.post(SERVER_URI + '/updateCustomer', {
-                        customerBeforeUpdate: customerBeforeUpdate, updatedCustomer: updatedCustomer
+                        customerBeforeUpdate: customerBeforeUpdate,
+                        updatedCustomer: updatedCustomer
                     }).then(
                         function (response) { //success callback
                             //check if the phone number does not exist already
@@ -2600,12 +2613,14 @@
                                 $scope.getCustomersList();
                                 category = undefined;
                                 statusRole = undefined;
+
+                                $scope.message = response.data.message;
+                                $scope.messageType = 'INFO';
+                                angular.element(document.querySelector('#msgModal')).modal('show');
                             } else { //if the phone already exsist show an error modal
                                 $scope.messageType = 'ERROR';
                                 $scope.message = response.data.phoneExists;
                                 angular.element(document.querySelector('#msgModal')).modal('show');
-
-
                             }
 
                         },

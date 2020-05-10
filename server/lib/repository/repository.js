@@ -169,41 +169,6 @@ module.exports = {
         await module.exports.deleteAllItems(req, res, 'customer', {}, {'workerName': workerName}, false);
         await module.exports.deleteAllItems(req, res, 'event', {}, {'workerName': workerName}, false);
     },
-    /*getCustomerEvents: async function (req, res, collectionName) {
-        let status = {
-            code: 200,
-            message: {}
-        };
-        try {
-            storage.getCollection(collectionName).find(
-                {
-                    'workerName': req.params.workerName,
-                    'customerPhone': req.params.eventId
-                }).forEach(function (doc) {
-                doc.Events = doc.Events.filter(function (event) {
-                    if (event.id === req.params.eventId) {
-                        return event;
-                    }
-                });
-                console.dir(doc.Events);
-                if (doc.Events) {
-                    status.message = {'customerEvents': doc.Events};
-                    res.writeHead(200, {'Content-Type': 'application/json'});
-                    res.end(JSON.stringify({'customerEvents': doc.Events}));
-                } else {
-                    status.message = {'customerEvents': {}};
-                    res.writeHead(200, {'Content-Type': 'application/json'});
-                    res.end(JSON.stringify({'customerEvents': doc.Events}));
-                }
-            });
-        } catch (err) {
-            logger.error(util.format('happened error[%s]', err));
-            status = utils.getErrorStatus(err);
-            const response = status.code === 200 ? JSON.stringify(status.message) : JSON.stringify(status);
-            res.writeHead(status.code, {'Content-Type': 'application/json'});
-            res.end(response);
-        }
-    },*/
     deleteItemAndReturnUpdatedList: async function (req, res, item, collectionName, jsonObj, desc = undefined, deleteItem = undefined, isPullItems = false, isResponse = true) {
         let status = {
             code: 200,

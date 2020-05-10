@@ -378,7 +378,10 @@ module.exports = {
         const customer = req.body.customer;
         customer.workerName = await repo.assignWorker({Role: customer.Category.Role}, 'customer');
         await repo.insertItemByCondition(req, res, {'PhoneNumber': customer.PhoneNumber}, customer,
-            {'phoneExists': 'ERROR : this phone number already exists, change it or search for this worker.'}, 'customer');
+            {'phoneExists': 'ERROR : this phone number already exists, change it or search for this worker.'},
+            'customer', true,
+            {'message': util.format('This customer has been assigned to a worker %s with role %s',
+                customer.workerName, customer.Category.Role)});
     },
     updateCustomer: async function (req, res) {
         logger.info('updateCustomer');
@@ -387,31 +390,32 @@ module.exports = {
             const customerBeforeUpdate = req.body.customerBeforeUpdate;
             const customerAfterUpdate = req.body.updatedCustomer;
             const history = customerAfterUpdate.History;
+            let workerName = customerBeforeUpdate.workerName;
             delete customerAfterUpdate.History;
             if (customerBeforeUpdate.Category.Role !== customerAfterUpdate.Category.Role) {
                 customerAfterUpdate.workerName = await repo.assignWorker({Role: customerAfterUpdate.Category.Role}, 'customer');
+                workerName = customerAfterUpdate.workerName;
             }
             if (customerBeforeUpdate.PhoneNumber !== customerAfterUpdate.PhoneNumber || customerBeforeUpdate.Name !== customerAfterUpdate.Name) {
-                const eventIdBeforeUpdate = customerBeforeUpdate.Name+' '+ customerBeforeUpdate.PhoneNumber;
-                const eventIdAfterUpdate = customerAfterUpdate.Name+' '+ customerAfterUpdate.PhoneNumber;
+                const eventIdBeforeUpdate = customerBeforeUpdate.Name + ' ' + customerBeforeUpdate.PhoneNumber;
+                const eventIdAfterUpdate = customerAfterUpdate.Name + ' ' + customerAfterUpdate.PhoneNumber;
                 await repo.updateItem(req, res, {id: eventIdBeforeUpdate ,customerPhone: customerBeforeUpdate.PhoneNumber}, {
                     $set: {id: eventIdAfterUpdate , customerPhone: customerAfterUpdate.PhoneNumber }
-                }, 'event');
-
+                }, 'event', undefined, undefined, undefined, false);
             }
-
             const foundItems = await repo.getAllCollectionItems('customer', {PhoneNumber: customerAfterUpdate.PhoneNumber});
             if (foundItems.length === 0 || foundItems.length === 1 && foundItems[0].PhoneNumber === customerBeforeUpdate.PhoneNumber) {
                 await repo.updateItem(req, res, {PhoneNumber: customerBeforeUpdate.PhoneNumber}, {
                     $addToSet: {History: history},
                     $set: customerAfterUpdate
-                }, 'customer');
+                }, 'customer', {'message': util.format('This customer has been assigned to a worker %s with role %s',
+                        workerName, customerAfterUpdate.Category.Role)});
                 return;
             }
             status.message = {'phoneExists': 'This phone number already exists, change it or search for this worker.'};
         } catch (err) {
             logger.error(util.format('happened error[%s]', err));
-            status = module.exports.getErrorStatus(err);
+            status = utils.getErrorStatus(err);
         }
         const response = status.code === 200 ? JSON.stringify(status.message) : JSON.stringify(status);
         logger.info(util.format('Response Data: %s', response));
@@ -435,7 +439,7 @@ module.exports = {
             }
         } catch (err) {
             logger.error(util.format('happened error[%s]', err));
-            status = module.exports.getErrorStatus(err);
+            status = utils.getErrorStatus(err);
             const response = JSON.stringify(status);
             logger.info(util.format('Response Data: %s', response));
             res.writeHead(status.code, {'Content-Type': 'application/json'});
@@ -656,6 +660,8 @@ module.exports = {
             condition = {};
         }
         responseData.Events = await repo.getAllCollectionItems('event', condition);
+        responseData.assignedWorker = {'message': util.format('This event has been assigned to a worker %s with role %s',
+            event.workerName, eventRole.Role)};
         if (!result.success) {
             responseData.eventExists = eventExists.eventExists;
         }
@@ -676,8 +682,8 @@ module.exports = {
             const eventExists = {'eventExists': 'The task already exists on this date, please select another time for this task'};
             const eventBeforeUpdate = req.body.updatedEvent.eventBeforeUpdate;
             const eventAfterUpdate = req.body.updatedEvent.eventAfterUpdate;
+            const eventRole = await repo.getItem({Color: eventAfterUpdate.color}, 'rolesWithStatus');
             if (eventBeforeUpdate.color !== eventAfterUpdate.color) {
-                const eventRole = await repo.getItem({Color: eventAfterUpdate.color}, 'rolesWithStatus');
                 eventAfterUpdate.workerName = await repo.assignWorker({Role: eventRole.Role}, 'event');
             }
             const foundItems = await repo.getAllCollectionItems('event',
@@ -690,13 +696,15 @@ module.exports = {
                 foundItems[0].workerName === eventBeforeUpdate.workerName &&
                 foundItems[0].start === eventBeforeUpdate.start &&
                 foundItems[0].end === eventBeforeUpdate.end) {
-                await repo.updateItem(req, res, eventBeforeUpdate, {$set: eventAfterUpdate}, 'event');
+                await repo.updateItem(req, res, eventBeforeUpdate, {$set: eventAfterUpdate}, 'event',
+                    {'message': util.format('This event has been assigned to a worker %s with role %s',
+                        eventAfterUpdate.workerName, eventRole.Role)});
                 return;
             }
             status.message = eventExists;
         } catch (err) {
             logger.error(util.format('happened error[%s]', err));
-            status = module.exports.getErrorStatus(err);
+            status = utils.getErrorStatus(err);
         }
         const response = status.code === 200 ? JSON.stringify(status.message) : JSON.stringify(status);
         logger.info(util.format('Response Data: %s', response));

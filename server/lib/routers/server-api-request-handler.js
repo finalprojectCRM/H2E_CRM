@@ -224,8 +224,7 @@ module.exports = {
                             'workerName': logInInfo.workerName,
                             'Name': logInInfo.Name,
                             'eMail': logInInfo.eMail,
-                            'Password': logInInfo.Password,
-                            'Events': logInInfo.Events
+                            'Password': logInInfo.Password
                         }
                     };
                 } else { //if the worker is not admin rturn worker datails
@@ -297,8 +296,7 @@ module.exports = {
     getCustomerEvents: async function (req, res) {
         logger.info(util.format('/getCustomerEvents/%s/%s', req.params.workerName, req.params.eventId));
         const workerName = req.params.workerName;
-        let condition = {workerName: req.params.workerName,customerPhone:req.params.eventId};
-        logger.info(util.format('/getWorkerEvents/%s', workerName));
+        let condition = {workerName: req.params.workerName, customerPhone: req.params.eventId};
         if (workerName === 'Admin') {
             condition = {customerPhone:req.params.eventId};
         }
@@ -306,21 +304,18 @@ module.exports = {
     },
     getEvent: async function (req, res) {
         logger.info(util.format('/getEvent'));
-        const event = req.body.my;
+        const event = req.body.event;
         logger.info(util.format('event=%s', JSON.stringify(event)));
-        await repo.getItems(req, res, 'event', 'event', event);
-
+        await repo.getItems(req, res, 'event', 'Events', event);
     },
     getAllEventsWithCustomer: async function (req, res) {
         logger.info(util.format('/getAllEventsWithCustomer'));
-        await repo.getItems(req, res, 'event', 'Events',{ customerPhone: { $ne: -1 } });
-        logger.info(util.format('/getAllEventsWithCustomer'));
-
-    }, getAllEventsWithoutCustomer: async function (req, res) {
+        await repo.getItems(req, res, 'event', 'Events', {customerPhone: { $ne: -1 } });
+    },
+    getAllEventsWithoutCustomer: async function (req, res) {
         logger.info(util.format('/getAllEventsWithoutCustomer'));
         await repo.getItems(req, res, 'event', 'Events',{ customerPhone: -1 });
         logger.info(util.format('/getAllEventsWithoutCustomer'));
-
     },
     uploadFile: async function (req, res) {
         logger.info('/uploadFile');

@@ -114,7 +114,6 @@ router.route('/getCustomerEvents/:workerName/:eventId')
 router.route('/getEvent')
     .post(serverApiRequestHandler.getEvent);
 
-
 router.route('/deleteAllCustomers')
     .get(serverApiRequestHandler.deleteAllCustomers);
 

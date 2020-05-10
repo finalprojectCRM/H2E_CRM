@@ -12,7 +12,7 @@ module.exports = {
     updateFileCollection: repo.updateFileCollection,
     updateWorkerPassword: repo.updateWorkerPassword,
     deleteItemAndReturnUpdatedList: repo.deleteItemAndReturnUpdatedList,
-    getCustomerEvents: repo.getCustomerEvents,
+    //getCustomerEvents: repo.getCustomerEvents,
     insertItemByCondition: repo.insertItemByCondition,
     updateItem: repo.updateItem,
     assignWorker: repo.assignWorker,

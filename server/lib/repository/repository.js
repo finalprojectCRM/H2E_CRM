@@ -163,15 +163,13 @@ module.exports = {
         res.writeHead(status.code, {'Content-Type': 'application/json'});
         res.end(response);
     },
-
     deleteWorkerEventsAndCustomers: async function (req, res, workerName) {
         logger.info('deleteWorkerEventsAndCustomers');
         logger.info(util.format('workerName: %s', workerName));
         await module.exports.deleteAllItems(req, res, 'customer', {}, {'workerName': workerName}, false);
         await module.exports.deleteAllItems(req, res, 'event', {}, {'workerName': workerName}, false);
     },
-
-    getCustomerEvents: async function (req, res, collectionName) {
+    /*getCustomerEvents: async function (req, res, collectionName) {
         let status = {
             code: 200,
             message: {}
@@ -205,7 +203,7 @@ module.exports = {
             res.writeHead(status.code, {'Content-Type': 'application/json'});
             res.end(response);
         }
-    },
+    },*/
     deleteItemAndReturnUpdatedList: async function (req, res, item, collectionName, jsonObj, desc = undefined, deleteItem = undefined, isPullItems = false, isResponse = true) {
         let status = {
             code: 200,

@@ -13,8 +13,8 @@
                 let workerBeforeUpdate;
                 const MAX_LETTERS_IN_NAME = 25;
                 const MAX_LETTERS_IN_ADDRESS = 35;
-                let category = undefined;
-                let statusRole = undefined;
+                let category;
+                let statusRole;
                 let loggedInWorker;
                 let incorectPassword = false;
                 let incorectNewTempPassword = false;
@@ -86,6 +86,8 @@
 
                             }, 5); // Set enough time to wait until animation finishes;*/
                             $scope.retreivedCalendarEvents = response.data.workerEvents;
+                            // $scope.workerEvents = response.data.workerEvents;
+
                             $log.log('response.data.workerEvents=' + JSON.stringify(response.data.workerEvents));
                             //$scope.retreivedCalendarEvents = Object.assign({}, response.data.workerEvents);
                             $log.log('retreivedCalendarEvents=' + JSON.stringify($scope.retreivedCalendarEvents));
@@ -104,21 +106,20 @@
 
                 $scope.getAllEvents = function () {
                     refreshCalendarEvents();
-                }
+                };
 
                 $scope.getAllEventsWithCustomer = function () {
                     $log.log('/getAllEventsWithCustomer');
                     $http.get(SERVER_URI + '/getAllEventsWithCustomer').then(
                         function (response) {//success callback
                             $log.log('in /getAllEventsWithCustomer');
-                            setTimeout(function () {
+                            /*setTimeout(function () {
                                 uiCalendarConfig.calendars['myCalendar'].fullCalendar('render');
-
-                            }, 5); // Set enough time to wait until animation finishes;*/
-                            $scope.retreivedCalendarEvents = response.data.Events;
-                            $log.log('refreshCalendarEvent=' + JSON.stringify($scope.retreivedCalendarEvents));
+                            }, 5);*/
+                            $scope.workerEvents = response.data.Events;
+                            $log.log('retreivedCalendarEvents=' + JSON.stringify($scope.workerEvents));
                             uiCalendarConfig.calendars.myCalendar.fullCalendar('removeEvents');
-                            uiCalendarConfig.calendars.myCalendar.fullCalendar('addEventSource', $scope.retreivedCalendarEvents);
+                            uiCalendarConfig.calendars.myCalendar.fullCalendar('addEventSource', $scope.workerEvents);
                             uiCalendarConfig.calendars.myCalendar.fullCalendar('rerenderEvents');
                         },
                         function (response) {//failure callback
@@ -128,7 +129,7 @@
                             angular.element(document.querySelector('#msgModal')).modal('show');
                         }
                     );
-                }
+                };
                 $scope.getAllEventsWithoutCustomer = function () {
                     $log.log('/getAllEventsWithCustomer');
                     $http.get(SERVER_URI + '/getAllEventsWithoutCustomer').then(
@@ -147,12 +148,21 @@
                             angular.element(document.querySelector('#msgModal')).modal('show');
                         }
                     );
-                }
+                };
 
 
-                function refreshCalendarEvent(event) {
+                function refreshCalendarEvent(calendarEvent) {
                     $log.log('refreshCalendarEvent');
-                    $log.log('event : '+JSON.stringify(event));
+                    $log.log('calendarEvent : ' + JSON.stringify(calendarEvent));
+                    const event = {
+                        "title": calendarEvent.title,
+                        "start": calendarEvent.start,
+                        "end": calendarEvent.end,
+                        "color": calendarEvent.color,
+                        "id": calendarEvent.id,
+                        "customerPhone": calendarEvent.customerPhone,
+                        "workerName": calendarEvent.workerName
+                    };
 
                     /*$log.log('CalendarEvent: before retreivedCalendarEvents=' + JSON.stringify($scope.retreivedCalendarEvents));
                     $scope.retreivedCalendarEvents.splice(0, $scope.retreivedCalendarEvents.length);
@@ -163,8 +173,8 @@
                     uiCalendarConfig.calendars.myCalendar.fullCalendar('addEventSource', $scope.retreivedCalendarEvents);
                     uiCalendarConfig.calendars.myCalendar.fullCalendar('rerenderEvents');
                     uiCalendarConfig.calendars.myCalendar.fullCalendar('refetchResources');*/
-                    $http.post(SERVER_URI + '/getEvent').then({
-                        my: event
+                    $http.post(SERVER_URI + '/getEvent', {
+                        event: event
                     }).then(
                         function (response) {//success callback
                             $scope.retreivedCalendarEvents = response.data.Events;
@@ -182,7 +192,7 @@
                     );
                 }
                 function displayEventsInCalendar(){
-                    
+
                 }
 
                 function refreshCustomerCalendarEvents(eventId) {
@@ -194,8 +204,7 @@
                             uiCalendarConfig.calendars.myCalendar.fullCalendar('removeEvents');
                             uiCalendarConfig.calendars.myCalendar.fullCalendar('addEventSource', $scope.retreivedCalendarEvents);
                             uiCalendarConfig.calendars.myCalendar.fullCalendar('rerenderEvents');
-                            if($scope.retreivedCalendarEvents.length==0)
-                            {
+                            if ($scope.retreivedCalendarEvents.length==0) {
                                 $scope.getCustomersFunction();
                                 $scope.message = 'There are no events for this customer';
                                 $scope.messageType = 'ERROR';
@@ -248,7 +257,7 @@
 
                         }
                     );
-                };
+                }
 
                 function getIndexOfSelectedItem(item, flag, status) {
                     if (flag === 'status_list') {
@@ -398,21 +407,20 @@
                 }
 
                 function getPhoneNumberEventId(eventId){
-                    let splitedStr = eventId.split(' ');
+                    const splitedStr = eventId.split(' ');
                     return splitedStr[splitedStr.length-1];
 
                 }
 
-                $scope.getCustomerEventByPhone = function (eventId)
-                {
+                $scope.getCustomerEventByPhone = function (eventId) {
                     $log.log('eventId : '+eventId);
                     const phoneCustomer = getPhoneNumberEventId(eventId);
                     $log.log('phoneCustomer : '+phoneCustomer);
 
                     $http.get(SERVER_URI + '/getCustomer/' + phoneCustomer).then(
                         function (response) {
-                            if(response.data.customers) {
-                                if(response.data.customers.length == 0) {
+                            if (response.data.customers) {
+                                if (response.data.customers.length == 0) {
                                     $scope.message = 'This customer does not exist';
                                     $scope.messageType = 'ERROR';
                                     angular.element(document.querySelector('#msgModal')).modal('show');
@@ -429,7 +437,7 @@
                     );
 
 
-                }
+                };
 
 
                 /*
@@ -459,15 +467,15 @@
                     $scope.account = true;
 
                     refreshCalendarEvents();
-                    $scope.workerEvents = Object.assign({}, $scope.retreivedCalendarEvents);
-                    $scope.retreivedCalendarEvents.forEach(function(event, index) {
+                    $scope.workerEvents = { ...$scope.retreivedCalendarEvents};
+                    /*$scope.retreivedCalendarEvents.forEach(function(event, index) {
                         let title = event.title;
                         if (event.id !== -1 && title.includes(':')) {
                             title = title.split(':')[1].trim();
                         }
                         $scope.workerEvents[index].title = title;
                         $log.log('index: ' + index + ' ,title=' + title);
-                    });
+                    });*/
                 };
                 /*
                     a function to render the calendar
@@ -565,8 +573,8 @@
                         $log.log('indexRole : ' + indexRole);
 
                         $scope.role = $scope.assignedRoles[indexRole];
-                        $log.log(' $scope.role : ' +  $scope.role);
-                        $log.log(' $scope.role : ' +  $scope.role.Role);
+                        $log.log(' $scope.role : ' + $scope.role);
+                        $log.log(' $scope.role : ' + $scope.role.Role);
 
 
                         //if a customer was not selected for the event, the event id is = '-1'
@@ -598,11 +606,11 @@
                         $scope.eventDate = moment(event.start).format('DD/MM/YYYY HH:mm') + ' - ' + moment(event.end).format('DD/MM/YYYY HH:mm');
                         $scope.taskIsEdit = false;
                         //show modal for edit or delete event
-                        $log.log(' $scope.role : ' +  $scope.role);
-                        $log.log(' $scope.role : ' +  $scope.role.Role);
+                        $log.log(' $scope.role : ' + $scope.role);
+                        $log.log(' $scope.role : ' + $scope.role.Role);
                         angular.element(document.querySelector('#editOrDeleteEvent')).modal('show');
-                        $log.log(' $scope.role : ' +  $scope.role);
-                        $log.log(' $scope.role : ' +  $scope.role.Role);
+                        $log.log(' $scope.role : ' + $scope.role);
+                        $log.log(' $scope.role : ' + $scope.role.Role);
                     }
                 };
 
@@ -708,7 +716,7 @@
 
                     let eventForUpdate = {};
 
-                    eventForUpdate = Object.assign({}, editEventDetails);
+                    eventForUpdate = { ...editEventDetails};
                     //update the event details in the calendar
                     //uiCalendarConfig.calendars.myCalendar.fullCalendar('updateEvent', editEventDetails);
                     updateEventInDataBase(eventForUpdate, evenBeforeUpdate, loggedInWorker);
@@ -722,7 +730,7 @@
                 $scope.goToCustomer = function () {
 
                     //get customers phone number as an ID
-                    $scope.getCustomerEventByPhone( $scope.customerEvent);
+                    $scope.getCustomerEventByPhone($scope.customerEvent);
 
                     //hide the 'document.querySelector('#editOrDeleteEvent')' modal
                     angular.element(document.querySelector('#editOrDeleteEvent')).modal('hide');
@@ -840,15 +848,13 @@
                                 emailsListStr = getStringofAllEmails(emailsListStr, arrInfo, i);
                             }
 
-                        } else {
-                            if ($scope.selected[arrInfo.PhoneNumber]) {
-                                customersPhone.push(arrInfo.PhoneNumber);
-                                emailsListStr = getStringofAllEmails(emailsListStr, arrInfo, i);
+                        } else if ($scope.selected[arrInfo.PhoneNumber]) {
+                            customersPhone.push(arrInfo.PhoneNumber);
+                            emailsListStr = getStringofAllEmails(emailsListStr, arrInfo, i);
 
-                            }
                         }
                     }
-                    if(emailsListStr.length === 0){
+                    if (emailsListStr.length === 0){
                         $scope.message = 'You did not select any one for sending email, please select one';
                         $scope.messageType = 'ERROR';
                         angular.element(document.querySelector('#msgModal')).modal('show');
@@ -860,7 +866,6 @@
                     $scope.showSendOrCancelMultipleButtonCustomers = false;
                     angular.element(document.querySelector('#emailModal')).modal('show');
                 };
-
 
 
                 function addEventToDataBase(event, worker) {
@@ -1046,7 +1051,7 @@
                 $scope.getCalendarEvent = function (event) {
                     $log.log('event : '+JSON.stringify(event));
                     $scope.calendarFunction('calendarEvent',event);
-                }
+                };
                 //cancel function from modal in calendar
                 $scope.cancelEvent = function () {
                     $scope.role = '';
@@ -1118,7 +1123,6 @@
                             $scope.fileToMail = false;
                             category = undefined;
                             $scope.selections = [];
-
 
 
                             if (response.data.ok) {
@@ -1250,7 +1254,6 @@
                 };
 
 
-
                 $scope.showModalCurTempPassword = function (){
                     angular.element(document.querySelector('#validationCurrentTempPasswordModal')).modal('show');
 
@@ -1273,7 +1276,7 @@
                             //verified passwords (not for Admin worker)
                             if (response.data.verified) {
                                 console.log('is verified');
-                                if(loggedInWorker!==undefined && loggedInWorker.adminWorker) {
+                                if (loggedInWorker!==undefined && loggedInWorker.adminWorker) {
                                     angular.element(document.querySelector('#changeTemporaryPasswordModal')).modal('show');
                                     return;
 
@@ -1297,11 +1300,10 @@
                             } else { //not correct temprorary password
                                 console.log('validationOfTempPassword: response.data.notVerified=' + response.data.notVerified);
                                 // eslint-disable-next-line no-undef
-                                if(loggedInWorker!==undefined && loggedInWorker.adminWorker) {
+                                if (loggedInWorker!==undefined && loggedInWorker.adminWorker) {
                                     $scope.message = 'Invalid temporary password , please try again.';
                                     invalidTempPassword = true;
-                                }
-                                else {
+                                } else {
                                     $scope.message = response.data.notVerified;
 
                                 }
@@ -1353,14 +1355,14 @@
                     }).then(
                         function (response) { //success callback
                             $log.log("response.data=" + JSON.stringify(response.data));
-                            if(response.data.error) {
+                            if (response.data.error) {
                                 toaster.pop('error', response.data.error, '');
                                 return;
                             }
                             $scope.newTemporaryPassword = $scope.newTemporaryValidationPassword = $scope.newTempPasswordSettings =$scope.verifyNewTempPasswordSettings = undefined;
                             $log.log('loggedInWorker ;'+loggedInWorker);
-                            if(loggedInWorker !== undefined && loggedInWorker.adminWorker){
-                                if(response.data.success) {
+                            if (loggedInWorker !== undefined && loggedInWorker.adminWorker){
+                                if (response.data.success) {
                                     toaster.pop('success', response.data.success, '');
                                     return;
                                 }
@@ -1521,8 +1523,7 @@
                                 // $scope.events = LoginWorker.Events;
                                 //$scope.retreivedCalendarEvents = LoginWorker.Events;
                                 //$log.log('Events : ' + $scope.events);
-                                if(LoginWorker.Role==='new in the system')
-                                {
+                                if (LoginWorker.Role==='new in the system') {
                                     $scope.message = 'The administrator has not yet assigned you a role in the system, therefore can not sign in yet';
                                     $scope.messageType = 'ERROR';
                                     angular.element(document.querySelector('#msgModal')).modal('show');
@@ -1596,8 +1597,7 @@
                     $scope.showWorkersEvents = false;
 
 
-                    if(!flag)
-                    {
+                    if (!flag) {
                         $scope.getCustomersList();
 
                     }
@@ -1780,7 +1780,7 @@
                     $scope.calendarNavColor = '#ff0066';
                     $scope.calendarNavColor = '#004d99';
                     $scope.customersNavColor = '#004d99';
-                   // $scope.getRolesList();
+                    // $scope.getRolesList();
                     getAssignedRoles();
 
 
@@ -1791,14 +1791,12 @@
                         uiCalendarConfig.calendars['myCalendar'].fullCalendar('render');
 
                     }, 5); // Set enough time to wait until animation finishes;*/
-                    if(flag=='customerEvents')
-                    {
+                    if (flag === 'customerEvents') {
 
                         refreshCustomerCalendarEvents(value);
                         return;
                     }
-                    if(flag=='calendarEvent')
-                    {
+                    if (flag === 'calendarEvent') {
                         $log.log('event : '+JSON.stringify(value));
                         refreshCalendarEvent(value);
                         return;
@@ -2169,7 +2167,7 @@
                 /*
                     get the customers list from server with http request
                 */
-                $scope.getCustomersList = function (workerName = loggedInWorker.workerName ) {
+                $scope.getCustomersList = function (workerName = loggedInWorker.workerName) {
                     $http.get(SERVER_URI + '/getCustomers/' + workerName).then(
                         function (response) {//success callback
 
@@ -2206,14 +2204,13 @@
                     );
                 };
 
-                $scope.getworkerNameCustomers = function (workerName)
-                {
+                $scope.getworkerNameCustomers = function (workerName) {
                     $scope.workersNavColor = '#004d99';
                     $scope.customersNavColor = '#ff0066';
                     $scope.getCustomersFunction(true);
                     $scope.getCustomersList(workerName);
 
-                }
+                };
 
                 /*
                     a function for getting the list of workers from server with http request
@@ -2375,7 +2372,6 @@
                     //call the function to add the new customer
                     $scope.addNewCustomer();
                 };
-
 
 
                 /*
@@ -2714,6 +2710,7 @@
                             if (response.data.workers) {
                                 $scope.workers = response.data.workers;
                                 $scope.showWorkers = true;
+                                category = undefined;
 
                             }
                             selectedItemPart2 = undefined;
@@ -2723,7 +2720,7 @@
                         }
                     );
                     $log.log(selectedItemPart2);
-                };
+                }
 
                 function deleteWorkerWithEventsAndCustomersFromDb() {
                     $log.log('/deleteWorkerWithEventsAndCustomersFromDb');
@@ -2737,6 +2734,8 @@
                             if (response.data.workers) {
                                 $scope.workers = response.data.workers;
                                 $scope.showWorkers = true;
+                                category = undefined;
+
 
                             }
                             selectedItemPart2 = undefined;
@@ -2746,7 +2745,7 @@
                         }
                     );
                     $log.log(selectedItemPart2);
-                };
+                }
 
                 /*
                     a function for repeating a message modal in match to the slected modal
